@@ -8,7 +8,7 @@
 
 **Moa** is a minimalist app to **learn and revise Korean** through a blend of **flashcards**, **mini-lessons**, and **handwriting practice**.
 
-The name *Moa* (모아) means *“to gather”* in Korean — reflecting the idea of collecting words, knowledge, and small daily moments of progress.
+The name *Moa* (모아) means *"to gather"* in Korean — reflecting the idea of collecting words, knowledge, and small daily moments of progress.
 
 Moa focuses on being calm, simple, and beautiful — a space where learning feels natural and consistent, not stressful.
 
@@ -19,9 +19,19 @@ Moa focuses on being calm, simple, and beautiful — a space where learning feel
 ### 🧠 Spaced Repetition Flashcards
 
 * Review vocabulary, phrases, and grammar patterns.
-* Simple “flip & rate” interface like Anki.
+* Simple "flip & rate" interface like Anki.
 * Smart scheduling that adapts to your memory pace.
-* Organize cards by *tags* (e.g., “food”, “grammar”, “TOPIK I”).
+* Organize cards by *tags* (e.g., "food", "grammar", "TOPIK I").
+
+### 🎮 Multiple Study Modes (Quizlet-inspired)
+
+* **Learn Mode** — Interactive flashcards with self-grading (Again/Hard/Good/Easy).
+* **Write Mode** — Type the answer from memory (checks spelling accuracy).
+* **Spell Mode** — Listen to audio and spell the word correctly.
+* **Test Mode** — Auto-generated quiz with multiple choice, true/false, and written questions.
+* **Match Mode** — Interactive game to match terms with definitions under time pressure.
+* **Progress Dashboard** — Track accuracy percentage, study streaks, and weak spots.
+* Switch between modes seamlessly within the same deck.
 
 ### 🗒️ Interactive Lessons
 
@@ -49,16 +59,23 @@ Moa focuses on being calm, simple, and beautiful — a space where learning feel
 * Rate and review shared content to help others find quality resources.
 * Build your personal collection by importing content from the community.
 
+### 📊 Import & Export
+
+* **Import from CSV** — Bulk import cards with front/back columns.
+* **Import from Quizlet** — Paste Quizlet set URL to automatically import decks.
+* **Export to CSV** — Back up your decks and share with others.
+* **Print Study Guides** — Generate PDF study sheets from your decks.
+
 ---
 
 ## 🌸 Design Philosophy
 
-Moa’s goal is **to make daily study feel effortless**.
+Moa's goal is **to make daily study feel effortless**.
 Each feature is designed around clarity, warmth, and focus.
 
 **Principles:**
 
-* Small steps every day — “한 걸음씩 (one step at a time).”
+* Small steps every day — "한 걸음씩 (one step at a time)."
 * Minimal visual noise — clean typography, pastel tones.
 * Encouraging progress — not perfection.
 
@@ -70,8 +87,8 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 
 | Element       | Description                             |
 | ------------- | --------------------------------------- |
-| **Name**      | *Moa* (모아) — “to gather”                |
-| **Tagline**   | “Gather words, grow fluency.”           |
+| **Name**      | *Moa* (모아) — "to gather"                |
+| **Tagline**   | "Gather words, grow fluency."           |
 | **Logo Idea** | Soft circle or open notebook symbol.    |
 | **Colors**    | Cream, sky blue, mint, and light coral. |
 | **Tone**      | Gentle, modern, and focused.            |
@@ -103,12 +120,17 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 
 | Screen         | Description                                      |
 | -------------- | ------------------------------------------------ |
-| **Home**       | Overview of today's goals and reviews due        |
+| **Home**       | Overview of today's goals, study streaks, and reviews due |
 | **Flashcards** | Flip cards, rate recall (Again / Good / Easy)    |
+| **Study Mode Picker** | Choose between Learn, Write, Spell, Test, or Match |
+| **Test Mode**  | Auto-generated quiz with multiple choice and written questions |
+| **Match Game** | Timed matching game to pair terms with definitions |
+| **Write Mode** | Type answers and get instant spelling feedback   |
 | **Lesson**     | Read mini-lesson → try quiz → add words to deck  |
 | **Write**      | Handwriting canvas to draw Hangul and self-check |
 | **Library**    | Browse your decks and discover shared content    |
 | **Share**      | Generate QR code to share your deck with others  |
+| **Progress**   | View detailed stats, accuracy trends, and achievements |
 
 ---
 
@@ -117,10 +139,13 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 | Phase                        | Goal                | Features                          |
 | ---------------------------- | ------------------- | --------------------------------- |
 | **1. MVP**                   | Validate experience | Flashcards + basic SRS            |
-| **2. Lessons**               | Add learning flow   | Mini-lessons + linked cards       |
-| **3. Handwriting**           | Enhance practice    | Canvas + compare mode             |
-| **4. Audio & Pronunciation** | Broaden skills      | Native audio + repeat             |
-| **5. Community**             | Expand content      | QR code sharing, deck discovery, community library |
+| **2. Study Modes**           | Add variety to practice | Test, Match, Write, Spell modes |
+| **3. Progress Tracking**     | Motivate consistency | Streaks, accuracy stats, achievements |
+| **4. Import/Export**         | Expand content access | CSV import/export, Quizlet import |
+| **5. Lessons**               | Add learning flow   | Mini-lessons + linked cards       |
+| **6. Handwriting**           | Enhance practice    | Canvas + compare mode             |
+| **7. Audio & Pronunciation** | Broaden skills      | Native audio + repeat             |
+| **8. Community**             | Expand content      | QR code sharing, deck discovery, community library |
 
 ---
 
@@ -129,4 +154,4 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 Moa is built for learners who want to grow their Korean quietly and consistently.
 No pressure, no clutter — just clear progress at your own rhythm.
 
-> *“Gather words, grow fluency. One Moa at a time.”*
+> *"Gather words, grow fluency. One Moa at a time."*
