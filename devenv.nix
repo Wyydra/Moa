@@ -12,10 +12,12 @@ let
   buildToolsVersion = "34.0.0";
   
   androidComposition = pkgs'.androidenv.composeAndroidPackages {
-    buildToolsVersions = [ buildToolsVersion "35.0.0" ];
+    buildToolsVersions = [ buildToolsVersion "35.0.0" "36.0.0" ];
     platformVersions = [ "36" ];
     includeEmulator = false;
-    includeNDK = false;
+    includeNDK = true;
+    ndkVersions = [ "27.1.12297006" ];
+    cmakeVersions = [ "3.22.1" ];
     includeSources = false;
     includeSystemImages = false;
     extraLicenses = [
@@ -29,11 +31,13 @@ in
 {
   packages = with pkgs; [ 
     watchman
-    # jdk17
-    # cacert
+    jdk17
+    gradle_8
   ];
 
+  env.JAVA_HOME = "${pkgs.jdk17}/lib/openjdk";
   env.ANDROID_HOME = "${androidSdk}/libexec/android-sdk";
+  env.GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdk}/libexec/android-sdk/build-tools/${buildToolsVersion}/aapt2";
   # env.ANDROID_SDK_ROOT = "${androidSdk}/libexec/android-sdk";
 
   languages.typescript.enable = true;
