@@ -101,6 +101,17 @@ export const getCardsByDeck = async (deckId: string): Promise<Card[]> => {
   }
 };
 
+export const getDueCards = async (deckId: string): Promise<Card[]> => {
+  try {
+    const cards = await getCardsByDeck(deckId);
+    const now = Date.now();
+    return cards.filter(c => c.nextReview <= now);
+  } catch (error) {
+    console.error('Error loading due cards:', error);
+    return [];
+  }
+}
+
 export const deleteCard = async (cardId: string): Promise<void> => {
   try {
     const cards = await getAllCards();
