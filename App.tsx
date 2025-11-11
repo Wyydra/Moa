@@ -11,6 +11,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
 import CreateDeckScreen from './src/screens/CreateDeckScreen';
 import EditDeckScreen from './src/screens/EditDeckScreen';
+import StudyScreen from './src/screens/StudyScreen';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -33,6 +34,11 @@ function LibraryStackNavigator() {
       <LibraryStack.Screen 
         name='EditDeck' 
         component={EditDeckScreen}
+        options={{ presentation: 'modal'}}
+        />
+      <LibraryStack.Screen 
+        name='StudyScreen' 
+        component={StudyScreen}
         options={{ presentation: 'modal'}}
         />
     </LibraryStack.Navigator>

@@ -4,19 +4,22 @@ import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { deleteDeck, getCardsByDeck, getDeckById } from "../data/storage";
+import { deleteDeck, getCardsByDeck, getDeckById, getDueCards } from "../data/storage";
 import { Card, Deck } from "../data/model";
 
 export default function DeckDetailsScreen({route, navigation}: any) {
   const { deckId } = route.params;
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<Card[]>([]);
+  const [dueCount, setDueCount] = useState(0);
 
   const loadDeckAndCards = async () => {
     const loadedDeck = await getDeckById(deckId);
     const loadedCards = await getCardsByDeck(deckId);
+    const due = await getDueCards(deckId);
     setCards(loadedCards);
     setDeck(loadedDeck);
+    setDueCount(due.length);
   };
 
   useFocusEffect(
@@ -59,6 +62,10 @@ export default function DeckDetailsScreen({route, navigation}: any) {
     );
   };
 
+  const handleStudy = () => {
+    navigation.navigate('StudyScreen', {deckId});
+  }
+
   const renderCard = ({ item }: { item: Card }) => (
     <View style={[commonStyles.card, styles.cardItem]}>
       <Text style={styles.cardFront}>{item.front}</Text>
@@ -93,6 +100,16 @@ export default function DeckDetailsScreen({route, navigation}: any) {
 
       {deck.description && (
         <Text style={styles.description}>{deck.description}</Text>
+      )}
+
+      {dueCount > 0 && (
+        <TouchableOpacity
+          style={[commonStyles.button, styles.studyButton]}
+          onPress={handleStudy}
+        >
+          <Ionicons name="school" size={20} color="white" style={{ marginRight: 8 }} />
+          <Text style={commonStyles.buttonText}> Study now ({dueCount} due)</Text>
+        </TouchableOpacity>
       )}
 
       {cards.length === 0 ? (
@@ -184,5 +201,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+  },
+  studyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.lg,
   },
 });
