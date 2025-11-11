@@ -121,7 +121,9 @@ if (completed) {
               onPress={() => handleResponse(StudyResponse.Hard)}
             >
               <Text style={styles.responseButtonText}>Hard</Text>
-              <Text style={styles.responseTime}>{'<10m'}</Text>
+              <Text style={styles.responseTime}>
+                {currentCard.repetitions === 0 ? '<1h' : '<10m'}
+              </Text>
             </TouchableOpacity>
 
              <TouchableOpacity

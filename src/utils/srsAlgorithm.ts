@@ -14,12 +14,16 @@ export enum StudyResponse {
 
     switch (response) {
       case StudyResponse.Again:
-        newInterval = 1;
+        newInterval = 1 / (24 * 60);
         newRepetitions = 0;
         newEaseFactor = Math.max(1.3, card.easeFactor - 0.2);
         break;
       case StudyResponse.Hard:
-        newInterval = Math.max(1, card.interval * 1.2);
+        if (card.repetitions === 0) {
+          newInterval = 1 / 24;
+        } else {
+          newInterval = Math.max(1 / 24, card.interval * 1.2);
+        }
         newRepetitions = card.repetitions + 1;
         newEaseFactor = Math.max(1.3, card.easeFactor - 0.15);
         break;
