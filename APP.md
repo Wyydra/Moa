@@ -51,6 +51,13 @@ Moa focuses on being calm, simple, and beautiful — a space where learning feel
 * Play native audio for each word or sentence.
 * Practice by repeating out loud and comparing recordings.
 
+### ✏️ Dictation Mode
+
+* Listen to audio and write what you hear using handwriting input.
+* Automatic handwriting recognition converts your writing to text in real-time.
+* Get instant feedback on spelling and accuracy.
+* Combines listening comprehension with writing practice.
+
 ### 📤 Share & Discover
 
 * Scan QR codes to instantly receive decks from friends or teachers.
@@ -146,6 +153,53 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 | **6. Handwriting**           | Enhance practice    | Canvas + compare mode             |
 | **7. Audio & Pronunciation** | Broaden skills      | Native audio + repeat             |
 | **8. Community**             | Expand content      | QR code sharing, deck discovery, community library |
+
+---
+
+## ✅ Implementation Status
+
+### Completed Features
+
+- ✅ **Basic App Structure** — React Native + Expo setup with navigation
+- ✅ **Data Models** — Card, Deck, and SRS algorithm types
+- ✅ **Storage Layer** — AsyncStorage for local persistence
+- ✅ **SRS Algorithm** — SM-2 implementation for spaced repetition
+- ✅ **Home Screen** — Overview of decks and study progress
+- ✅ **Library Screen** — Browse and manage decks
+- ✅ **Create Deck** — Add new decks with name and description
+- ✅ **Edit Deck** — Modify existing deck properties
+- ✅ **Add Cards** — Create flashcards with front/back content
+- ✅ **Deck Details** — View deck stats and card list
+- ✅ **Study Screen** — Flashcard review with flip animation and SRS ratings
+- ✅ **Handwriting Canvas** — Korean handwriting input with ML Kit
+  - ✅ Infinite scrollable canvas with auto-scroll on inactivity
+  - ✅ Real-time stroke rendering with dark background
+  - ✅ Automatic recognition after writing pause
+  - ✅ Navigation arrows and clear button
+  - ✅ Korean model download and initialization
+- ✅ **Handwriting Test Screen** — Practice writing with modal input
+  - ✅ Modal-based handwriting canvas (keyboard-style)
+  - ✅ Text input field with handwriting button
+  - ✅ Real-time recognition feedback
+  - ✅ Answer validation and progress tracking
+
+### In Progress
+
+- 🚧 **Dictation Mode** — Listen and write with handwriting input
+
+### Planned Features
+
+- ⏳ **Write Mode** — Type answers with spelling feedback
+- ⏳ **Spell Mode** — Audio-based spelling practice
+- ⏳ **Test Mode** — Auto-generated quizzes
+- ⏳ **Match Mode** — Timed matching game
+- ⏳ **Progress Dashboard** — Stats, streaks, and achievements
+- ⏳ **Mini-Lessons** — Interactive learning modules
+- ⏳ **Audio & Pronunciation** — Native audio playback and recording
+- ⏳ **CSV Import/Export** — Bulk card management
+- ⏳ **Quizlet Import** — Import decks from Quizlet URLs
+- ⏳ **QR Code Sharing** — Share and receive decks via QR codes
+- ⏳ **Community Library** — Browse and rate shared content
 
 ---
 

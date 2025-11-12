@@ -12,6 +12,9 @@ import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
 import CreateDeckScreen from './src/screens/CreateDeckScreen';
 import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
+import { useEffect } from 'react';
+import { initializeStorage } from './src/data/storage';
+import HandwritingTestScreen from './src/screens/HandwritingTestScreen';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -46,6 +49,9 @@ function LibraryStackNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initializeStorage();
+  }, []);
   return (
   <NavigationContainer>
     <Tab.Navigator
@@ -77,6 +83,15 @@ export default function App() {
           ),
         }}
       />
+      <Tab.Screen
+        name="Handwriting"
+        component={HandwritingTestScreen}
+        options={{
+          tabBarIcon: ({color, size}) => (
+          <Ionicons name='brush' size={size} color={color} />
+        ),
+      }}
+    />
     </Tab.Navigator>
     <StatusBar style='auto'/>
   </NavigationContainer>

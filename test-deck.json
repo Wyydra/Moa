@@ -1,0 +1,29 @@
+{
+  "deck": {
+    "name": "Korean Vocabulary",
+    "description": "Basic Korean words for beginners",
+    "cardCount": 5
+  },
+  "cards": [
+    {
+      "front": "Water",
+      "back": "물"
+    },
+    {
+      "front": "House",
+      "back": "집"
+    },
+    {
+      "front": "Dog",
+      "back": "개"
+    },
+    {
+      "front": "Book",
+      "back": "책"
+    },
+    {
+      "front": "Car",
+      "back": "차"
+    }
+  ]
+}

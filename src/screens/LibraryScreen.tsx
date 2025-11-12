@@ -58,8 +58,7 @@ export default function LibraryScreen({navigation}: any) {
   const handleDeleteDeck = (deck: Deck) => {
     Alert.alert(
       'Delete Deck',
-      `Are you sure you want to delete "${deck.name}"? This will also delete all ${deck.cardCount} cards in
-this deck.`,
+      `Are you sure you want to delete "${deck.name}"? This will also delete all ${deck.cardCount} cards in this deck.`,
       [
         {
           text: 'Cancel',

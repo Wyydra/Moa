@@ -150,3 +150,44 @@ export const clearAllData = async (): Promise<void> => {
     throw error;
   }
 };
+
+export const seedTestData = async (): Promise<void> => {
+  const testDeckData = require('../../test-deck.json');
+  const now = Date.now();
+
+  const testDeckId = generateId();
+  const testDeck: Deck = {
+    id: testDeckId,
+    name: testDeckData.deck.name,
+    description: testDeckData.deck.description,
+    createdAt: now,
+    cardCount: testDeckData.cards.length
+  };
+
+  const testCards: Card[] = testDeckData.cards.map((cardData: any) => ({
+    id: generateId(),
+    front: cardData.front,
+    back: cardData.back,
+    deckId: testDeckId,
+    nextReview: now,
+    interval: 0,
+    easeFactor: 2.5,
+    repetitions: 0,
+    createdAt: now
+  }));
+
+  await AsyncStorage.setItem(DECKS_KEY, JSON.stringify([testDeck]));
+  await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(testCards));
+};
+
+export const initializeStorage = async (): Promise<void> => {
+  try {
+    const decks = await getAllDecks();
+    if (decks.length === 0) {
+      console.log('No existing data found. Seeding test data...');
+      await seedTestData();
+    }
+  } catch (error) {
+    console.error('Error initializing storage:', error);
+  }
+};
