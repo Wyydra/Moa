@@ -359,19 +359,6 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
         />
       )}
       <View style={styles.controlsContainer}>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Stroke Order Check</Text>
-          <TouchableOpacity
-            style={[styles.toggle, strokeOrderCheckEnabled && styles.toggleActive]}
-            onPress={() => {
-              setStrokeOrderCheckEnabled(!strokeOrderCheckEnabled);
-              setValidation(null);
-              setDetectedCharacter('');
-            }}
-          >
-            <View style={[styles.toggleThumb, strokeOrderCheckEnabled && styles.toggleThumbActive]} />
-          </TouchableOpacity>
-        </View>
         <View style={styles.navigationRow}>
           {!practiceMode && (
             <>
@@ -389,6 +376,19 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
           )}
           <TouchableOpacity style={styles.clearButton} onPress={clearCanvas}>
             <Text style={styles.clearButtonText}>Clear</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>Stroke Order Check</Text>
+          <TouchableOpacity
+            style={[styles.toggle, strokeOrderCheckEnabled && styles.toggleActive]}
+            onPress={() => {
+              setStrokeOrderCheckEnabled(!strokeOrderCheckEnabled);
+              setValidation(null);
+              setDetectedCharacter('');
+            }}
+          >
+            <View style={[styles.toggleThumb, strokeOrderCheckEnabled && styles.toggleThumbActive]} />
           </TouchableOpacity>
         </View>
       </View>
