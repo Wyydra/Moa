@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
+import EditCardScreen from './src/screens/EditCardScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -12,9 +13,10 @@ import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
 import CreateDeckScreen from './src/screens/CreateDeckScreen';
 import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
+import WriteScreen from './src/screens/WriteScreen';
 import { useEffect } from 'react';
 import { initializeStorage } from './src/data/storage';
-import HandwritingTestScreen from './src/screens/HandwritingTestScreen';
+import TestScreen from './src/screens/TestScreen';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -30,6 +32,11 @@ function LibraryStackNavigator() {
         options={{ presentation: 'modal'}}
         />
       <LibraryStack.Screen 
+        name='EditCard' 
+        component={EditCardScreen}
+        options={{ presentation: 'modal'}}
+        />
+      <LibraryStack.Screen 
         name='CreateDeck' 
         component={CreateDeckScreen}
         options={{ presentation: 'modal'}}
@@ -42,6 +49,16 @@ function LibraryStackNavigator() {
       <LibraryStack.Screen 
         name='StudyScreen' 
         component={StudyScreen}
+        options={{ presentation: 'modal'}}
+        />
+      <LibraryStack.Screen 
+        name='WriteScreen' 
+        component={WriteScreen}
+        options={{ presentation: 'modal'}}
+        />
+      <LibraryStack.Screen
+        name='TestScreen'
+        component={TestScreen}
         options={{ presentation: 'modal'}}
         />
     </LibraryStack.Navigator>
@@ -83,15 +100,6 @@ export default function App() {
           ),
         }}
       />
-      <Tab.Screen
-        name="Handwriting"
-        component={HandwritingTestScreen}
-        options={{
-          tabBarIcon: ({color, size}) => (
-          <Ionicons name='brush' size={size} color={color} />
-        ),
-      }}
-    />
     </Tab.Navigator>
     <StatusBar style='auto'/>
   </NavigationContainer>

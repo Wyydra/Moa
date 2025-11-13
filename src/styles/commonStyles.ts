@@ -69,4 +69,37 @@ export const commonStyles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+
+  modalContent: {
+    backgroundColor: COLORS.cardBg,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: SPACING.lg,
+    paddingBottom: 40,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+
+  modalCloseButton: {
+    fontSize: 28,
+    color: COLORS.textLight,
+    fontWeight: '300',
+  },
 });

@@ -30,6 +30,7 @@ let
 in
 {
   packages = with pkgs; [ 
+    just
     watchman
     jdk17
     gradle_8

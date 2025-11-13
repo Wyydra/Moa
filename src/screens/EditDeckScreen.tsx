@@ -53,6 +53,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
 return (
     <View style={commonStyles.container}>
       <View style={styles.header}>
+        <View style={styles.spacer} />
         <Text style={commonStyles.screenTitle}>Edit Deck</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={COLORS.text} />
@@ -93,6 +94,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  spacer: {
+    width: 28,
   },
   closeButton: {
     marginTop: 60,

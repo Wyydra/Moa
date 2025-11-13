@@ -62,6 +62,7 @@ if (completed) {
     return (
       <View style={commonStyles.container}>
         <View style={styles.header}>
+          <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
             <Ionicons name="close" size={28} color={COLORS.text} />
           </TouchableOpacity>
@@ -83,15 +84,15 @@ if (completed) {
   const currentCard = cards[currentIndex];
 
 
- return (
+  return (
     <View style={commonStyles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
-        </TouchableOpacity>
         <Text style={styles.progress}>
           {currentIndex + 1} / {cards.length}
         </Text>
+        <TouchableOpacity onPress={handleBack}>
+          <Ionicons name="close" size={28} color={COLORS.text} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.cardContainer}>
@@ -157,6 +158,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 60,
     paddingBottom: SPACING.md,
+  },
+  spacer: {
+    width: 28,
   },
   progress: {
     fontSize: 18,
