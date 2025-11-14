@@ -1,4 +1,5 @@
 import { use, useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { useTheme } from "@react-navigation/native";
 import { getCardsByDeck } from "../data/storage";
@@ -14,6 +15,7 @@ interface Question {
 }
 
 export default function TestScreen({route, navigation}: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -90,12 +92,13 @@ export default function TestScreen({route, navigation}: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>loading...</Text>
+        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     );
   }
 
   if (completed) {
+    const percentage = Math.round((correctCount / questions.length) * 100);
     return (
       <View style={commonStyles.container}>
         <View style={styles.header}>
@@ -106,12 +109,12 @@ export default function TestScreen({route, navigation}: any) {
         </View>
           <View style={styles.completedContainer}>
             <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
-            <Text style={styles.completedTitle}> Test Complete!</Text>
+            <Text style={styles.completedTitle}>{t('modes.test.sessionComplete')}</Text>
             <Text style={styles.completedText}>
-              Score: {correctCount} / {questions.length} ({Math.round((correctCount / questions.length) * 100)}%)
+              {t('modes.test.score', { correct: correctCount, total: questions.length, percentage })}
             </Text>
             <TouchableOpacity style={commonStyles.button} onPress={handleBack}>
-              <Text style={commonStyles.buttonText}>Done</Text>
+              <Text style={commonStyles.buttonText}>{t('common.done')}</Text>
             </TouchableOpacity>
         </View>
       </View>
@@ -124,7 +127,7 @@ export default function TestScreen({route, navigation}: any) {
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <Text style={styles.progress}>
-          {currentIndex + 1} / {questions.length}
+          {t('study.progress', { current: currentIndex + 1, total: questions.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
           <Ionicons name="close" size={28} color={COLORS.text} />
@@ -133,7 +136,7 @@ export default function TestScreen({route, navigation}: any) {
 
       <View style={styles.testContainer}>
         <View style={[commonStyles.card, styles.questionCard]}>
-          <Text style={styles.cardLabel}>Question</Text>
+          <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
           <Text style={styles.cardText}>{currentQuestion.card.front}</Text>
         </View>
 
@@ -174,7 +177,7 @@ export default function TestScreen({route, navigation}: any) {
             onPress={handleNext}
           >
             <Text style={commonStyles.buttonText}>
-              {currentIndex + 1 >= questions.length ? 'Finish' : 'Next'}
+              {currentIndex + 1 >= questions.length ? t('common.finish') : t('common.next')}
             </Text>
           </TouchableOpacity>
         )}

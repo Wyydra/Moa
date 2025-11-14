@@ -1,0 +1,109 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "loading": "Chargement...",
+    "done": "Terminé",
+    "next": "Suivant",
+    "finish": "Terminer"
+  },
+  "home": {
+    "title": "Accueil",
+    "welcome": "Bienvenue sur MOA",
+    "todaysReviews": "Révisions du jour",
+    "cardsDue": "cartes à réviser",
+    "startReviewing": "Commencer à réviser"
+  },
+  "library": {
+    "title": "Bibliothèque",
+    "noDecks": "Aucun paquet",
+    "createFirstDeck": "Créer votre premier paquet",
+    "cardCount": "{{count}} cartes",
+    "deleteDeck": "Supprimer le paquet",
+    "deleteDeckConfirm": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les {{count}} cartes de ce paquet."
+  },
+  "deck": {
+    "cards": "cartes",
+    "createDeck": "Créer un paquet",
+    "editDeck": "Modifier le paquet",
+    "deleteDeck": "Supprimer le paquet",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les {{count}} cartes de ce paquet.",
+    "deckName": "Nom du paquet",
+    "description": "Description (Optionnel)",
+    "descriptionPlaceholder": "Salutations coréennes courantes",
+    "totalCards": "Total de cartes",
+    "dueForReview": "À réviser",
+    "startStudying": "Commencer à étudier",
+    "noCards": "Aucune carte dans ce paquet",
+    "addFirstCard": "Ajouter votre première carte"
+  },
+  "card": {
+    "addCard": "Ajouter une carte",
+    "editCard": "Modifier la carte",
+    "deleteCard": "Supprimer la carte",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette carte ?",
+    "front": "Recto",
+    "back": "Verso",
+    "saveCard": "Enregistrer la carte",
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "study": {
+    "chooseMode": "Choisir un mode d'étude",
+    "sessionComplete": "Session d'étude terminée !",
+    "noDueCards": "Aucune carte à réviser",
+    "reviewedCards": "{{count}} cartes révisées",
+    "progress": "{{current}} / {{total}}"
+  },
+  "modes": {
+    "learn": {
+      "title": "Apprendre",
+      "description": "Révisez les cartes avec répétition espacée"
+    },
+    "write": {
+      "title": "Écrire",
+      "description": "Tapez les réponses",
+      "yourAnswer": "Votre réponse",
+      "writeByHand": "Écrire à la main",
+      "submit": "Soumettre la réponse",
+      "correct": "Correct !",
+      "incorrect": "Incorrect",
+      "correctAnswer": "Réponse correcte",
+      "sessionComplete": "Session d'écriture terminée !",
+      "score": "Score : {{correct}} / {{total}} ({{percentage}}%)"
+    },
+    "test": {
+      "title": "Test",
+      "description": "Répondez à un quiz à choix multiples",
+      "question": "Question",
+      "sessionComplete": "Test terminé !",
+      "score": "Score : {{correct}} / {{total}} ({{percentage}}%)"
+    },
+    "match": {
+      "title": "Associer",
+      "description": "Associez les termes et définitions"
+    },
+    "spell": {
+      "title": "Épeler",
+      "description": "Écoutez et tapez ce que vous entendez (prochainement)"
+    }
+  },
+  "flashcard": {
+    "question": "Question",
+    "answer": "Réponse",
+    "showAnswer": "Afficher la réponse",
+    "again": "Encore",
+    "hard": "Difficile",
+    "good": "Bien",
+    "easy": "Facile"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appLanguage": "Langue de l'application",
+    "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
+    "handwritingLanguage": "Langue d'écriture manuscrite",
+    "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite"
+  }
+}

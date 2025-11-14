@@ -3,6 +3,8 @@ import { Card, Deck } from "./model";
 
 const DECKS_KEY = '@moa_decks';
 const CARDS_KEY = '@moa_cards';
+const LANGUAGE_PREF_KEY = '@moa_language_preference';
+const HANDWRITING_LANG_KEY = '@moa_handwriting_language';
 
 export const generateId = (): string => {
   return Date.now().toString() + Math.random().toString(36).substring(2,9);
@@ -189,5 +191,42 @@ export const initializeStorage = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('Error initializing storage:', error);
+  }
+};
+
+export const getLanguagePreference = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(LANGUAGE_PREF_KEY);
+  } catch (error) {
+    console.error('Error loading language preference:', error);
+    return null;
+  }
+};
+
+export const saveLanguagePreference = async (language: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(LANGUAGE_PREF_KEY, language);
+  } catch (error) {
+    console.error('Error saving language preference:', error);
+    throw error;
+  }
+};
+
+export const getHandwritingLanguage = async (): Promise<string | null> => {
+  try {
+    const lang = await AsyncStorage.getItem(HANDWRITING_LANG_KEY);
+    return lang || 'ko';
+  } catch (error) {
+    console.error('Error loading handwriting language:', error);
+    return 'ko';
+  }
+};
+
+export const saveHandwritingLanguage = async (language: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(HANDWRITING_LANG_KEY, language);
+  } catch (error) {
+    console.error('Error saving handwriting language:', error);
+    throw error;
   }
 };

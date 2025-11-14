@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { useCallback, useState } from "react";
 import { Deck } from "../data/model";
@@ -8,6 +9,7 @@ import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 
 export default function LibraryScreen({navigation}: any) {
+  const { t } = useTranslation();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
@@ -57,15 +59,15 @@ export default function LibraryScreen({navigation}: any) {
 
   const handleDeleteDeck = (deck: Deck) => {
     Alert.alert(
-      'Delete Deck',
-      `Are you sure you want to delete "${deck.name}"? This will also delete all ${deck.cardCount} cards in this deck.`,
+      t('library.deleteDeck'),
+      t('library.deleteDeckConfirm', { name: deck.name, count: deck.cardCount }),
       [
         {
-          text: 'Cancel',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           onPress: async () => {
             await deleteDeck(deck.id);
             loadDecks();
@@ -84,7 +86,7 @@ export default function LibraryScreen({navigation}: any) {
       <View style={styles.deckContent}>
         <View style={styles.deckInfo}>
           <Text style={styles.deckName}>{item.name}</Text>
-          <Text style={styles.deckCount}>{item.cardCount} cards</Text>
+          <Text style={styles.deckCount}>{t('library.cardCount', { count: item.cardCount })}</Text>
         </View>
         <TouchableOpacity
           onPress={() => handleDeckMenu(item)}
@@ -99,16 +101,16 @@ export default function LibraryScreen({navigation}: any) {
 
   return (
      <View style={commonStyles.container}>
-      <Text style={commonStyles.screenTitle}>Library</Text>
+      <Text style={commonStyles.screenTitle}>{t('library.title')}</Text>
 
       {decks.length === 0 ? (
         <>
-          <Text style={commonStyles.emptyText}>No decks yet</Text>
+          <Text style={commonStyles.emptyText}>{t('library.noDecks')}</Text>
           <TouchableOpacity
             style={[commonStyles.button, styles.createButton]}
             onPress={handleCreateDeck}
           >
-            <Text style={commonStyles.buttonText}>Create Your First Deck</Text>
+            <Text style={commonStyles.buttonText}>{t('library.createFirstDeck')}</Text>
           </TouchableOpacity>
         </>
       ) : (
@@ -138,12 +140,12 @@ export default function LibraryScreen({navigation}: any) {
           <View style={styles.actionSheet}>
             <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
               <Ionicons name="create-outline" size={24} color={COLORS.text} />
-              <Text style={styles.actionText}>Edit</Text>
+              <Text style={styles.actionText}>{t('common.edit')}</Text>
             </TouchableOpacity>
             <View style={styles.actionDivider} />
             <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
               <Ionicons name="trash-outline" size={24} color="#FF3B30" />
-              <Text style={[styles.actionText, styles.deleteText]}>Delete</Text>
+              <Text style={[styles.actionText, styles.deleteText]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>

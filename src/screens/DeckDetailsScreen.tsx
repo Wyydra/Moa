@@ -1,4 +1,5 @@
 import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { deleteDeck, getCardsByDeck, getDeckById, getDueCards } from "../data/st
 import { Card, Deck } from "../data/model";
 
 export default function DeckDetailsScreen({ route, navigation }: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<Card[]>([]);
@@ -43,16 +45,15 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
 
   const handleDeleteDeck = () => {
     Alert.alert(
-      'Delete Deck',
-      `Are you sure you want to delete "${deck?.name}"? This will also delete all ${cards.length} cards in
-      this deck.`,
+      t('deck.deleteDeck'),
+      t('deck.deleteConfirm', { name: deck?.name, count: cards.length }),
       [
         {
-          text: 'Cancel',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           onPress: async () => {
             await deleteDeck(deckId);
             navigation.goBack();
@@ -84,7 +85,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   if (!deck) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>Loading...</Text>
+        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -109,12 +110,12 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{cards.length}</Text>
-          <Text style={styles.statLabel}>Total Cards</Text>
+          <Text style={styles.statLabel}>{t('deck.totalCards')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, dueCount > 0 && styles.statNumberDue]}>{dueCount}</Text>
-          <Text style={styles.statLabel}>Due for Review</Text>
+          <Text style={styles.statLabel}>{t('deck.dueForReview')}</Text>
         </View>
       </View>
 
@@ -127,17 +128,17 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         onPress={() => setShowModePicker(true)}
       >
         <Ionicons name="school-outline" size={20} color="white" style={{ marginRight: 8 }} />
-        <Text style={commonStyles.buttonText}>Start Studying</Text>
+        <Text style={commonStyles.buttonText}>{t('deck.startStudying')}</Text>
       </TouchableOpacity>
 
       {cards.length === 0 ? (
         <>
-          <Text style={commonStyles.emptyText}>No cards in this deck</Text>
+          <Text style={commonStyles.emptyText}>{t('deck.noCards')}</Text>
           <TouchableOpacity
             style={[commonStyles.button, styles.addButton]}
             onPress={handleAddCard}
           >
-            <Text style={commonStyles.buttonText}>Add Your First Card</Text>
+            <Text style={commonStyles.buttonText}>{t('deck.addFirstCard')}</Text>
           </TouchableOpacity>
         </>
       ) : (
@@ -165,7 +166,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         <View style={commonStyles.modalOverlay}>
           <View style={commonStyles.modalContent}>
             <View style={commonStyles.modalHeader}>
-              <Text style={commonStyles.modalTitle}>Choose Study Mode</Text>
+              <Text style={commonStyles.modalTitle}>{t('study.chooseMode')}</Text>
               <TouchableOpacity onPress={() => setShowModePicker(false)}>
                 <Text style={commonStyles.modalCloseButton}>✕</Text>
               </TouchableOpacity>
@@ -180,8 +181,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             >
               <Ionicons name="book-outline" size={24} color={COLORS.skyBlue} />
               <View style={styles.modeTextContainer}>
-                <Text style={styles.modeTitle}>Learn</Text>
-                <Text style={styles.modeDescription}>Review cards with spaced repetition</Text>
+                <Text style={styles.modeTitle}>{t('modes.learn.title')}</Text>
+                <Text style={styles.modeDescription}>{t('modes.learn.description')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -194,8 +195,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             >
               <Ionicons name="create-outline" size={24} color={COLORS.skyBlue} />
               <View style={styles.modeTextContainer}>
-                <Text style={styles.modeTitle}>Write</Text>
-                <Text style={styles.modeDescription}>Type out the answers</Text>
+                <Text style={styles.modeTitle}>{t('modes.write.title')}</Text>
+                <Text style={styles.modeDescription}>{t('modes.write.description')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -208,8 +209,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             >
               <Ionicons name="clipboard-outline" size={24} color={COLORS.skyBlue} />
               <View style={styles.modeTextContainer}>
-                <Text style={styles.modeTitle}>Test</Text>
-                <Text style={styles.modeDescription}>Take a multiple-choice quiz</Text>
+                <Text style={styles.modeTitle}>{t('modes.test.title')}</Text>
+                <Text style={styles.modeDescription}>{t('modes.test.description')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -222,8 +223,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             >
               <Ionicons name="git-compare-outline" size={24} color={COLORS.skyBlue} />
               <View style={styles.modeTextContainer}>
-                <Text style={styles.modeTitle}>Match</Text>
-                <Text style={styles.modeDescription}>Match terms and definitions</Text>
+                <Text style={styles.modeTitle}>{t('modes.match.title')}</Text>
+                <Text style={styles.modeDescription}>{t('modes.match.description')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -233,8 +234,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             >
               <Ionicons name="mic-outline" size={24} color={COLORS.textLight} />
               <View style={styles.modeTextContainer}>
-                <Text style={[styles.modeTitle, styles.modeDisabled]}>Spell</Text>
-                <Text style={[styles.modeDescription, styles.modeDisabled]}>Listen and type what you hear (coming soon)</Text>
+                <Text style={[styles.modeTitle, styles.modeDisabled]}>{t('modes.spell.title')}</Text>
+                <Text style={[styles.modeDescription, styles.modeDisabled]}>{t('modes.spell.description')}</Text>
               </View>
             </TouchableOpacity>
           </View>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../utils/constants';
@@ -7,6 +8,7 @@ import { saveDeck, generateId } from '../data/storage';
 import { Deck } from "../data/model";
 
 export default function CreateDeckScreen({ navigation }: any) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
@@ -35,13 +37,13 @@ return (
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <View style={styles.spacer} />
-        <Text style={commonStyles.screenTitle}>Create Deck</Text>
+        <Text style={commonStyles.screenTitle}>{t('deck.createDeck')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
-      <Text style={commonStyles.label}>Deck Name</Text>
+      <Text style={commonStyles.label}>{t('deck.deckName')}</Text>
       <TextInput
         style={commonStyles.input}
         value={name}
@@ -49,11 +51,12 @@ return (
         autoFocus
       />
 
-      <Text style={commonStyles.label}>Description (Optional)</Text>
+      <Text style={commonStyles.label}>{t('deck.description')}</Text>
       <TextInput
         style={[commonStyles.input, styles.descriptionInput]}
         value={description}
         onChangeText={setDescription}
+        placeholder={t('deck.descriptionPlaceholder')}
         multiline
         numberOfLines={3}
       />
@@ -62,7 +65,7 @@ return (
         style={[commonStyles.button, styles.saveButton]}
         onPress={handleSave}
       >
-        <Text style={commonStyles.buttonText}>Create Deck</Text>
+        <Text style={commonStyles.buttonText}>{t('deck.createDeck')}</Text>
       </TouchableOpacity>
     </View>
   );

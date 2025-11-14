@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { getCardsByDeck } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal } from "react-native";
@@ -8,6 +9,7 @@ import { COLORS, SPACING } from '../utils/constants';
 import { HandwritingCanvas } from '../components/HandwritingCanvas';
 
 export default function WriteScreen({route, navigation}: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,12 +67,13 @@ export default function WriteScreen({route, navigation}: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>Loading...</Text>
+        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     );
   }
 
   if (completed) {
+    const percentage = Math.round((correctCount / cards.length) * 100);
     return (
       <View style={commonStyles.container}>
         <View style={styles.header}>
@@ -81,12 +84,12 @@ export default function WriteScreen({route, navigation}: any) {
         </View>
         <View style={styles.completedContainer}>
           <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
-          <Text style={styles.completedTitle}>Write Session Complete!</Text>
+          <Text style={styles.completedTitle}>{t('modes.write.sessionComplete')}</Text>
           <Text style={styles.completedText}>
-            Score: {correctCount} / {cards.length} ({Math.round((correctCount / cards.length) * 100)}%)
+            {t('modes.write.score', { correct: correctCount, total: cards.length, percentage })}
           </Text>
           <TouchableOpacity style={commonStyles.button} onPress={handleBack}>
-            <Text style={commonStyles.buttonText}>Done</Text>
+            <Text style={commonStyles.buttonText}>{t('common.done')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -99,7 +102,7 @@ export default function WriteScreen({route, navigation}: any) {
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <Text style={styles.progress}>
-          {currentIndex + 1} / {cards.length}
+          {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
           <Ionicons name="close" size={28} color={COLORS.text} />
@@ -108,13 +111,13 @@ export default function WriteScreen({route, navigation}: any) {
 
       <View style={styles.cardContainer}>
         <View style={[commonStyles.card, styles.questionCard]}>
-          <Text style={styles.cardLabel}>Question</Text>
+          <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
           <Text style={styles.cardText}>{currentCard.front}</Text>
         </View>
 
         <View style={styles.answerSection}>
           <View style={styles.answerHeader}>
-            <Text style={styles.answerLabel}>Your Answer</Text>
+            <Text style={styles.answerLabel}>{t('modes.write.yourAnswer')}</Text>
             <TouchableOpacity
               onPress={() => setShowHandwriting(true)}
               style={styles.handwritingButton}
@@ -122,7 +125,7 @@ export default function WriteScreen({route, navigation}: any) {
             >
               <Ionicons name="brush-outline" size={20} color={showResult ? COLORS.textLight : COLORS.skyBlue} />
               <Text style={[styles.handwritingButtonText, showResult && styles.handwritingButtonDisabled]}>
-                Write by hand
+                {t('modes.write.writeByHand')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -150,12 +153,12 @@ export default function WriteScreen({route, navigation}: any) {
                 color="white" 
               />
               <Text style={styles.resultText}>
-                {isCorrect ? 'Correct!' : 'Incorrect'}
+                {t(isCorrect ? 'modes.write.correct' : 'modes.write.incorrect')}
               </Text>
             </View>
             {!isCorrect && (
               <View style={styles.correctAnswerBox}>
-                <Text style={styles.correctAnswerLabel}>Correct answer:</Text>
+                <Text style={styles.correctAnswerLabel}>{t('modes.write.correctAnswer')}:</Text>
                 <Text style={styles.correctAnswerText}>{currentCard.back}</Text>
               </View>
             )}
@@ -168,7 +171,7 @@ export default function WriteScreen({route, navigation}: any) {
             onPress={handleSubmit}
             disabled={!userAnswer.trim()}
           >
-            <Text style={commonStyles.buttonText}>Submit</Text>
+            <Text style={commonStyles.buttonText}>{t('modes.write.submit')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity 
@@ -176,7 +179,7 @@ export default function WriteScreen({route, navigation}: any) {
             onPress={handleNext}
           >
             <Text style={commonStyles.buttonText}>
-              {currentIndex + 1 >= cards.length ? 'Finish' : 'Next'}
+              {currentIndex + 1 >= cards.length ? t('common.finish') : t('common.next')}
             </Text>
           </TouchableOpacity>
         )}
@@ -191,7 +194,7 @@ export default function WriteScreen({route, navigation}: any) {
         <View style={commonStyles.modalOverlay}>
           <View style={commonStyles.modalContent}>
             <View style={commonStyles.modalHeader}>
-              <Text style={commonStyles.modalTitle}>Write by Hand</Text>
+              <Text style={commonStyles.modalTitle}>{t('modes.write.writeByHand')}</Text>
               <TouchableOpacity onPress={() => setShowHandwriting(false)}>
                 <Text style={commonStyles.modalCloseButton}>✕</Text>
               </TouchableOpacity>

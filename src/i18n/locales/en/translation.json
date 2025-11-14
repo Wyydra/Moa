@@ -1,0 +1,109 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "done": "Done",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome to MOA",
+    "todaysReviews": "Today's Reviews",
+    "cardsDue": "cards due",
+    "startReviewing": "Start Reviewing"
+  },
+  "library": {
+    "title": "Library",
+    "noDecks": "No decks yet",
+    "createFirstDeck": "Create Your First Deck",
+    "cardCount": "{{count}} cards",
+    "deleteDeck": "Delete Deck",
+    "deleteDeckConfirm": "Are you sure you want to delete \"{{name}}\"? This will also delete all {{count}} cards in this deck."
+  },
+  "deck": {
+    "cards": "cards",
+    "createDeck": "Create Deck",
+    "editDeck": "Edit Deck",
+    "deleteDeck": "Delete Deck",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This will also delete all {{count}} cards in this deck.",
+    "deckName": "Deck Name",
+    "description": "Description (Optional)",
+    "descriptionPlaceholder": "Common Korean greetings",
+    "totalCards": "Total Cards",
+    "dueForReview": "Due for Review",
+    "startStudying": "Start Studying",
+    "noCards": "No cards in this deck",
+    "addFirstCard": "Add Your First Card"
+  },
+  "card": {
+    "addCard": "Add Card",
+    "editCard": "Edit Card",
+    "deleteCard": "Delete Card",
+    "deleteConfirm": "Are you sure you want to delete this card?",
+    "front": "Front",
+    "back": "Back",
+    "saveCard": "Save Card",
+    "saveChanges": "Save Changes"
+  },
+  "study": {
+    "chooseMode": "Choose Study Mode",
+    "sessionComplete": "Study Session Complete!",
+    "noDueCards": "No cards due for review",
+    "reviewedCards": "Reviewed {{count}} cards",
+    "progress": "{{current}} / {{total}}"
+  },
+  "modes": {
+    "learn": {
+      "title": "Learn",
+      "description": "Review cards with spaced repetition"
+    },
+    "write": {
+      "title": "Write",
+      "description": "Type out the answers",
+      "yourAnswer": "Your Answer",
+      "writeByHand": "Write by hand",
+      "submit": "Submit Answer",
+      "correct": "Correct!",
+      "incorrect": "Incorrect",
+      "correctAnswer": "Correct Answer",
+      "sessionComplete": "Write Session Complete!",
+      "score": "Score: {{correct}} / {{total}} ({{percentage}}%)"
+    },
+    "test": {
+      "title": "Test",
+      "description": "Take a multiple-choice quiz",
+      "question": "Question",
+      "sessionComplete": "Test Complete!",
+      "score": "Score: {{correct}} / {{total}} ({{percentage}}%)"
+    },
+    "match": {
+      "title": "Match",
+      "description": "Match terms and definitions"
+    },
+    "spell": {
+      "title": "Spell",
+      "description": "Listen and type what you hear (coming soon)"
+    }
+  },
+  "flashcard": {
+    "question": "Question",
+    "answer": "Answer",
+    "showAnswer": "Show Answer",
+    "again": "Again",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy"
+  },
+  "settings": {
+    "title": "Settings",
+    "appLanguage": "App Language",
+    "appLanguageDescription": "Select the language for the app interface",
+    "handwritingLanguage": "Handwriting Language",
+    "handwritingLanguageDescription": "Select the language model for handwriting recognition"
+  }
+}

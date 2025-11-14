@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { getDeckById, saveDeck } from "../data/storage";
 import { View, Alert, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -6,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from '../utils/constants';
 
 export default function EditDeckScreen({ route, navigation}: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -46,7 +48,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}> Loading... </Text>
+        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     )
   }
@@ -54,27 +56,26 @@ return (
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <View style={styles.spacer} />
-        <Text style={commonStyles.screenTitle}>Edit Deck</Text>
+        <Text style={commonStyles.screenTitle}>{t('deck.editDeck')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
-      <Text style={commonStyles.label}>Deck Name</Text>
+      <Text style={commonStyles.label}>{t('deck.deckName')}</Text>
       <TextInput
         style={commonStyles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Basic Greetings"
         autoFocus
       />
 
-      <Text style={commonStyles.label}>Description (Optional)</Text>
+      <Text style={commonStyles.label}>{t('deck.description')}</Text>
       <TextInput
         style={[commonStyles.input, styles.descriptionInput]}
         value={description}
         onChangeText={setDescription}
-        placeholder="Common Korean greetings"
+        placeholder={t('deck.descriptionPlaceholder')}
         multiline
         numberOfLines={3}
       />
@@ -83,7 +84,7 @@ return (
         style={[commonStyles.button, styles.saveButton]}
         onPress={handleSave}
       >
-        <Text style={commonStyles.buttonText}>Save Changes</Text>
+        <Text style={commonStyles.buttonText}>{t('card.saveChanges')}</Text>
       </TouchableOpacity>
     </View>
   );

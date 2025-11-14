@@ -6,6 +6,7 @@ import { ValidationResult } from '../utils/strokeOrder/types';
 import { StrokeOrderFeedback, FeedbackMessage } from './StrokeOrderFeedback';
 import { StrokeGuide, StrokeAnimation, AnimationControls } from './StrokeAnimation';
 import { isCharacterSupported, decomposeHangul } from '../utils/strokeOrder/database';
+import { getHandwritingLanguage } from '../data/storage';
 
 const { HandwritingModule } = NativeModules;
 
@@ -59,30 +60,42 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
   const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
-    initializeKoreanModel();
+    initializeHandwritingModel();
   }, []);
 
-  const initializeKoreanModel = async () => {
+  const getLanguageName = (code: string): string => {
+    const names: Record<string, string> = {
+      'ko': 'Korean',
+      'ja': 'Japanese',
+    };
+    return names[code] || code;
+  };
+
+  const initializeHandwritingModel = async () => {
     try {
-      setDownloadStatus('Checking for Korean model...');
-      const isDownloaded = await HandwritingModule.isModelDownloaded('ko');
+      const savedLanguage = await getHandwritingLanguage();
+      const languageCode = savedLanguage || 'ko';
+      const languageName = getLanguageName(languageCode);
+      
+      setDownloadStatus(`Checking for ${languageName} model...`);
+      const isDownloaded = await HandwritingModule.isModelDownloaded(languageCode);
       
       if (!isDownloaded) {
         Alert.alert(
           'Download Required',
-          'Korean language model needs to be downloaded. This may take a moment (approx. 20-30MB).',
+          `${languageName} language model needs to be downloaded. This may take a moment (approx. 20-30MB).`,
           [
             {
               text: 'Download',
               onPress: async () => {
                 try {
-                  setDownloadStatus('Downloading Korean model...');
-                  await HandwritingModule.downloadModel('ko');
+                  setDownloadStatus(`Downloading ${languageName} model...`);
+                  await HandwritingModule.downloadModel(languageCode);
                   setDownloadStatus('Initializing recognizer...');
-                  await HandwritingModule.initializeRecognizer('ko');
+                  await HandwritingModule.initializeRecognizer(languageCode);
                   setModelReady(true);
                   setDownloadStatus('Ready!');
-                  Alert.alert('Success', 'Korean model is ready to use!');
+                  Alert.alert('Success', `${languageName} model is ready to use!`);
                 } catch (error) {
                   console.error('Download error:', error);
                   setDownloadStatus('Download failed');
@@ -99,7 +112,7 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
         );
       } else {
         setDownloadStatus('Initializing recognizer...');
-        await HandwritingModule.initializeRecognizer('ko');
+        await HandwritingModule.initializeRecognizer(languageCode);
         setModelReady(true);
         setDownloadStatus('Ready!');
       }

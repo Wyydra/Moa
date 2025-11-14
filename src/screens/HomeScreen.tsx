@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { COLORS, SPACING } from '../utils/constants';
 import { commonStyles } from '../styles/commonStyles';
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const reviewsDue = 0;
 
   return (
@@ -12,13 +14,13 @@ export default function HomeScreen() {
       </View>
 
       <View style={[commonStyles.card, styles.progressCard]}>
-        <Text style={styles.cardTitle}>Today's Reviews</Text>
+        <Text style={styles.cardTitle}>{t('home.todaysReviews')}</Text>
         <Text style={styles.cardNumber}>{reviewsDue}</Text>
-        <Text style={styles.cardSubtext}>cards due</Text>
+        <Text style={styles.cardSubtext}>{t('home.cardsDue')}</Text>
       </View>
 
       <TouchableOpacity style={[commonStyles.button, styles.startButton]}>
-        <Text style={commonStyles.buttonText}>Start Reviewing</Text>
+        <Text style={commonStyles.buttonText}>{t('home.startReviewing')}</Text>
       </TouchableOpacity>
     </View>
   );

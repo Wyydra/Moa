@@ -7,6 +7,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
 import EditCardScreen from './src/screens/EditCardScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
@@ -17,6 +18,8 @@ import WriteScreen from './src/screens/WriteScreen';
 import { useEffect } from 'react';
 import { initializeStorage } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
+import './src/i18n/config';
+import { useTranslation } from 'react-i18next';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -66,6 +69,8 @@ function LibraryStackNavigator() {
 }
 
 export default function App() {
+  const { t } = useTranslation();
+  
   useEffect(() => {
     initializeStorage();
   }, []);
@@ -86,6 +91,7 @@ export default function App() {
         name='Home'
         component={HomeScreen}
         options={{ 
+          tabBarLabel: t('home.title'),
           tabBarIcon: ({color, size}) => (
             <Ionicons name='home' size={size} color={color} />
           ),
@@ -95,8 +101,19 @@ export default function App() {
         name="Library"
         component={LibraryStackNavigator}
         options={{ 
+          tabBarLabel: t('library.title'),
           tabBarIcon: ({color, size}) => (
             <Ionicons name='library' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ 
+          tabBarLabel: t('settings.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='settings' size={size} color={color} />
           ),
         }}
       />

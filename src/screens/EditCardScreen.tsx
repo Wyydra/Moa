@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from '../utils/constants';
@@ -8,6 +9,7 @@ import { Card } from "../data/model";
 
 
 export default function EditCardScreen({ route, navigation }: any) {
+  const { t } = useTranslation();
   const { cardId } = route.params;
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -49,15 +51,15 @@ export default function EditCardScreen({ route, navigation }: any) {
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete Card",
-      "Are you sure you want to delete this card?",
+      t('card.deleteCard'),
+      t('card.deleteConfirm'),
       [
         {
-          text: "Cancel",
+          text: t('common.cancel'),
           style: "cancel"
         },
         {
-          text: "Delete",
+          text: t('common.delete'),
           style: "destructive",
           onPress: async () => {
             await deleteCard(cardId);
@@ -75,7 +77,7 @@ export default function EditCardScreen({ route, navigation }: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text>Loading...</Text>
+        <Text>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -86,13 +88,13 @@ export default function EditCardScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={24} color={COLORS.coral} />
         </TouchableOpacity>
-        <Text style={commonStyles.screenTitle}>Edit Card</Text>
+        <Text style={commonStyles.screenTitle}>{t('card.editCard')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
-      <Text style={commonStyles.label}>Front</Text>
+      <Text style={commonStyles.label}>{t('card.front')}</Text>
       <TextInput
         style={commonStyles.input}
         value={front}
@@ -100,7 +102,7 @@ export default function EditCardScreen({ route, navigation }: any) {
         autoFocus
       />
 
-      <Text style={commonStyles.label}>Back</Text>
+      <Text style={commonStyles.label}>{t('card.back')}</Text>
       <TextInput
         style={commonStyles.input}
         value={back}
@@ -111,7 +113,7 @@ export default function EditCardScreen({ route, navigation }: any) {
         style={[commonStyles.button, styles.saveButton]}
         onPress={handleSave}
       >
-        <Text style={commonStyles.buttonText}>Save Changes</Text>
+        <Text style={commonStyles.buttonText}>{t('card.saveChanges')}</Text>
       </TouchableOpacity>
     </View>
   );

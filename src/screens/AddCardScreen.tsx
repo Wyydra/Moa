@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
@@ -8,6 +9,7 @@ import { Card } from "../data/model";
 
 
 export default function AddCardScreen({ route, navigation }: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -41,13 +43,13 @@ export default function AddCardScreen({ route, navigation }: any) {
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <View style={styles.spacer} />
-        <Text style={commonStyles.screenTitle}>Add Card</Text>
+        <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
-      <Text style={commonStyles.label}>Front</Text>
+      <Text style={commonStyles.label}>{t('card.front')}</Text>
       <TextInput
         style={commonStyles.input}
         value={front}
@@ -55,7 +57,7 @@ export default function AddCardScreen({ route, navigation }: any) {
         autoFocus
       />
 
-      <Text style={commonStyles.label}>Back</Text>
+      <Text style={commonStyles.label}>{t('card.back')}</Text>
       <TextInput
         style={commonStyles.input}
         value={back}
@@ -66,7 +68,7 @@ export default function AddCardScreen({ route, navigation }: any) {
         style={[commonStyles.button, styles.saveButton]}
         onPress={handleSave}
       >
-        <Text style={commonStyles.buttonText}>Save Card</Text>
+        <Text style={commonStyles.buttonText}>{t('card.saveCard')}</Text>
       </TouchableOpacity>
     </View>
   );

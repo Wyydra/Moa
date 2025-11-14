@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { getDueCards, saveCard } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
@@ -8,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
 
 export default function StudyScreen({route, navigation}: any) {
+  const { t } = useTranslation();
   const { deckId } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,7 +55,7 @@ export default function StudyScreen({route, navigation}: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>Loading...</Text>
+        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     )
   }
@@ -69,12 +71,12 @@ if (completed) {
         </View>
         <View style={styles.completedContainer}>
           <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
-          <Text style={styles.completedTitle}>Study Session Complete!</Text>
+          <Text style={styles.completedTitle}>{t('study.sessionComplete')}</Text>
           <Text style={styles.completedText}>
-            {cards.length === 0 ? 'No cards due for review' : `Reviewed ${cards.length} cards`}
+            {cards.length === 0 ? t('study.noDueCards') : t('study.reviewedCards', { count: cards.length })}
           </Text>
           <TouchableOpacity style={commonStyles.button} onPress={handleBack}>
-            <Text style={commonStyles.buttonText}>Done</Text>
+            <Text style={commonStyles.buttonText}>{t('common.done')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -88,7 +90,7 @@ if (completed) {
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <Text style={styles.progress}>
-          {currentIndex + 1} / {cards.length}
+          {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
           <Ionicons name="close" size={28} color={COLORS.text} />
@@ -97,7 +99,7 @@ if (completed) {
 
       <View style={styles.cardContainer}>
         <View style={[commonStyles.card, styles.flashcard]}>
-          <Text style={styles.cardLabel}>{showBack ? 'Answer' : 'Question'}</Text>
+          <Text style={styles.cardLabel}>{showBack ? t('flashcard.answer') : t('flashcard.question')}</Text>
           <Text style={styles.cardText}>
             {showBack ? currentCard.back : currentCard.front}
           </Text>
@@ -105,7 +107,7 @@ if (completed) {
 
         {!showBack ? (
           <TouchableOpacity style={[commonStyles.button, styles.showButton]} onPress={handleFlip}>
-            <Text style={commonStyles.buttonText}>Show Answer</Text>
+            <Text style={commonStyles.buttonText}>{t('flashcard.showAnswer')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.responseButtons}>
@@ -113,7 +115,7 @@ if (completed) {
               style={[styles.responseButton, styles.againButton]}
               onPress={() => handleResponse(StudyResponse.Again)}
             >
-              <Text style={styles.responseButtonText}>Again</Text>
+              <Text style={styles.responseButtonText}>{t('flashcard.again')}</Text>
               <Text style={styles.responseTime}>{'<1m'}</Text>
             </TouchableOpacity>
 
@@ -121,7 +123,7 @@ if (completed) {
               style={[styles.responseButton, styles.hardButton]}
               onPress={() => handleResponse(StudyResponse.Hard)}
             >
-              <Text style={styles.responseButtonText}>Hard</Text>
+              <Text style={styles.responseButtonText}>{t('flashcard.hard')}</Text>
               <Text style={styles.responseTime}>
                 {currentCard.repetitions === 0 ? '<1h' : '<10m'}
               </Text>
@@ -131,7 +133,7 @@ if (completed) {
               style={[styles.responseButton, styles.goodButton]}
               onPress={() => handleResponse(StudyResponse.Good)}
             >
-              <Text style={styles.responseButtonText}>Good</Text>
+              <Text style={styles.responseButtonText}>{t('flashcard.good')}</Text>
               <Text style={styles.responseTime}>
                 {currentCard.repetitions === 0 ? '1d' : '6d'}
               </Text>
@@ -141,7 +143,7 @@ if (completed) {
               style={[styles.responseButton, styles.easyButton]}
               onPress={() => handleResponse(StudyResponse.Easy)}
             >
-              <Text style={styles.responseButtonText}>Easy</Text>
+              <Text style={styles.responseButtonText}>{t('flashcard.easy')}</Text>
               <Text style={styles.responseTime}>4d</Text>
             </TouchableOpacity>
           </View>
