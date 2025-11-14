@@ -5,8 +5,10 @@ import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { deleteDeck, getCardsByDeck, getDeckById, getDueCards } from "../data/storage";
+import { deleteDeck, exportDeckToJSON, getCardsByDeck, getDeckById, getDueCards } from "../data/storage";
 import { Card, Deck } from "../data/model";
+import { encodeDeckToUrl as encodeDeckToURL } from "../utils/deepLinking";
+import QRCode from 'react-native-qrcode-svg';
 
 export default function DeckDetailsScreen({ route, navigation }: any) {
   const { t } = useTranslation();
@@ -15,6 +17,8 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   const [cards, setCards] = useState<Card[]>([]);
   const [dueCount, setDueCount] = useState(0);
   const [showModePicker, setShowModePicker] = useState(false);
+  const [deckJSON, setDeckJSON] = useState<string>('');
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const loadDeckAndCards = async () => {
     const loadedDeck = await getDeckById(deckId);
@@ -64,6 +68,28 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
     );
   };
 
+  const handleShareDeck = async () => {
+    try {
+      console.log('Starting deck export for deckId:', deckId);
+      const json = await exportDeckToJSON(deckId);
+      console.log('Exported JSON length:', json.length);
+      console.log('First 100 chars:', json.substring(0, 100));
+      
+      const deepLink = encodeDeckToURL(json);
+      console.log('Generated deep link:', deepLink);
+      console.log('Deep link length:', deepLink.length);
+      
+      setDeckJSON(deepLink);
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert(
+        t('common.error'), 
+        `${t('deck.exportError')}\n\nDebug: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
   const handleEditCard = (card: Card) => {
     navigation.navigate('EditCard', { deckId, cardId: card.id });
   };
@@ -98,6 +124,9 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         </TouchableOpacity>
         <Text style={[commonStyles.screenTitle, styles.title]}>{deck.name}</Text>
         <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleShareDeck} style={styles.actionButton}>
+            <Ionicons name="share-outline" size={24} color={COLORS.skyBlue} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleEditDeck} style={styles.actionButton}>
             <Ionicons name="create-outline" size={24} color={COLORS.text} />
           </TouchableOpacity>
@@ -237,6 +266,43 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 <Text style={[styles.modeTitle, styles.modeDisabled]}>{t('modes.spell.title')}</Text>
                 <Text style={[styles.modeDescription, styles.modeDisabled]}>{t('modes.spell.description')}</Text>
               </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showQRModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowQRModal(false)}
+      >
+        <View style={commonStyles.modalOverlay}>
+          <View style={[commonStyles.modalContent, styles.qrModal]}>
+            <View style={commonStyles.modalHeader}>
+              <Text style={commonStyles.modalTitle}>{t('deck.shareTitle')}</Text>
+              <TouchableOpacity onPress={() => setShowQRModal(false)}>
+                <Text style={commonStyles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+          <View style={styles.qrContainer}>
+            <QRCode
+              value={deckJSON}
+              size={250}
+              backgroundColor="white"
+            />
+          </View>
+
+              <Text style={styles.qrInstructions}>
+                {t('deck.scanInstructions')}
+              </Text>
+
+              <TouchableOpacity
+                style={commonStyles.button}
+                onPress={() => setShowQRModal(false)}
+              >
+              <Text style={commonStyles.buttonText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -387,5 +453,22 @@ const styles = StyleSheet.create({
   },
   modeDisabled: {
     color: COLORS.textLight,
+  },
+  qrModal: {
+    alignItems: 'center',
+    minHeight: 400,
+  },
+  qrContainer: {
+    backgroundColor: 'white',
+    padding: SPACING.lg,
+    borderRadius: 12,
+    marginVertical: SPACING.lg,
+  },
+  qrInstructions: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.md,
   },
 });

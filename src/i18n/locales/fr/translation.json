@@ -8,7 +8,10 @@
     "loading": "Chargement...",
     "done": "Terminé",
     "next": "Suivant",
-    "finish": "Terminer"
+    "finish": "Terminer",
+    "success": "Succès",
+    "error": "Erreur",
+    "ok": "OK"
   },
   "home": {
     "title": "Accueil",
@@ -38,7 +41,12 @@
     "dueForReview": "À réviser",
     "startStudying": "Commencer à étudier",
     "noCards": "Aucune carte dans ce paquet",
-    "addFirstCard": "Ajouter votre première carte"
+    "addFirstCard": "Ajouter votre première carte",
+    "shareTitle": "Partager le paquet",
+    "scanInstructions": "Scannez ce code QR avec n'importe quelle application caméra pour importer ce paquet dans Moa",
+    "exportError": "Échec de l'exportation du paquet",
+    "importSuccess": "Paquet importé : {{name}}",
+    "importError": "Échec de l'importation du paquet"
   },
   "card": {
     "addCard": "Ajouter une carte",

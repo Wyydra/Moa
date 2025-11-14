@@ -230,3 +230,89 @@ export const saveHandwritingLanguage = async (language: string): Promise<void> =
     throw error;
   }
 };
+
+export interface ExportedDeck {
+  version: string;
+  deck: {
+    name: string;
+    description?: string;
+  };
+  cards: {
+    front: string;
+    back: string;
+  }[];
+  exportedAt: number;
+}
+
+export const exportDeckToJSON = async (deckId: string): Promise<string> => {
+  try {
+    const deck = await getDeckById(deckId);
+    const cards = await getCardsByDeck(deckId);
+
+    if (!deck) {
+      throw new Error('Deck not found');
+    }
+
+    const exportData: ExportedDeck = {
+      version: '1.0',
+      deck: {
+        name: deck.name,
+        description: deck.description,
+      },
+      cards: cards.map(card => ({
+        front: card.front,
+        back: card.back,
+      })),
+      exportedAt: Date.now(),
+    };
+
+    return JSON.stringify(exportData);
+  } catch (error) {
+    console.error('Error exporting deck:', error);
+    throw error;
+  }
+}
+
+export const importDeckFromJSON = async (jsonString: string): Promise<string> => {
+  try {
+    const exportData: ExportedDeck = JSON.parse(jsonString);
+
+    if (!exportData.version || !exportData.deck || !exportData.cards) {
+      throw new Error('Invalid deck format');
+    }
+
+    const now = Date.now();
+    const newDeckId = generateId();
+
+    const newDeck: Deck = {
+      id: newDeckId,
+      name: exportData.deck.name,
+      description: exportData.deck.description,
+      createdAt: now,
+      cardCount: exportData.cards.length,
+    };
+
+    const newCards: Card[] = exportData.cards.map(cardData => ({
+      id: generateId(),
+      front: cardData.front,
+      back: cardData.back,
+      deckId: newDeckId,
+      nextReview: now,
+      interval: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      createdAt: now,
+    }));
+
+    await saveDeck(newDeck);
+
+    for (const card of newCards) {
+      await saveCard(card);
+    }
+    
+    return newDeckId;
+  } catch (error) {
+    console.error('Error importing deck:', error);
+    throw error;
+  }
+}

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
+import { Link, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -20,6 +20,8 @@ import { initializeStorage } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
 import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
+import { handleImportURL } from './src/utils/deepLinking';
+import { t } from 'i18next';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -74,6 +76,42 @@ export default function App() {
   useEffect(() => {
     initializeStorage();
   }, []);
+
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      console.log('Deep link received:', event.url);
+      
+      if (event.url.startsWith('moa://import-deck')) {
+        console.log('Processing import-deck link...');
+        const result = await handleImportURL(event.url);
+        console.log('Import result:', result);
+
+        if (result.success) {
+          Alert.alert(
+            t('common.success'),
+            t('deck.importSuccess', { name: result.deckName }),
+            [{ text: t('common.ok')}]
+          );
+        } else {
+          Alert.alert(
+            t('common.error'),
+            `${result.error || t('deck.importError')}\n\nDebug info available in console`
+          );
+        }
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log('Initial URL:', url);
+        handleDeepLink({ url });
+      }
+    });
+    return () => subscription.remove();
+  }, [t]);
+
   return (
   <NavigationContainer>
     <Tab.Navigator

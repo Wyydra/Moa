@@ -8,7 +8,10 @@
     "loading": "Loading...",
     "done": "Done",
     "next": "Next",
-    "finish": "Finish"
+    "finish": "Finish",
+    "success": "Success",
+    "error": "Error",
+    "ok": "OK"
   },
   "home": {
     "title": "Home",
@@ -38,7 +41,12 @@
     "dueForReview": "Due for Review",
     "startStudying": "Start Studying",
     "noCards": "No cards in this deck",
-    "addFirstCard": "Add Your First Card"
+    "addFirstCard": "Add Your First Card",
+    "shareTitle": "Share Deck",
+    "scanInstructions": "Scan this QR code with any camera app to import this deck into Moa",
+    "exportError": "Failed to export deck",
+    "importSuccess": "Imported deck: {{name}}",
+    "importError": "Failed to import deck"
   },
   "card": {
     "addCard": "Add Card",
