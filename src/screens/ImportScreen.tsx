@@ -61,12 +61,20 @@ export default function ImportScreen({ navigation }: any) {
         addDebugInfo(`Set data keys: ${Object.keys(setData).join(', ')}`);
       }
       
-      const terms = setData?.terms || data.terms || [];
+      const termsFromModels = data.responses?.[0]?.models?.term;
+      addDebugInfo(`Terms in models: ${termsFromModels ? Object.keys(termsFromModels).length : 0}`);
+      
+      let terms = [];
+      if (termsFromModels) {
+        terms = Object.values(termsFromModels);
+      } else {
+        terms = setData?.terms || data.terms || [];
+      }
+      
       addDebugInfo(`Terms found: ${terms.length}`);
       
        if (!terms || terms.length === 0) {
          addDebugInfo('Error: No terms in response');
-         addDebugInfo(`Full data structure: ${JSON.stringify(data).substring(0, 500)}`);
          Alert.alert(t('common.error'), t('import.error.notFound'));
          setLoading(false);
          return;
