@@ -48,15 +48,21 @@ Moa focuses on being calm, simple, and beautiful — a space where learning feel
 
 ### 🎧 Listening & Pronunciation
 
-* Play native audio for each word or sentence.
-* Practice by repeating out loud and comparing recordings.
+* **Text-to-Speech (TTS)** — Play pronunciation for any card with one tap.
+* **Language Detection** — Automatically detects Korean/Japanese for proper pronunciation.
+* **Speed Control** — Adjust playback speed (0.5x - 2.0x) for better comprehension.
+* **Auto-Pronunciation** — Optional setting to automatically play audio when card appears.
+* **Study Screen Integration** — Speaker button next to card text during review.
+* **List View Audio** — Quick pronunciation playback from deck card lists.
+* **Accessible Learning** — Helps auditory learners and improves pronunciation accuracy.
 
-### ✏️ Dictation Mode
+### ✏️ Spell Mode (Audio Dictation)
 
-* Listen to audio and write what you hear using handwriting input.
-* Automatic handwriting recognition converts your writing to text in real-time.
-* Get instant feedback on spelling and accuracy.
-* Combines listening comprehension with writing practice.
+* **Listen & Type** — Hear the word/phrase spoken and type what you hear.
+* **TTS Playback** — Text-to-speech plays the card content automatically.
+* **Spelling Validation** — Check your answer against the correct spelling.
+* **Handwriting Input** — Option to write by hand instead of typing.
+* **Combines Skills** — Listening comprehension + spelling accuracy + writing practice.
 
 ### 📤 Share & Discover
 
@@ -106,12 +112,13 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 
 | Layer        | Technology                   |
 | ------------ | ---------------------------- |
-| UI           | **React Native + Expo**      |
-| Core logic   | TypeScript                   |
-| Data storage | Local storage (AsyncStorage) |
-| Audio        | Expo AV                      |
-| Handwriting  | React Native Canvas          |
-| Sharing      | QR codes + Backend API       |
+| UI           | **React Native + Expo**          |
+| Core logic   | TypeScript                       |
+| Data storage | Local storage (AsyncStorage)     |
+| TTS          | Expo Speech                      |
+| Handwriting  | Google ML Kit Digital Ink       |
+| Recognition  | Native Android module (Kotlin)   |
+| Sharing      | QR codes + Deep Linking          |
 
 ### Architecture
 
@@ -182,6 +189,21 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
   - ✅ Text input field with handwriting button
   - ✅ Real-time recognition feedback
   - ✅ Answer validation and progress tracking
+- ✅ **Native ML Kit Integration** — Google ML Kit Digital Ink Recognition
+  - ✅ Custom Kotlin native module for Android
+  - ✅ Model download and management (Korean/Japanese)
+  - ✅ On-device recognition with stroke data
+  - ✅ Language selection in Settings
+  - ✅ Lifecycle management and error handling
+- ✅ **Internationalization** — Multi-language support
+  - ✅ English and French translations
+  - ✅ Settings screen for language switching
+  - ✅ React-i18next integration
+- ✅ **QR Code Deck Sharing** — Offline deck distribution
+  - ✅ Generate QR codes from decks
+  - ✅ Deep linking for deck import
+  - ✅ Share modal with QR display
+  - ✅ Deck export to JSON format
 
 ### In Progress
 
@@ -189,16 +211,21 @@ Moa aims to be *a space you enjoy opening*, not another task on your list.
 
 ### Planned Features
 
+- 📋 **Text-to-Speech Pronunciation** — Listen to card pronunciation
+  - ⏳ PronunciationButton component with language detection
+  - ⏳ Integration in StudyScreen, DeckDetailsScreen, TestScreen
+  - ⏳ Auto-pronunciation setting (play on card flip)
+  - ⏳ Speech rate control (0.5x - 2.0x)
+  - ⏳ Korean/Japanese language detection from text
+  - ⏳ Speaker icon with speaking state animation
 - ⏳ **Write Mode** — Type answers with spelling feedback
-- ⏳ **Spell Mode** — Audio-based spelling practice
+- ⏳ **Spell Mode** — Audio-based spelling practice with TTS
 - ⏳ **Test Mode** — Auto-generated quizzes
 - ⏳ **Match Mode** — Timed matching game
 - ⏳ **Progress Dashboard** — Stats, streaks, and achievements
 - ⏳ **Mini-Lessons** — Interactive learning modules
-- ⏳ **Audio & Pronunciation** — Native audio playback and recording
 - ⏳ **CSV Import/Export** — Bulk card management
 - ⏳ **Quizlet Import** — Import decks from Quizlet URLs
-- ⏳ **QR Code Sharing** — Share and receive decks via QR codes
 - ⏳ **Community Library** — Browse and rate shared content
 
 ---
