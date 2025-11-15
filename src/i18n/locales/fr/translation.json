@@ -112,20 +112,25 @@
      "good": "Bien",
      "easy": "Facile"
    },
-   "import": {
-     "title": "Importer un paquet",
-     "quizletUrl": "URL Quizlet",
-     "info": "Collez l'URL d'un ensemble Quizlet public pour l'importer",
-     "fetchDeck": "Récupérer le paquet",
-     "importing": "Importation du paquet...",
-     "cardCount": "cartes",
-     "preview": "Aperçu (3 premières cartes)",
-     "more": "et",
-     "import": "Importer le paquet",
-     "error": {
-       "emptyUrl": "Veuillez entrer une URL Quizlet"
-     }
-   },
+    "import": {
+      "title": "Importer un paquet",
+      "quizletUrl": "URL Quizlet",
+      "info": "Collez l'URL d'un ensemble Quizlet public pour l'importer",
+      "fetchDeck": "Récupérer le paquet",
+      "importing": "Importation du paquet...",
+      "cardCount": "cartes",
+      "preview": "Aperçu (3 premières cartes)",
+      "more": "et",
+      "import": "Importer le paquet",
+      "description": "Importé depuis Quizlet",
+      "error": {
+        "emptyUrl": "Veuillez entrer une URL Quizlet",
+        "invalidUrl": "URL Quizlet invalide",
+        "notFound": "Impossible de trouver le paquet",
+        "fetchFailed": "Impossible de récupérer le paquet. Assurez-vous qu'il s'agit d'un ensemble Quizlet public.",
+        "importFailed": "Échec de l'importation du paquet"
+      }
+    },
      "settings": {
       "title": "Paramètres",
       "appLanguage": "Langue de l'application",

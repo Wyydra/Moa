@@ -20,21 +20,21 @@ export default function ImportScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      const quizletId = extractQuizletId(url);
-      if (!quizletId) {
-        Alert.alert(t('common.error'), 'Invalid Quizlet URL');
-        setLoading(false);
-        return;
-      }
+       const quizletId = extractQuizletId(url);
+       if (!quizletId) {
+         Alert.alert(t('common.error'), t('import.error.invalidUrl'));
+         setLoading(false);
+         return;
+       }
 
       const response = await fetch(`https://quizlet.com/webapi/3.2/studiables/${quizletId}?client=web`);
       const data = await response.json();
       
-      if (!data.studiables || data.studiables.length === 0) {
-        Alert.alert(t('common.error'), 'Could not find deck');
-        setLoading(false);
-        return;
-      }
+       if (!data.studiables || data.studiables.length === 0) {
+         Alert.alert(t('common.error'), t('import.error.notFound'));
+         setLoading(false);
+         return;
+       }
 
       const deckName = data.set?.title || 'Imported Deck';
       const cards = data.studiables
@@ -50,10 +50,10 @@ export default function ImportScreen({ navigation }: any) {
         cards,
       });
     } catch (error) {
-      Alert.alert(t('common.error'), 'Failed to fetch deck. Make sure it\'s a public Quizlet set.');
-    } finally {
-      setLoading(false);
-    }
+       Alert.alert(t('common.error'), t('import.error.fetchFailed'));
+     } finally {
+       setLoading(false);
+     }
   };
 
   const extractQuizletId = (url: string): string | null => {
@@ -66,13 +66,13 @@ export default function ImportScreen({ navigation }: any) {
 
     try {
       setLoading(true);
-      const deckData = {
-        deck: {
-          id: `deck_${Date.now()}`,
-          name: preview.deckName,
-          description: 'Imported from Quizlet',
-          createdAt: new Date().toISOString(),
-        },
+       const deckData = {
+         deck: {
+           id: `deck_${Date.now()}`,
+           name: preview.deckName,
+           description: t('import.description'),
+           createdAt: new Date().toISOString(),
+         },
         cards: preview.cards.map((card: any, idx: number) => ({
           id: `card_${Date.now()}_${idx}`,
           deckId: `deck_${Date.now()}`,
@@ -93,11 +93,11 @@ export default function ImportScreen({ navigation }: any) {
           onPress: () => navigation.goBack(),
         },
       ]);
-    } catch (error) {
-      Alert.alert(t('common.error'), 'Failed to import deck');
-    } finally {
-      setLoading(false);
-    }
+     } catch (error) {
+       Alert.alert(t('common.error'), t('import.error.importFailed'));
+     } finally {
+       setLoading(false);
+     }
   };
 
   return (
