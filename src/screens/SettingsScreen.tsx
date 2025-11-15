@@ -39,9 +39,7 @@ export default function SettingsScreen({ navigation }: any) {
   };
 
   const handleImportDeck = () => {
-    navigation.getParent()?.navigate('Library', {
-      screen: 'ImportScreen'
-    });
+    navigation.navigate('ImportScreen');
   };
 
   const appLanguages = [

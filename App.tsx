@@ -27,6 +27,7 @@ import * as Font from 'expo-font';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
+const SettingsStack = createNativeStackNavigator();
 
 function LibraryStackNavigator() {
   return (
@@ -74,6 +75,19 @@ function LibraryStackNavigator() {
         options={{ presentation: 'modal'}}
         />
     </LibraryStack.Navigator>
+  )
+}
+
+function SettingsStackNavigator() {
+  return (
+    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+      <SettingsStack.Screen name='SettingsList' component={SettingsScreen} />
+      <SettingsStack.Screen
+        name='ImportScreen'
+        component={ImportScreen}
+        options={{ presentation: 'modal'}}
+        />
+    </SettingsStack.Navigator>
   )
 }
 
@@ -166,7 +180,7 @@ export default function App() {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsStackNavigator}
         options={{ 
           tabBarLabel: t('settings.title'),
           tabBarIcon: ({color, size}) => (
