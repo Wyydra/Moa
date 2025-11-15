@@ -36,10 +36,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
-
 # Devenv
 .devenv*
 devenv.local.nix
