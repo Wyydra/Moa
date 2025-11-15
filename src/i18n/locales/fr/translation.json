@@ -112,11 +112,12 @@
     "good": "Bien",
     "easy": "Facile"
   },
-  "settings": {
-    "title": "Paramètres",
-    "appLanguage": "Langue de l'application",
-    "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
-    "handwritingLanguage": "Langue d'écriture manuscrite",
-    "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite"
+    "settings": {
+      "title": "Paramètres",
+      "appLanguage": "Langue de l'application",
+      "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
+      "handwritingLanguage": "Langue d'écriture manuscrite",
+      "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite",
+      "import": "Importer un paquet"
+    }
   }
-}

@@ -112,11 +112,12 @@
     "good": "Good",
     "easy": "Easy"
   },
-  "settings": {
-    "title": "Settings",
-    "appLanguage": "App Language",
-    "appLanguageDescription": "Select the language for the app interface",
-    "handwritingLanguage": "Handwriting Language",
-    "handwritingLanguageDescription": "Select the language model for handwriting recognition"
+    "settings": {
+      "title": "Settings",
+      "appLanguage": "App Language",
+      "appLanguageDescription": "Select the language for the app interface",
+      "handwritingLanguage": "Handwriting Language",
+      "handwritingLanguageDescription": "Select the language model for handwriting recognition",
+      "import": "Import Deck"
+    }
   }
-}
