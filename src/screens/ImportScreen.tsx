@@ -41,30 +41,36 @@ export default function ImportScreen({ navigation }: any) {
          return;
        }
 
-      const apiUrl = `https://quizlet.com/webapi/3.2/studiables/${quizletId}?client=web`;
+      const apiUrl = `https://quizlet.com/webapi/3.4/sets/${quizletId}`;
       addDebugInfo(`Calling API: ${apiUrl}`);
       
       const response = await fetch(apiUrl);
       addDebugInfo(`Response status: ${response.status}`);
       
+      if (!response.ok) {
+        addDebugInfo(`HTTP Error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        addDebugInfo(`Error body: ${errorText.substring(0, 200)}`);
+      }
+      
       const data = await response.json();
       addDebugInfo(`Response keys: ${Object.keys(data).join(', ')}`);
-      addDebugInfo(`Studiables found: ${data.studiables?.length || 0}`);
+      addDebugInfo(`Terms found: ${data.terms?.length || 0}`);
       
-       if (!data.studiables || data.studiables.length === 0) {
-         addDebugInfo('Error: No studiables in response');
+       if (!data.terms || data.terms.length === 0) {
+         addDebugInfo('Error: No terms in response');
          Alert.alert(t('common.error'), t('import.error.notFound'));
          setLoading(false);
          return;
        }
 
-      const deckName = data.set?.title || 'Imported Deck';
+      const deckName = data.title || 'Imported Deck';
       addDebugInfo(`Deck name: ${deckName}`);
       
-      const cards = data.studiables
-        .filter((card: any) => card.definition && card.term)
+      const cards = data.terms
+        .filter((card: any) => card.definition && card.word)
         .map((card: any) => ({
-          front: card.term,
+          front: card.word,
           back: card.definition,
         }));
 
