@@ -87,7 +87,7 @@ export default function ImportScreen({ navigation }: any) {
   };
 
   const extractQuizletId = (url: string): string | null => {
-    const match = url.match(/quizlet\.com\/(\d+)/);
+    const match = url.match(/quizlet\.com\/(?:[a-z]{2}\/)?(\d+)/);
     return match ? match[1] : null;
   };
 
