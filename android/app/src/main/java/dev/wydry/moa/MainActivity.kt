@@ -1,4 +1,4 @@
-package com.anonymous.Moa
+package dev.wydry.moa
 
 import android.os.Build
 import android.os.Bundle

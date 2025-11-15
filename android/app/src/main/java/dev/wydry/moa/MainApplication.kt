@@ -1,4 +1,4 @@
-package com.anonymous.Moa
+package dev.wydry.moa
 
 import android.app.Application
 import android.content.res.Configuration

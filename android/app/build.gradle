@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.Moa'
+    namespace 'dev.wydry.moa'
     defaultConfig {
-        applicationId 'com.anonymous.Moa'
+        applicationId 'dev.wydry.moa'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -156,6 +156,8 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    implementation 'com.google.mlkit:digital-ink-recognition:18.1.0'
+
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
@@ -179,6 +181,4 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-
-    implementation 'com.google.mlkit:digital-ink-recognition:18.1.0'
 }
