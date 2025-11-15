@@ -11,6 +11,12 @@ export default function ImportScreen({ navigation }: any) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+  const addDebugInfo = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugInfo(prev => [...prev, `[${timestamp}] ${message}`]);
+  };
 
   const fetchQuizletDeck = async () => {
     if (!url.trim()) {
@@ -18,25 +24,41 @@ export default function ImportScreen({ navigation }: any) {
       return;
     }
 
+    setDebugInfo([]);
+    addDebugInfo(`Fetching from URL: ${url}`);
     setLoading(true);
+    
     try {
        const quizletId = extractQuizletId(url);
+       addDebugInfo(`Extracted ID: ${quizletId || 'FAILED'}`);
+       
        if (!quizletId) {
+         addDebugInfo('Error: Invalid Quizlet URL format');
          Alert.alert(t('common.error'), t('import.error.invalidUrl'));
          setLoading(false);
          return;
        }
 
-      const response = await fetch(`https://quizlet.com/webapi/3.2/studiables/${quizletId}?client=web`);
+      const apiUrl = `https://quizlet.com/webapi/3.2/studiables/${quizletId}?client=web`;
+      addDebugInfo(`Calling API: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl);
+      addDebugInfo(`Response status: ${response.status}`);
+      
       const data = await response.json();
+      addDebugInfo(`Response keys: ${Object.keys(data).join(', ')}`);
+      addDebugInfo(`Studiables found: ${data.studiables?.length || 0}`);
       
        if (!data.studiables || data.studiables.length === 0) {
+         addDebugInfo('Error: No studiables in response');
          Alert.alert(t('common.error'), t('import.error.notFound'));
          setLoading(false);
          return;
        }
 
       const deckName = data.set?.title || 'Imported Deck';
+      addDebugInfo(`Deck name: ${deckName}`);
+      
       const cards = data.studiables
         .filter((card: any) => card.definition && card.term)
         .map((card: any) => ({
@@ -44,12 +66,20 @@ export default function ImportScreen({ navigation }: any) {
           back: card.definition,
         }));
 
+      addDebugInfo(`Cards after filtering: ${cards.length}`);
+      if (cards.length > 0) {
+        addDebugInfo(`First card: "${cards[0].front}" → "${cards[0].back}"`);
+      }
+      addDebugInfo('✓ Fetch successful!');
+
       setPreview({
         deckName,
         cardCount: cards.length,
         cards,
       });
     } catch (error) {
+       const errorMsg = error instanceof Error ? error.message : String(error);
+       addDebugInfo(`ERROR: ${errorMsg}`);
        Alert.alert(t('common.error'), t('import.error.fetchFailed'));
      } finally {
        setLoading(false);
@@ -130,15 +160,24 @@ export default function ImportScreen({ navigation }: any) {
           </View>
         )}
 
-        {!loading && !preview && (
-          <TouchableOpacity
-            style={[commonStyles.button, styles.fetchButton]}
-            onPress={fetchQuizletDeck}
-            disabled={!url.trim()}
-          >
-            <Text style={commonStyles.buttonText}>{t('import.fetchDeck')}</Text>
-          </TouchableOpacity>
-        )}
+         {debugInfo.length > 0 && (
+           <View style={styles.debugContainer}>
+             <Text style={styles.debugTitle}>Debug Info:</Text>
+             {debugInfo.map((info, idx) => (
+               <Text key={idx} style={styles.debugText}>{info}</Text>
+             ))}
+           </View>
+         )}
+
+         {!loading && !preview && (
+           <TouchableOpacity
+             style={[commonStyles.button, styles.fetchButton]}
+             onPress={fetchQuizletDeck}
+             disabled={!url.trim()}
+           >
+             <Text style={commonStyles.buttonText}>{t('import.fetchDeck')}</Text>
+           </TouchableOpacity>
+         )}
 
         {!loading && preview && (
           <View style={styles.preview}>
@@ -228,19 +267,39 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     fontStyle: 'italic',
   },
-  fetchButton: {
-    marginTop: SPACING.lg,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.xl,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    color: COLORS.textLight,
-    fontSize: 14,
-  },
+   debugContainer: {
+     backgroundColor: COLORS.cardBg,
+     borderRadius: 12,
+     padding: SPACING.md,
+     marginBottom: SPACING.lg,
+     borderWidth: 1,
+     borderColor: COLORS.border,
+   },
+   debugTitle: {
+     fontSize: 14,
+     fontWeight: '600',
+     color: COLORS.skyBlue,
+     marginBottom: SPACING.sm,
+   },
+   debugText: {
+     fontSize: 12,
+     color: COLORS.textLight,
+     fontFamily: 'monospace',
+     marginBottom: SPACING.xs,
+   },
+   fetchButton: {
+     marginTop: SPACING.lg,
+   },
+   loadingContainer: {
+     alignItems: 'center',
+     justifyContent: 'center',
+     paddingVertical: SPACING.xl,
+   },
+   loadingText: {
+     marginTop: SPACING.md,
+     color: COLORS.textLight,
+     fontSize: 14,
+   },
   preview: {
     marginTop: SPACING.lg,
   },
