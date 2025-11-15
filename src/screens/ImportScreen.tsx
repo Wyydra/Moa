@@ -15,7 +15,9 @@ export default function ImportScreen({ navigation }: any) {
 
   const addDebugInfo = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setDebugInfo(prev => [...prev, `[${timestamp}] ${message}`]);
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log('[ImportScreen]', message);
+    setDebugInfo(prev => [...prev, logMessage]);
   };
 
   const fetchQuizletDeck = async () => {
