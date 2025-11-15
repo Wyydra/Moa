@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage } from '../data/storage';
 import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING } from '../utils/constants';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: any) {
   const { t, i18n } = useTranslation();
   const [appLanguage, setAppLanguage] = useState(i18n.language);
   const [handwritingLanguage, setHandwritingLanguage] = useState('ko');
@@ -35,6 +36,10 @@ export default function SettingsScreen() {
   const handleHandwritingLanguageChange = async (lang: string) => {
     await saveHandwritingLanguage(lang);
     setHandwritingLanguage(lang);
+  };
+
+  const handleImportDeck = () => {
+    navigation.navigate('ImportScreen');
   };
 
   const appLanguages = [
@@ -101,6 +106,23 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('settings.import')}</Text>
+          <TouchableOpacity
+            style={[commonStyles.card, styles.importButton]}
+            onPress={handleImportDeck}
+          >
+            <View style={styles.importContent}>
+              <Ionicons name="cloud-download" size={24} color={COLORS.skyBlue} />
+              <View style={styles.importText}>
+                <Text style={styles.importTitle}>{t('import.importQuizlet')}</Text>
+                <Text style={styles.importDescription}>{t('import.importDescription')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -148,5 +170,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: COLORS.skyBlue,
     fontWeight: 'bold',
+  },
+  importButton: {
+    padding: SPACING.md,
+  },
+  importContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  importText: {
+    flex: 1,
+  },
+  importTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  importDescription: {
+    fontSize: 14,
+    color: COLORS.textLight,
   },
 });
