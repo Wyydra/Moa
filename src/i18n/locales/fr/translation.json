@@ -123,6 +123,8 @@
       "more": "et",
       "import": "Importer le paquet",
       "description": "Importé depuis Quizlet",
+      "importQuizlet": "Importer depuis Quizlet",
+      "importDescription": "Importez des paquets depuis des ensembles Quizlet publics",
       "error": {
         "emptyUrl": "Veuillez entrer une URL Quizlet",
         "invalidUrl": "URL Quizlet invalide",

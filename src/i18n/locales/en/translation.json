@@ -123,6 +123,8 @@
        "more": "and",
        "import": "Import Deck",
        "description": "Imported from Quizlet",
+       "importQuizlet": "Import from Quizlet",
+       "importDescription": "Import decks from public Quizlet sets",
        "error": {
          "emptyUrl": "Please enter a Quizlet URL",
          "invalidUrl": "Invalid Quizlet URL",
