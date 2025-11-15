@@ -103,16 +103,30 @@
       "description": "Écoutez et tapez ce que vous entendez (prochainement)"
     }
   },
-  "flashcard": {
-    "question": "Question",
-    "answer": "Réponse",
-    "showAnswer": "Afficher la réponse",
-    "again": "Encore",
-    "hard": "Difficile",
-    "good": "Bien",
-    "easy": "Facile"
-  },
-    "settings": {
+   "flashcard": {
+     "question": "Question",
+     "answer": "Réponse",
+     "showAnswer": "Afficher la réponse",
+     "again": "Encore",
+     "hard": "Difficile",
+     "good": "Bien",
+     "easy": "Facile"
+   },
+   "import": {
+     "title": "Importer un paquet",
+     "quizletUrl": "URL Quizlet",
+     "info": "Collez l'URL d'un ensemble Quizlet public pour l'importer",
+     "fetchDeck": "Récupérer le paquet",
+     "importing": "Importation du paquet...",
+     "cardCount": "cartes",
+     "preview": "Aperçu (3 premières cartes)",
+     "more": "et",
+     "import": "Importer le paquet",
+     "error": {
+       "emptyUrl": "Veuillez entrer une URL Quizlet"
+     }
+   },
+     "settings": {
       "title": "Paramètres",
       "appLanguage": "Langue de l'application",
       "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",

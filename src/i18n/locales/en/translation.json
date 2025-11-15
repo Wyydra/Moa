@@ -103,16 +103,30 @@
       "description": "Listen and type what you hear (coming soon)"
     }
   },
-  "flashcard": {
-    "question": "Question",
-    "answer": "Answer",
-    "showAnswer": "Show Answer",
-    "again": "Again",
-    "hard": "Hard",
-    "good": "Good",
-    "easy": "Easy"
-  },
-    "settings": {
+   "flashcard": {
+     "question": "Question",
+     "answer": "Answer",
+     "showAnswer": "Show Answer",
+     "again": "Again",
+     "hard": "Hard",
+     "good": "Good",
+     "easy": "Easy"
+   },
+   "import": {
+     "title": "Import Deck",
+     "quizletUrl": "Quizlet URL",
+     "info": "Paste the URL of a public Quizlet set to import it",
+     "fetchDeck": "Fetch Deck",
+     "importing": "Importing deck...",
+     "cardCount": "cards",
+     "preview": "Preview (first 3 cards)",
+     "more": "and",
+     "import": "Import Deck",
+     "error": {
+       "emptyUrl": "Please enter a Quizlet URL"
+     }
+   },
+     "settings": {
       "title": "Settings",
       "appLanguage": "App Language",
       "appLanguageDescription": "Select the language for the app interface",
