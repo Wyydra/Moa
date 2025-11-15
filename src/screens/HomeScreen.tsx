@@ -1,61 +1,218 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { COLORS, SPACING } from '../utils/constants';
 import { commonStyles } from '../styles/commonStyles';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { getAllDecks, getAllCards, getDueCards } from '../data/storage';
+import { Deck } from '../data/model';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
-  const reviewsDue = 0;
+  const [totalDue, setTotalDue] = useState(0);
+  const [totalCards, setTotalCards] = useState(0);
+  const [decksWithDue, setDecksWithDue] = useState<Array<{deck: Deck, dueCount: number}>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadStats = async () => {
+    setLoading(true);
+    const decks = await getAllDecks();
+    const cards = await getAllCards();
+    
+    let totalDueCount = 0;
+    const decksWithDueCards = [];
+    
+    for (const deck of decks) {
+      const due = await getDueCards(deck.id);
+      if (due.length > 0) {
+        decksWithDueCards.push({ deck, dueCount: due.length });
+        totalDueCount += due.length;
+      }
+    }
+    
+    setTotalDue(totalDueCount);
+    setTotalCards(cards.length);
+    setDecksWithDue(decksWithDueCards);
+    setLoading(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+    }, [])
+  );
+
+  const handleDeckPress = (deckId: string) => {
+    navigation.navigate('DeckDetails', { deckId });
+  };
 
   return (
-    <View style={commonStyles.container}>
+    <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Moa 🪶</Text>
+        <Text style={styles.title}>Moa</Text>
+        <Text style={styles.subtitle}>{t('home.welcome')}</Text>
       </View>
 
-      <View style={[commonStyles.card, styles.progressCard]}>
-        <Text style={styles.cardTitle}>{t('home.todaysReviews')}</Text>
-        <Text style={styles.cardNumber}>{reviewsDue}</Text>
-        <Text style={styles.cardSubtext}>{t('home.cardsDue')}</Text>
+      <View style={styles.statsGrid}>
+        <View style={[commonStyles.card, styles.statCard]}>
+          <Ionicons name="today-outline" size={28} color={COLORS.skyBlue} />
+          <Text style={styles.statNumber}>{totalDue}</Text>
+          <Text style={styles.statLabel}>{t('home.cardsDue')}</Text>
+        </View>
+
+        <View style={[commonStyles.card, styles.statCard]}>
+          <Ionicons name="library-outline" size={28} color={COLORS.mint} />
+          <Text style={styles.statNumber}>{totalCards}</Text>
+          <Text style={styles.statLabel}>{t('home.totalCards')}</Text>
+        </View>
       </View>
 
-      <TouchableOpacity style={[commonStyles.button, styles.startButton]}>
-        <Text style={commonStyles.buttonText}>{t('home.startReviewing')}</Text>
-      </TouchableOpacity>
-    </View>
+      {decksWithDue.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('home.readyToStudy')}</Text>
+          {decksWithDue.map(({ deck, dueCount }) => (
+            <TouchableOpacity
+              key={deck.id}
+              style={[commonStyles.card, styles.deckCard]}
+              onPress={() => handleDeckPress(deck.id)}
+            >
+              <View style={styles.deckInfo}>
+                <Text style={styles.deckName}>{deck.name}</Text>
+                <Text style={styles.deckDescription}>
+                  {deck.description || t('library.cardCount', { count: deck.cardCount })}
+                </Text>
+              </View>
+              <View style={styles.dueBadge}>
+                <Text style={styles.dueBadgeText}>{dueCount}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {decksWithDue.length === 0 && !loading && (
+        <View style={styles.emptyState}>
+          <Ionicons name="checkmark-circle-outline" size={64} color={COLORS.mint} />
+          <Text style={styles.emptyTitle}>{t('home.allCaughtUp')}</Text>
+          <Text style={styles.emptyText}>{t('home.noCardsDue')}</Text>
+          <TouchableOpacity
+            style={[commonStyles.button, styles.libraryButton]}
+            onPress={() => navigation.navigate('Library')}
+          >
+            <Ionicons name="library-outline" size={20} color="white" style={{ marginRight: 8 }} />
+            <Text style={commonStyles.buttonText}>{t('home.browseLibrary')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.bottomPadding} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
     marginTop: 60,
-    marginBottom: 40,
-    alignItems: 'center',
+    marginBottom: SPACING.lg,
   },
   title: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: COLORS.textLight,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginBottom: SPACING.xl,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: SPACING.lg,
+  },
+  statNumber: {
     fontSize: 36,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.xs,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  section: {
+    marginBottom: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.md,
+  },
+  deckCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+  },
+  deckInfo: {
+    flex: 1,
+  },
+  deckName: {
+    fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
     marginBottom: SPACING.xs,
   },
-  progressCard: {
+  deckDescription: {
+    fontSize: 14,
+    color: COLORS.textLight,
+  },
+  dueBadge: {
+    backgroundColor: COLORS.skyBlue,
+    borderRadius: 20,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    minWidth: 40,
     alignItems: 'center',
   },
-  cardTitle: {
-    fontSize: 18,
-    color: COLORS.textLight,
+  dueBadgeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'white',
+  },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: SPACING.xl * 2,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
-  cardNumber: {
-    fontSize: 64,
-    fontWeight: 'bold',
-    color: COLORS.skyBlue,
-  },
-  cardSubtext: {
+  emptyText: {
     fontSize: 16,
     color: COLORS.textLight,
+    marginBottom: SPACING.xl,
   },
-  startButton: {
-    marginTop: 40,
+  libraryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomPadding: {
+    height: 40,
   },
 });

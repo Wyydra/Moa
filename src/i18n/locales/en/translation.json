@@ -18,6 +18,11 @@
     "welcome": "Welcome to MOA",
     "todaysReviews": "Today's Reviews",
     "cardsDue": "cards due",
+    "totalCards": "total cards",
+    "readyToStudy": "Ready to Study",
+    "allCaughtUp": "All Caught Up! 🎉",
+    "noCardsDue": "No cards due for review right now",
+    "browseLibrary": "Browse Library",
     "startReviewing": "Start Reviewing"
   },
   "library": {

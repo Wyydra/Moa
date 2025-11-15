@@ -18,6 +18,11 @@
     "welcome": "Bienvenue sur MOA",
     "todaysReviews": "Révisions du jour",
     "cardsDue": "cartes à réviser",
+    "totalCards": "total de cartes",
+    "readyToStudy": "Prêt à étudier",
+    "allCaughtUp": "Tout est à jour ! 🎉",
+    "noCardsDue": "Aucune carte à réviser pour le moment",
+    "browseLibrary": "Parcourir la bibliothèque",
     "startReviewing": "Commencer à réviser"
   },
   "library": {
