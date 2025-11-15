@@ -15,13 +15,14 @@ import CreateDeckScreen from './src/screens/CreateDeckScreen';
 import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { initializeStorage } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
 import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import { t } from 'i18next';
+import * as Font from 'expo-font';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -72,8 +73,16 @@ function LibraryStackNavigator() {
 
 export default function App() {
   const { t } = useTranslation();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   
   useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        ...Ionicons.font,
+      });
+      setFontsLoaded(true);
+    }
+    loadFonts();
     initializeStorage();
   }, []);
 
@@ -111,6 +120,10 @@ export default function App() {
     });
     return () => subscription.remove();
   }, [t]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
   <NavigationContainer>
