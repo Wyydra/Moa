@@ -41,7 +41,7 @@ export default function ImportScreen({ navigation }: any) {
          return;
        }
 
-      const apiUrl = `https://quizlet.com/webapi/3.4/sets/${quizletId}`;
+      const apiUrl = `https://quizlet.com/webapi/3.4/sets/${quizletId}/terms`;
       addDebugInfo(`Calling API: ${apiUrl}`);
       
       const response = await fetch(apiUrl);
@@ -57,11 +57,11 @@ export default function ImportScreen({ navigation }: any) {
       addDebugInfo(`Response keys: ${Object.keys(data).join(', ')}`);
       
       const setData = data.responses?.[0]?.models?.set?.[0];
+      const termsFromModels = data.responses?.[0]?.models?.term;
+      
       if (setData) {
         addDebugInfo(`Set data keys: ${Object.keys(setData).join(', ')}`);
       }
-      
-      const termsFromModels = data.responses?.[0]?.models?.term;
       addDebugInfo(`Terms in models: ${termsFromModels ? Object.keys(termsFromModels).length : 0}`);
       
       let terms = [];
