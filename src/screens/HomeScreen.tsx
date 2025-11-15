@@ -44,7 +44,10 @@ export default function HomeScreen({ navigation }: any) {
   );
 
   const handleDeckPress = (deckId: string) => {
-    navigation.navigate('DeckDetails', { deckId });
+    navigation.navigate('Library', { 
+      screen: 'DeckDetails', 
+      params: { deckId } 
+    });
   };
 
   return (
