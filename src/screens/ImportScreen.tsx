@@ -55,19 +55,27 @@ export default function ImportScreen({ navigation }: any) {
       
       const data = await response.json();
       addDebugInfo(`Response keys: ${Object.keys(data).join(', ')}`);
-      addDebugInfo(`Terms found: ${data.terms?.length || 0}`);
       
-       if (!data.terms || data.terms.length === 0) {
+      const setData = data.responses?.[0]?.models?.set?.[0];
+      if (setData) {
+        addDebugInfo(`Set data keys: ${Object.keys(setData).join(', ')}`);
+      }
+      
+      const terms = setData?.terms || data.terms || [];
+      addDebugInfo(`Terms found: ${terms.length}`);
+      
+       if (!terms || terms.length === 0) {
          addDebugInfo('Error: No terms in response');
+         addDebugInfo(`Full data structure: ${JSON.stringify(data).substring(0, 500)}`);
          Alert.alert(t('common.error'), t('import.error.notFound'));
          setLoading(false);
          return;
        }
 
-      const deckName = data.title || 'Imported Deck';
+      const deckName = setData?.title || data.title || 'Imported Deck';
       addDebugInfo(`Deck name: ${deckName}`);
       
-      const cards = data.terms
+      const cards = terms
         .filter((card: any) => card.definition && card.word)
         .map((card: any) => ({
           front: card.word,
