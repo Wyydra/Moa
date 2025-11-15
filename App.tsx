@@ -18,7 +18,6 @@ import WriteScreen from './src/screens/WriteScreen';
 import { useEffect, useState } from 'react';
 import { initializeStorage } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
-import ImportScreen from './src/screens/ImportScreen';
 import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
@@ -69,11 +68,6 @@ function LibraryStackNavigator() {
         component={TestScreen}
         options={{ presentation: 'modal'}}
         />
-      <LibraryStack.Screen
-        name='ImportScreen'
-        component={ImportScreen}
-        options={{ presentation: 'modal'}}
-        />
     </LibraryStack.Navigator>
   )
 }
@@ -82,11 +76,6 @@ function SettingsStackNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name='SettingsList' component={SettingsScreen} />
-      <SettingsStack.Screen
-        name='ImportScreen'
-        component={ImportScreen}
-        options={{ presentation: 'modal'}}
-        />
     </SettingsStack.Navigator>
   )
 }

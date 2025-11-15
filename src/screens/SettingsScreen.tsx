@@ -38,10 +38,6 @@ export default function SettingsScreen({ navigation }: any) {
     setHandwritingLanguage(lang);
   };
 
-  const handleImportDeck = () => {
-    navigation.navigate('ImportScreen');
-  };
-
   const appLanguages = [
     { code: 'en', label: 'English' },
     { code: 'fr', label: 'Français' },
@@ -107,22 +103,7 @@ export default function SettingsScreen({ navigation }: any) {
           ))}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.import')}</Text>
-          <TouchableOpacity
-            style={[commonStyles.card, styles.importButton]}
-            onPress={handleImportDeck}
-          >
-            <View style={styles.importContent}>
-              <Ionicons name="cloud-download" size={24} color={COLORS.skyBlue} />
-              <View style={styles.importText}>
-                <Text style={styles.importTitle}>{t('import.importQuizlet')}</Text>
-                <Text style={styles.importDescription}>{t('import.importDescription')}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
-            </View>
-          </TouchableOpacity>
-        </View>
+
       </ScrollView>
     </View>
   );
@@ -171,25 +152,5 @@ const styles = StyleSheet.create({
     color: COLORS.skyBlue,
     fontWeight: 'bold',
   },
-  importButton: {
-    padding: SPACING.md,
-  },
-  importContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  importText: {
-    flex: 1,
-  },
-  importTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  importDescription: {
-    fontSize: 14,
-    color: COLORS.textLight,
-  },
+
 });

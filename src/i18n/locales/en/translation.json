@@ -112,33 +112,11 @@
      "good": "Good",
      "easy": "Easy"
    },
-    "import": {
-       "title": "Import Deck",
-       "quizletUrl": "Quizlet URL",
-       "info": "Paste the URL of a public Quizlet set to import it",
-       "fetchDeck": "Fetch Deck",
-       "importing": "Importing deck...",
-       "cardCount": "cards",
-       "preview": "Preview (first 3 cards)",
-       "more": "and",
-       "import": "Import Deck",
-       "description": "Imported from Quizlet",
-       "importQuizlet": "Import from Quizlet",
-       "importDescription": "Import decks from public Quizlet sets",
-       "error": {
-         "emptyUrl": "Please enter a Quizlet URL",
-         "invalidUrl": "Invalid Quizlet URL",
-         "notFound": "Could not find deck",
-         "fetchFailed": "Failed to fetch deck. Make sure it's a public Quizlet set.",
-         "importFailed": "Failed to import deck"
-       }
-     },
-     "settings": {
+      "settings": {
       "title": "Settings",
       "appLanguage": "App Language",
       "appLanguageDescription": "Select the language for the app interface",
       "handwritingLanguage": "Handwriting Language",
-      "handwritingLanguageDescription": "Select the language model for handwriting recognition",
-      "import": "Import Deck"
+      "handwritingLanguageDescription": "Select the language model for handwriting recognition"
     }
   }

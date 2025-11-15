@@ -112,33 +112,11 @@
      "good": "Bien",
      "easy": "Facile"
    },
-    "import": {
-      "title": "Importer un paquet",
-      "quizletUrl": "URL Quizlet",
-      "info": "Collez l'URL d'un ensemble Quizlet public pour l'importer",
-      "fetchDeck": "Récupérer le paquet",
-      "importing": "Importation du paquet...",
-      "cardCount": "cartes",
-      "preview": "Aperçu (3 premières cartes)",
-      "more": "et",
-      "import": "Importer le paquet",
-      "description": "Importé depuis Quizlet",
-      "importQuizlet": "Importer depuis Quizlet",
-      "importDescription": "Importez des paquets depuis des ensembles Quizlet publics",
-      "error": {
-        "emptyUrl": "Veuillez entrer une URL Quizlet",
-        "invalidUrl": "URL Quizlet invalide",
-        "notFound": "Impossible de trouver le paquet",
-        "fetchFailed": "Impossible de récupérer le paquet. Assurez-vous qu'il s'agit d'un ensemble Quizlet public.",
-        "importFailed": "Échec de l'importation du paquet"
-      }
-    },
      "settings": {
       "title": "Paramètres",
       "appLanguage": "Langue de l'application",
       "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
       "handwritingLanguage": "Langue d'écriture manuscrite",
-      "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite",
-      "import": "Importer un paquet"
+      "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite"
     }
   }
