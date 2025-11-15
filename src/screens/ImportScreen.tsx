@@ -41,49 +41,45 @@ export default function ImportScreen({ navigation }: any) {
          return;
        }
 
-      const apiUrl = `https://quizlet.com/webapi/3.4/sets/${quizletId}/terms`;
-      addDebugInfo(`Calling API: ${apiUrl}`);
+      const pageUrl = url;
+      addDebugInfo(`Fetching page: ${pageUrl}`);
       
-      const response = await fetch(apiUrl);
+      const response = await fetch(pageUrl);
       addDebugInfo(`Response status: ${response.status}`);
       
       if (!response.ok) {
         addDebugInfo(`HTTP Error: ${response.status} ${response.statusText}`);
-        const errorText = await response.text();
-        addDebugInfo(`Error body: ${errorText.substring(0, 200)}`);
       }
       
-      const data = await response.json();
-      addDebugInfo(`Response keys: ${Object.keys(data).join(', ')}`);
+      const html = await response.text();
+      addDebugInfo(`HTML length: ${html.length}`);
       
-      const setData = data.responses?.[0]?.models?.set?.[0];
-      const termsFromModels = data.responses?.[0]?.models?.term;
-      
-      if (setData) {
-        addDebugInfo(`Set data keys: ${Object.keys(setData).join(', ')}`);
-      }
-      addDebugInfo(`Terms in models: ${termsFromModels ? Object.keys(termsFromModels).length : 0}`);
-      
-      let terms = [];
-      if (termsFromModels) {
-        terms = Object.values(termsFromModels);
-      } else {
-        terms = setData?.terms || data.terms || [];
+      const jsonMatch = html.match(/window\.Quizlet\["setPageData"\]\s*=\s*({.+?});/);
+      if (!jsonMatch) {
+        addDebugInfo('Error: Could not find setPageData in HTML');
+        Alert.alert(t('common.error'), t('import.error.notFound'));
+        setLoading(false);
+        return;
       }
       
-      addDebugInfo(`Terms found: ${terms.length}`);
+      addDebugInfo('Found setPageData in HTML');
+      const data = JSON.parse(jsonMatch[1]);
+      addDebugInfo(`Data keys: ${Object.keys(data).join(', ')}`);
       
-       if (!terms || terms.length === 0) {
-         addDebugInfo('Error: No terms in response');
+      const termsList = data.termIdToTermsMap ? Object.values(data.termIdToTermsMap) : [];
+      addDebugInfo(`Terms found: ${termsList.length}`);
+      
+       if (!termsList || termsList.length === 0) {
+         addDebugInfo('Error: No terms in page data');
          Alert.alert(t('common.error'), t('import.error.notFound'));
          setLoading(false);
          return;
        }
 
-      const deckName = setData?.title || data.title || 'Imported Deck';
+      const deckName = data.set?.title || 'Imported Deck';
       addDebugInfo(`Deck name: ${deckName}`);
       
-      const cards = terms
+      const cards = termsList
         .filter((card: any) => card.definition && card.word)
         .map((card: any) => ({
           front: card.word,
