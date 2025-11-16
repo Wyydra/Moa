@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { getCardsByDeck } from "../data/storage";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from "../utils/constants";
@@ -12,6 +12,7 @@ interface Tile {
   type: 'front' | 'back';
   cardId: string;
   matched: boolean;
+  animation: Animated.Value;
 }
 
 export default function MatchScreen({ route, navigation }: any) {
@@ -61,6 +62,7 @@ export default function MatchScreen({ route, navigation }: any) {
         type: 'front',
         cardId: card.id,
         matched: false,
+        animation: new Animated.Value(0),
       });
       generatedTiles.push({
         id: `${card.id}-back`,
@@ -68,6 +70,7 @@ export default function MatchScreen({ route, navigation }: any) {
         type: 'back',
         cardId: card.id,
         matched: false,
+        animation: new Animated.Value(0),
       });
     });
 
@@ -91,19 +94,34 @@ export default function MatchScreen({ route, navigation }: any) {
       const isMatch = first.cardId === second.cardId && first.type !== second.type;
 
       if (isMatch) {
-        setTiles(prevTiles =>
-          prevTiles.map(t =>
-            t.cardId === first.cardId ? { ...t, matched: true } : t
-          )
-        );
-        setSelectedTiles([]);
+        Animated.parallel([
+          Animated.timing(first.animation, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(second.animation, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]).start();
 
-        const allMatched = tiles.every(t => 
-          t.cardId === first.cardId || t.matched
-        );
-        if (allMatched) {
-          setCompleted(true);
-        }
+        setTimeout(() => {
+          setTiles(prevTiles =>
+            prevTiles.map(t =>
+              t.cardId === first.cardId ? { ...t, matched: true } : t
+            )
+          );
+          setSelectedTiles([]);
+
+          const allMatched = tiles.every(t => 
+            t.cardId === first.cardId || t.matched
+          );
+          if (allMatched) {
+            setCompleted(true);
+          }
+        }, 400);
       } else {
         setTimeout(() => {
           setSelectedTiles([]);
@@ -198,27 +216,42 @@ export default function MatchScreen({ route, navigation }: any) {
       <View style={styles.grid}>
         {tiles.map(tile => {
           const isSelected = selectedTiles.find(t => t.id === tile.id);
+          
+          const scale = tile.animation.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [1, 1.1, 0],
+          });
+          
+          const opacity = tile.animation.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [1, 1, 0],
+          });
+
           return (
-            <TouchableOpacity
+            <Animated.View
               key={tile.id}
               style={[
                 styles.tile,
-                tile.matched && styles.tileMatched,
                 isSelected && styles.tileSelected,
+                {
+                  transform: [{ scale }],
+                  opacity,
+                },
               ]}
-              onPress={() => handleTilePress(tile)}
-              disabled={tile.matched}
             >
-              <Text
-                style={[
-                  styles.tileText,
-                  tile.matched && styles.tileTextMatched,
-                ]}
-                numberOfLines={3}
+              <TouchableOpacity
+                style={styles.tileTouchable}
+                onPress={() => handleTilePress(tile)}
+                disabled={tile.matched}
               >
-                {tile.text}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={styles.tileText}
+                  numberOfLines={3}
+                >
+                  {tile.text}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </View>
@@ -281,29 +314,37 @@ const styles = StyleSheet.create({
     aspectRatio: 0.75,
     backgroundColor: COLORS.cardBg,
     borderRadius: 12,
-    padding: SPACING.xs,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tileTouchable: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xs,
   },
   tileSelected: {
     borderColor: COLORS.skyBlue,
-    backgroundColor: '#B8D8E820',
-  },
-  tileMatched: {
-    backgroundColor: '#51CF6620',
-    borderColor: '#51CF66',
+    backgroundColor: '#B8D8E840',
+    shadowColor: COLORS.skyBlue,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   tileText: {
     fontSize: 13,
     color: COLORS.text,
     textAlign: 'center',
   },
-  tileTextMatched: {
-    color: COLORS.textLight,
-    textDecorationLine: 'line-through',
-  },
+
   completedContainer: {
     flex: 1,
     justifyContent: 'center',
