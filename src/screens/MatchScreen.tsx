@@ -127,7 +127,7 @@ export default function MatchScreen({ route, navigation }: any) {
       } else {
         setTimeout(() => {
           setSelectedTiles([]);
-        }, 800);
+        }, 1000);
       }
     }
   };
@@ -219,6 +219,10 @@ export default function MatchScreen({ route, navigation }: any) {
         {tiles.map(tile => {
           const isSelected = selectedTiles.find(t => t.id === tile.id);
           
+          const isWrongMatch = selectedTiles.length === 2 && 
+            isSelected && 
+            selectedTiles[0].cardId !== selectedTiles[1].cardId;
+          
           const scale = tile.animation.interpolate({
             inputRange: [0, 0.5, 1],
             outputRange: [1, 1.1, 0],
@@ -234,7 +238,8 @@ export default function MatchScreen({ route, navigation }: any) {
               key={tile.id}
               style={[
                 styles.tile,
-                isSelected && styles.tileSelected,
+                isSelected && !isWrongMatch && styles.tileSelected,
+                isWrongMatch && styles.tileWrong,
                 {
                   transform: [{ scale }],
                   opacity,
@@ -336,8 +341,16 @@ const styles = StyleSheet.create({
   },
   tileSelected: {
     borderColor: COLORS.skyBlue,
-    backgroundColor: '#B8D8E840',
+    backgroundColor: COLORS.skyBlue,
     shadowColor: COLORS.skyBlue,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  tileWrong: {
+    borderColor: '#FF6B6B',
+    backgroundColor: '#FF6B6B',
+    shadowColor: '#FF6B6B',
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
