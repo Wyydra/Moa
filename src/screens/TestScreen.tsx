@@ -1,8 +1,7 @@
-import { use, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
-import { useTheme } from "@react-navigation/native";
-import { getCardsByDeck } from "../data/storage";
+import { getCardsByDeck, getCardsByTags } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from '../utils/constants';
@@ -16,7 +15,7 @@ interface Question {
 
 export default function TestScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId } = route.params;
+  const { deckId, tags } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,7 +29,7 @@ export default function TestScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadCardsAndGenerateQuestions()
-  }, [deckId]);
+  }, [deckId, tags]);
 
   useEffect(() => {
     if (questions.length > 0) {
@@ -68,19 +67,23 @@ export default function TestScreen({route, navigation}: any) {
   };
 
   const loadCardsAndGenerateQuestions = async () => {
-    const allCards = await getCardsByDeck(deckId);
-    setCards(allCards);
+    const allCards = tags 
+      ? await getCardsByTags(tags)
+      : await getCardsByDeck(deckId);
+    
+    const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
+    setCards(shuffledCards);
 
-    if(allCards.length === 0){
+    if(shuffledCards.length === 0){
       setCompleted(true);
       setLoading(false);
       return;
     }
 
-    const generatedQuestions: Question[] = allCards.map((card) => {
+    const generatedQuestions: Question[] = shuffledCards.map((card) => {
       const correctAnswer = card.back;
 
-      const wrongAnswer = allCards
+      const wrongAnswer = shuffledCards
         .filter(c => c.id !== card.id)
         .map(c => c.back)
         .sort(() => Math.random() - 0.5)

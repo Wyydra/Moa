@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
-import { getCardsByDeck } from "../data/storage";
+import { getCardsByDeck, getCardsByTags } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +10,7 @@ import { HandwritingCanvas } from '../components/HandwritingCanvas';
 
 export default function WriteScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId } = route.params;
+  const { deckId, tags } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
@@ -25,13 +25,16 @@ export default function WriteScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadCards();
-  }, [deckId]);
+  }, [deckId, tags]);
 
   const loadCards = async () => {
-    const allCards = await getCardsByDeck(deckId);
-    setCards(allCards);
+    const allCards = tags 
+      ? await getCardsByTags(tags)
+      : await getCardsByDeck(deckId);
+    const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
+    setCards(shuffledCards);
     setLoading(false);
-    if (allCards.length === 0) {
+    if (shuffledCards.length === 0) {
       setCompleted(true);
     }
   };

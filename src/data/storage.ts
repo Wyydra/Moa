@@ -116,13 +116,23 @@ export const getDueCards = async (deckId: string): Promise<Card[]> => {
 
 export const getDueCardsByTags = async (tags: string[]): Promise<Card[]> => {
   try {
-    const decks = await getDecksByTags(tags);
-    const deckIds = decks.map(d => d.id);
+    const deckIds = (await getDecksByTags(tags)).map(d => d.id);
     const allCards = await getAllCards();
     const now = Date.now();
     return allCards.filter(c => deckIds.includes(c.deckId) && c.nextReview <= now);
   } catch (error) {
     console.error('Error loading due cards by tags:', error);
+    return [];
+  }
+}
+
+export const getCardsByTags = async (tags: string[]): Promise<Card[]> => {
+  try {
+    const deckIds = (await getDecksByTags(tags)).map(d => d.id);
+    const allCards = await getAllCards();
+    return allCards.filter(c => deckIds.includes(c.deckId));
+  } catch (error) {
+    console.error('Error loading cards by tags:', error);
     return [];
   }
 }

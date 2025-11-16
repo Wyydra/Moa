@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
-import { getCardsByDeck } from "../data/storage";
+import { getCardsByDeck, getCardsByTags } from "../data/storage";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,7 +19,7 @@ interface Tile {
 
 export default function MatchScreen({ route, navigation }: any) {
   const { t } = useTranslation();
-  const { deckId } = route.params;
+  const { deckId, tags } = route.params;
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [selectedTiles, setSelectedTiles] = useState<Tile[]>([]);
   const [completed, setCompleted] = useState(false);
@@ -30,7 +30,7 @@ export default function MatchScreen({ route, navigation }: any) {
 
   useEffect(() => {
     loadCardsAndGenerateTiles();
-  }, [deckId]);
+  }, [deckId, tags]);
 
   useEffect(() => {
     if (loading || completed) return;
@@ -43,7 +43,9 @@ export default function MatchScreen({ route, navigation }: any) {
   }, [loading, completed, startTime]);
 
   const loadCardsAndGenerateTiles = async () => {
-    const allCards = await getCardsByDeck(deckId);
+    const allCards = tags 
+      ? await getCardsByTags(tags)
+      : await getCardsByDeck(deckId);
 
     if (allCards.length === 0) {
       setCompleted(true);

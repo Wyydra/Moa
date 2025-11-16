@@ -31,9 +31,10 @@ export default function StudyScreen({route, navigation}: any) {
     } else {
       dueCards = await getDueCards(deckId);
     }
-    setCards(dueCards);
+    const shuffledCards = [...dueCards].sort(() => Math.random() - 0.5);
+    setCards(shuffledCards);
     setLoading(false);
-    if (dueCards.length === 0) {
+    if (shuffledCards.length === 0) {
       setCompleted(true);
     }
   };
