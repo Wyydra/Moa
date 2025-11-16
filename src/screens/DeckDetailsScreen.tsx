@@ -1,10 +1,10 @@
-import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, Animated } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import { deleteDeck, exportDeckToJSON, getCardsByDeck, getDeckById, getDueCards } from "../data/storage";
 import { Card, Deck } from "../data/model";
 import { encodeDeckToUrl as encodeDeckToURL } from "../utils/deepLinking";
@@ -95,39 +95,18 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   };
 
   const renderCard = ({ item, index }: { item: Card, index: number }) => {
-    const animValue = useRef(new Animated.Value(0)).current;
-
-    Animated.timing(animValue, {
-      toValue: 1,
-      duration: 400,
-      delay: index * 80,
-      useNativeDriver: true,
-    }).start();
-
-    const translateX = animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [30, 0],
-    });
-
     return (
-      <Animated.View
-        style={{
-          opacity: animValue,
-          transform: [{ translateX }],
-        }}
+      <TouchableOpacity 
+        style={[commonStyles.card, styles.cardItem]}
+        onPress={() => handleEditCard(item)}
       >
-        <TouchableOpacity 
-          style={[commonStyles.card, styles.cardItem]}
-          onPress={() => handleEditCard(item)}
-        >
-          <View style={styles.cardContent}>
-            <Text style={styles.cardFront}>{item.front}</Text>
-            <Ionicons name="arrow-forward" size={16} color={COLORS.textLight} />
-            <Text style={styles.cardBack}>{item.back}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} style={styles.cardChevron} />
-        </TouchableOpacity>
-      </Animated.View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardFront}>{item.front}</Text>
+          <Ionicons name="arrow-forward" size={16} color={COLORS.textLight} />
+          <Text style={styles.cardBack}>{item.back}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} style={styles.cardChevron} />
+      </TouchableOpacity>
     );
   };
 
