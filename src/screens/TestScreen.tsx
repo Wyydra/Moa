@@ -1,9 +1,9 @@
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { useTheme } from "@react-navigation/native";
 import { getCardsByDeck } from "../data/storage";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
@@ -25,10 +25,47 @@ export default function TestScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const optionAnims = useRef<Animated.Value[]>([]).current;
+  const questionAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCardsAndGenerateQuestions()
   }, [deckId]);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      animateOptions();
+      animateQuestion();
+    }
+  }, [currentIndex, questions]);
+
+  const animateQuestion = () => {
+    questionAnim.setValue(0);
+    Animated.spring(questionAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  };
+
+  const animateOptions = () => {
+    if (optionAnims.length === 0) {
+      for (let i = 0; i < 4; i++) {
+        optionAnims.push(new Animated.Value(0));
+      }
+    }
+    
+    optionAnims.forEach((anim, index) => {
+      anim.setValue(0);
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 80,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const loadCardsAndGenerateQuestions = async () => {
     const allCards = await getCardsByDeck(deckId);
@@ -135,10 +172,24 @@ export default function TestScreen({route, navigation}: any) {
       </View>
 
       <View style={styles.testContainer}>
-        <View style={[commonStyles.card, styles.questionCard]}>
+        <Animated.View 
+          style={[
+            commonStyles.card, 
+            styles.questionCard,
+            {
+              opacity: questionAnim,
+              transform: [{
+                scale: questionAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.9, 1],
+                }),
+              }],
+            }
+          ]}
+        >
           <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
           <Text style={styles.cardText}>{currentQuestion.card.front}</Text>
-        </View>
+        </Animated.View>
 
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => {
@@ -152,21 +203,32 @@ export default function TestScreen({route, navigation}: any) {
               optionStyle = styles.optionIncorrect;
             }
 
+            const animatedStyle = optionAnims[index] ? {
+              opacity: optionAnims[index],
+              transform: [{
+                translateX: optionAnims[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0],
+                }),
+              }],
+            } : {};
+
             return (
-              <TouchableOpacity
-                key={index}
-                style={[styles.option, optionStyle]}
-                onPress={() => handleSelectAnswer(option)}
-                disabled={showResult}
-              >
-                <Text style={styles.optionText}>{option}</Text>
-                {showResult && isCorrect && (
-                  <Ionicons name="checkmark-circle" size={24} color="#51CF66" />
-                )}
-                {showResult && isSelected && !isCorrect && (
-                  <Ionicons name="close-circle" size={24} color="#FF6B6B" />
-                )}
-              </TouchableOpacity>
+              <Animated.View key={index} style={animatedStyle}>
+                <TouchableOpacity
+                  style={[styles.option, optionStyle]}
+                  onPress={() => handleSelectAnswer(option)}
+                  disabled={showResult}
+                >
+                  <Text style={styles.optionText}>{option}</Text>
+                  {showResult && isCorrect && (
+                    <Ionicons name="checkmark-circle" size={24} color="#51CF66" />
+                  )}
+                  {showResult && isSelected && !isCorrect && (
+                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
             );
           })}
         </View>
@@ -213,6 +275,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardLabel: {
     fontSize: 14,
@@ -239,8 +306,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   optionCorrect: {
+    backgroundColor: '#51CF6620',
     borderRadius: 12,
     padding: SPACING.md,
     borderWidth: 2,
@@ -248,9 +321,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#51CF6620',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   optionIncorrect: {
+    backgroundColor: '#FF6B6B20',
     borderRadius: 12,
     padding: SPACING.md,
     borderWidth: 2,
@@ -258,7 +336,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B20',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   optionText: {
     fontSize: 16,

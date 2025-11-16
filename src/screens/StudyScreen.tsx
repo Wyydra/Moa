@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { getDueCards, saveCard } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
@@ -16,6 +16,8 @@ export default function StudyScreen({route, navigation}: any) {
   const [showBack, setShowBack] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
+  const flipAnim = useRef(new Animated.Value(0)).current;
+  const cardAnim = useRef(new Animated.Value(1)).current;
 
 
   useEffect(() => {
@@ -32,7 +34,20 @@ export default function StudyScreen({route, navigation}: any) {
   };
 
   const handleFlip = () => {
-    setShowBack(!showBack);
+    Animated.sequence([
+      Animated.timing(flipAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(flipAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    setTimeout(() => setShowBack(!showBack), 200);
   }
 
   const handleResponse = async (response: StudyResponse) => {
@@ -40,12 +55,19 @@ export default function StudyScreen({route, navigation}: any) {
     const updatedCard = calculateNextReview(currentCard, response);
     await saveCard(updatedCard);
 
-    if (currentIndex + 1 >= cards.length) {
-      setCompleted(true);
-    } else {
-      setCurrentIndex(currentIndex + 1);
-      setShowBack(false);
-    }
+    Animated.timing(cardAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      if (currentIndex + 1 >= cards.length) {
+        setCompleted(true);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+        setShowBack(false);
+        cardAnim.setValue(1);
+      }
+    });
   };
 
   const handleBack = () => {
@@ -98,12 +120,31 @@ if (completed) {
       </View>
 
       <View style={styles.cardContainer}>
-        <View style={[commonStyles.card, styles.flashcard]}>
+        <Animated.View 
+          style={[
+            commonStyles.card, 
+            styles.flashcard,
+            {
+              opacity: cardAnim,
+              transform: [
+                {
+                  rotateY: flipAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg'],
+                  }),
+                },
+                {
+                  scale: cardAnim,
+                },
+              ],
+            },
+          ]}
+        >
           <Text style={styles.cardLabel}>{showBack ? t('flashcard.answer') : t('flashcard.question')}</Text>
           <Text style={styles.cardText}>
             {showBack ? currentCard.back : currentCard.front}
           </Text>
-        </View>
+        </Animated.View>
 
         {!showBack ? (
           <TouchableOpacity style={[commonStyles.button, styles.showButton]} onPress={handleFlip}>
@@ -180,6 +221,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   cardLabel: {
     fontSize: 14,
@@ -210,6 +256,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   againButton: {
     backgroundColor: '#FF6B6B',

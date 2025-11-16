@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { COLORS, SPACING } from '../utils/constants';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { getAllDecks, getAllCards, getDueCards } from '../data/storage';
 import { Deck } from '../data/model';
 
@@ -14,6 +14,23 @@ export default function HomeScreen({ navigation }: any) {
   const [totalCards, setTotalCards] = useState(0);
   const [decksWithDue, setDecksWithDue] = useState<Array<{deck: Deck, dueCount: number}>>([]);
   const [loading, setLoading] = useState(true);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const loadStats = async () => {
     setLoading(true);
@@ -57,7 +74,15 @@ export default function HomeScreen({ navigation }: any) {
         <Text style={styles.subtitle}>{t('home.welcome')}</Text>
       </View>
 
-      <View style={styles.statsGrid}>
+      <Animated.View 
+        style={[
+          styles.statsGrid,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }
+        ]}
+      >
         <View style={[commonStyles.card, styles.statCard]}>
           <Ionicons name="today-outline" size={28} color={COLORS.skyBlue} />
           <Text style={styles.statNumber}>{totalDue}</Text>
@@ -69,7 +94,7 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.statNumber}>{totalCards}</Text>
           <Text style={styles.statLabel}>{t('home.totalCards')}</Text>
         </View>
-      </View>
+      </Animated.View>
 
       {decksWithDue.length > 0 && (
         <View style={styles.section}>
@@ -138,6 +163,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: SPACING.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statNumber: {
     fontSize: 36,
@@ -167,6 +197,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: SPACING.md,
     padding: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   deckInfo: {
     flex: 1,

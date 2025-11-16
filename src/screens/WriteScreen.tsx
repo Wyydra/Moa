@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { getCardsByDeck } from "../data/storage";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
@@ -20,6 +20,8 @@ export default function WriteScreen({route, navigation}: any) {
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showHandwriting, setShowHandwriting] = useState(false);
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const resultAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCards();
@@ -40,6 +42,21 @@ export default function WriteScreen({route, navigation}: any) {
     setShowResult(true);
     if (correct) {
       setCorrectCount(correctCount + 1);
+      Animated.spring(resultAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      ]).start();
+      Animated.spring(resultAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
     }
   };
 
@@ -47,6 +64,7 @@ export default function WriteScreen({route, navigation}: any) {
     if (currentIndex + 1 >= cards.length) {
       setCompleted(true);
     } else {
+      resultAnim.setValue(0);
       setCurrentIndex(currentIndex + 1);
       setUserAnswer('');
       setShowResult(false);
@@ -129,23 +147,44 @@ export default function WriteScreen({route, navigation}: any) {
               </Text>
             </TouchableOpacity>
           </View>
-          <TextInput
-            style={[
-              styles.input,
-              showResult && (isCorrect ? styles.inputCorrect : styles.inputIncorrect)
-            ]}
-            value={userAnswer}
-            onChangeText={setUserAnswer}
-            placeholder="Type your answer..."
-            placeholderTextColor={COLORS.textLight}
-            editable={!showResult}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <Animated.View
+            style={{
+              transform: [{ translateX: shakeAnim }],
+            }}
+          >
+            <TextInput
+              style={[
+                styles.input,
+                showResult && (isCorrect ? styles.inputCorrect : styles.inputIncorrect)
+              ]}
+              value={userAnswer}
+              onChangeText={setUserAnswer}
+              placeholder="Type your answer..."
+              placeholderTextColor={COLORS.textLight}
+              editable={!showResult}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </Animated.View>
         </View>
 
         {showResult && (
-          <View style={styles.resultSection}>
+          <Animated.View 
+            style={[
+              styles.resultSection,
+              {
+                opacity: resultAnim,
+                transform: [
+                  {
+                    scale: resultAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             <View style={[styles.resultBadge, isCorrect ? styles.correctBadge : styles.incorrectBadge]}>
               <Ionicons 
                 name={isCorrect ? "checkmark-circle" : "close-circle"} 
@@ -162,7 +201,7 @@ export default function WriteScreen({route, navigation}: any) {
                 <Text style={styles.correctAnswerText}>{currentCard.back}</Text>
               </View>
             )}
-          </View>
+          </Animated.View>
         )}
 
         {!showResult ? (
@@ -238,6 +277,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardLabel: {
     fontSize: 14,
@@ -307,6 +351,11 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     borderRadius: 12,
     marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   correctBadge: {
     backgroundColor: '#51CF66',

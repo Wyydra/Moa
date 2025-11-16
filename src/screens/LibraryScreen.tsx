@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable, Animated } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Deck } from "../data/model";
 import { deleteDeck, getAllDecks } from "../data/storage";
 import { COLORS, SPACING } from '../utils/constants';
@@ -78,26 +78,49 @@ export default function LibraryScreen({navigation}: any) {
     );
   };
 
-  const renderDeck = ({ item }: { item: Deck }) => (
-    <TouchableOpacity
-      style={[commonStyles.card, styles.deckCard]}
-      onPress={() => handleDeckPress(item)}
-    >
-      <View style={styles.deckContent}>
-        <View style={styles.deckInfo}>
-          <Text style={styles.deckName}>{item.name}</Text>
-          <Text style={styles.deckCount}>{t('library.cardCount', { count: item.cardCount })}</Text>
-        </View>
+  const renderDeck = ({ item, index }: { item: Deck, index: number }) => {
+    const animValue = useRef(new Animated.Value(0)).current;
+
+    Animated.timing(animValue, {
+      toValue: 1,
+      duration: 400,
+      delay: index * 100,
+      useNativeDriver: true,
+    }).start();
+
+    const translateY = animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [20, 0],
+    });
+
+    return (
+      <Animated.View
+        style={{
+          opacity: animValue,
+          transform: [{ translateY }],
+        }}
+      >
         <TouchableOpacity
-          onPress={() => handleDeckMenu(item)}
-          style={styles.menuButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={[commonStyles.card, styles.deckCard]}
+          onPress={() => handleDeckPress(item)}
         >
-          <Ionicons name="ellipsis-vertical" size={20} color={COLORS.textLight} />
+          <View style={styles.deckContent}>
+            <View style={styles.deckInfo}>
+              <Text style={styles.deckName}>{item.name}</Text>
+              <Text style={styles.deckCount}>{t('library.cardCount', { count: item.cardCount })}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => handleDeckMenu(item)}
+              style={styles.menuButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="ellipsis-vertical" size={20} color={COLORS.textLight} />
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+      </Animated.View>
+    );
+  };
 
   return (
      <View style={commonStyles.container}>
@@ -163,6 +186,11 @@ const styles = StyleSheet.create({
   },
   deckCard: {
     marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   deckContent: {
     flexDirection: 'row',
