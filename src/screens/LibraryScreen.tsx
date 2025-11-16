@@ -136,7 +136,11 @@ export default function LibraryScreen({navigation}: any) {
       <Text style={commonStyles.screenTitle}>{t('library.title')}</Text>
 
       {allTags.length > 0 && (
-        <>
+        <View style={styles.filterSection}>
+          <View style={styles.filterHeader}>
+            <Ionicons name="funnel-outline" size={16} color={COLORS.textLight} />
+            <Text style={styles.filterLabel}>{t('library.filterByTags')}</Text>
+          </View>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -159,7 +163,7 @@ export default function LibraryScreen({navigation}: any) {
             ))}
           </ScrollView>
           {selectedTags.length > 0 && (
-            <View style={styles.filterActions}>
+            <>
               <TouchableOpacity
                 style={styles.clearFilterButton}
                 onPress={handleClearFilter}
@@ -167,16 +171,39 @@ export default function LibraryScreen({navigation}: any) {
                 <Ionicons name="close-circle" size={16} color={COLORS.skyBlue} />
                 <Text style={styles.clearFilterText}>{t('library.clearFilter')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[commonStyles.button, styles.studyAllButton]}
-                onPress={() => navigation.navigate('StudyScreen', { tags: selectedTags })}
-              >
-                <Ionicons name="school-outline" size={16} color="white" style={{ marginRight: 6 }} />
-                <Text style={[commonStyles.buttonText, styles.studyAllText]}>{t('library.studyAll')}</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.modeButtons}>
+                <TouchableOpacity
+                  style={[styles.modeButton, styles.modeButtonLearn]}
+                  onPress={() => navigation.navigate('StudyScreen', { tags: selectedTags })}
+                >
+                  <Ionicons name="book-outline" size={20} color="white" />
+                  <Text style={styles.modeButtonText}>{t('modes.learn.title')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeButton, styles.modeButtonTest]}
+                  onPress={() => navigation.navigate('TestScreen', { tags: selectedTags })}
+                >
+                  <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                  <Text style={styles.modeButtonText}>{t('modes.test.title')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeButton, styles.modeButtonWrite]}
+                  onPress={() => navigation.navigate('WriteScreen', { tags: selectedTags })}
+                >
+                  <Ionicons name="create-outline" size={20} color="white" />
+                  <Text style={styles.modeButtonText}>{t('modes.write.title')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeButton, styles.modeButtonMatch]}
+                  onPress={() => navigation.navigate('MatchScreen', { tags: selectedTags })}
+                >
+                  <Ionicons name="grid-outline" size={20} color="white" />
+                  <Text style={styles.modeButtonText}>{t('modes.match.title')}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
-        </>
+        </View>
       )}
 
       {decks.length === 0 ? (
@@ -234,6 +261,20 @@ const styles = StyleSheet.create({
   createButton: {
     marginTop: SPACING.xl,
   },
+  filterSection: {
+    marginBottom: SPACING.md,
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+    gap: SPACING.xs,
+  },
+  filterLabel: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    fontWeight: '500',
+  },
   tagsFilter: {
     marginBottom: SPACING.md,
     maxHeight: 40,
@@ -258,30 +299,47 @@ const styles = StyleSheet.create({
   filterTagTextActive: {
     color: 'white',
   },
-  filterActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
   clearFilterButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: SPACING.md,
   },
   clearFilterText: {
     color: COLORS.skyBlue,
     fontSize: 14,
     marginLeft: SPACING.xs,
   },
-  studyAllButton: {
+  modeButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginLeft: SPACING.md,
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
   },
-  studyAllText: {
-    fontSize: 14,
+  modeButton: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: 12,
+    gap: SPACING.xs,
+  },
+  modeButtonLearn: {
+    backgroundColor: COLORS.skyBlue,
+  },
+  modeButtonTest: {
+    backgroundColor: '#34C759',
+  },
+  modeButtonWrite: {
+    backgroundColor: '#FF9500',
+  },
+  modeButtonMatch: {
+    backgroundColor: '#AF52DE',
+  },
+  modeButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContent: {
     paddingBottom: 100,
