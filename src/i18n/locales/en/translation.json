@@ -48,7 +48,7 @@
     "description": "Description (Optional)",
     "descriptionPlaceholder": "Common Korean greetings",
     "tags": "Tags",
-    "tagsPlaceholder": "Add tags (e.g., Korean, Beginner, TOPIK)",
+    "tagsPlaceholder": "Add tags",
     "addTag": "Add tag",
     "filterByTag": "Filter by tag",
     "allDecks": "All Decks",
@@ -62,7 +62,10 @@
     "scanInstructions": "Scan this QR code with any camera app to import this deck into Moa",
     "exportError": "Failed to export deck",
     "importSuccess": "Imported deck: {{name}}",
-    "importError": "Failed to import deck"
+    "importError": "Failed to import deck",
+    "exportAsFile": "Export as File",
+    "shareNotAvailable": "Sharing is not available on this device",
+    "exportDeck": "Export Deck"
   },
   "card": {
     "addCard": "Add Card",

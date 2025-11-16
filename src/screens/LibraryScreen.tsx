@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { useCallback, useState } from "react";
 import { Deck } from "../data/model";
-import { deleteDeck, getAllDecks, getAllTags, getDecksByTags } from "../data/storage";
+import { deleteDeck, getAllDecks, getAllTags, getDecksByTags, getDeckById, importDeckFromJSON } from "../data/storage";
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
@@ -106,6 +107,40 @@ export default function LibraryScreen({navigation}: any) {
         },
       ]
     );
+  };
+
+  const handleImportDeck = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const file = result.assets[0];
+      const response = await fetch(file.uri);
+      const jsonString = await response.text();
+
+      const newDeckId = await importDeckFromJSON(jsonString);
+      const deck = await getDeckById(newDeckId);
+
+      if (deck) {
+        Alert.alert(
+          t('common.success'),
+          t('deck.importSuccess', { name: deck.name })
+        );
+        loadDecks();
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      Alert.alert(
+        t('common.error'),
+        `${t('deck.importError')}\n\nDebug: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   };
 
   const renderDeck = ({ item, index }: { item: Deck, index: number }) => {
@@ -224,6 +259,12 @@ export default function LibraryScreen({navigation}: any) {
             keyExtractor={item => item.id}
             contentContainerStyle={styles.listContent}
           />
+          <TouchableOpacity
+            style={styles.importFab}
+            onPress={handleImportDeck}
+          >
+            <Ionicons name="download-outline" size={24} color="white"/>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.fab}
             onPress={handleCreateDeck}
@@ -372,6 +413,22 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     padding: SPACING.sm,
+  },
+  importFab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 100,
+    backgroundColor: COLORS.coral,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   fab: {
     position: 'absolute',

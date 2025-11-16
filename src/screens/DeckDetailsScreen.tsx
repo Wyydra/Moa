@@ -9,6 +9,8 @@ import { deleteDeck, exportDeckToJSON, getCardsByDeck, getDeckById, getDueCards 
 import { Card, Deck } from "../data/model";
 import { encodeDeckToUrl as encodeDeckToURL } from "../utils/deepLinking";
 import QRCode from 'react-native-qrcode-svg';
+import * as Sharing from 'expo-sharing';
+import { Paths, File } from 'expo-file-system';
 
 export default function DeckDetailsScreen({ route, navigation }: any) {
   const { t } = useTranslation();
@@ -70,21 +72,40 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
 
   const handleShareDeck = async () => {
     try {
-      console.log('Starting deck export for deckId:', deckId);
       const json = await exportDeckToJSON(deckId);
-      console.log('Exported JSON length:', json.length);
-      console.log('First 100 chars:', json.substring(0, 100));
-      
       const deepLink = encodeDeckToURL(json);
-      console.log('Generated deep link:', deepLink);
-      console.log('Deep link length:', deepLink.length);
-      
       setDeckJSON(deepLink);
       setShowQRModal(true);
     } catch (error) {
       console.error('Export error:', error);
       Alert.alert(
         t('common.error'), 
+        `${t('deck.exportError')}\n\nDebug: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  const handleExportFile = async () => {
+    try {
+      const json = await exportDeckToJSON(deckId);
+      const fileName = `${deck?.name.replace(/[^a-z0-9]/gi, '_')}_deck.moa`;
+      const file = new File(Paths.cache, fileName);
+      
+      await file.write(json);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/json',
+          dialogTitle: t('deck.exportDeck'),
+          UTI: 'public.json',
+        });
+      } else {
+        Alert.alert(t('common.error'), t('deck.shareNotAvailable'));
+      }
+    } catch (error) {
+      console.error('Export file error:', error);
+      Alert.alert(
+        t('common.error'),
         `${t('deck.exportError')}\n\nDebug: ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -298,22 +319,33 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               </TouchableOpacity>
             </View>
 
-          <View style={styles.qrContainer}>
-            <QRCode
-              value={deckJSON}
-              size={250}
-              backgroundColor="white"
-            />
-          </View>
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={deckJSON}
+                size={250}
+                backgroundColor="white"
+              />
+            </View>
 
-              <Text style={styles.qrInstructions}>
-                {t('deck.scanInstructions')}
-              </Text>
+            <Text style={styles.qrInstructions}>
+              {t('deck.scanInstructions')}
+            </Text>
 
-              <TouchableOpacity
-                style={commonStyles.button}
-                onPress={() => setShowQRModal(false)}
-              >
+            <TouchableOpacity
+              style={[commonStyles.button, styles.exportButton]}
+              onPress={async () => {
+                setShowQRModal(false);
+                await handleExportFile();
+              }}
+            >
+              <Ionicons name="download-outline" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={commonStyles.buttonText}>{t('deck.exportAsFile')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[commonStyles.button, styles.closeButton]}
+              onPress={() => setShowQRModal(false)}
+            >
               <Text style={commonStyles.buttonText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
@@ -504,5 +536,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SPACING.lg,
     paddingHorizontal: SPACING.md,
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  closeButton: {
+    backgroundColor: COLORS.textLight,
   },
 });
