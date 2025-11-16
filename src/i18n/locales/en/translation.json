@@ -96,7 +96,13 @@
     },
     "match": {
       "title": "Match",
-      "description": "Match terms and definitions"
+      "description": "Match terms and definitions",
+      "selectTwo": "Select two tiles to match",
+      "tries": "Tries",
+      "time": "Time",
+      "sessionComplete": "Match Complete!",
+      "stats": "{{matches}} matches in {{tries}} tries",
+      "newGame": "New Game"
     },
     "spell": {
       "title": "Spell",

@@ -96,7 +96,13 @@
     },
     "match": {
       "title": "Associer",
-      "description": "Associez les termes et définitions"
+      "description": "Associez les termes et définitions",
+      "selectTwo": "Sélectionnez deux tuiles à associer",
+      "tries": "Essais",
+      "time": "Temps",
+      "sessionComplete": "Jeu terminé !",
+      "stats": "{{matches}} correspondances en {{tries}} essais",
+      "newGame": "Nouvelle partie"
     },
     "spell": {
       "title": "Épeler",
