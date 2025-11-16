@@ -114,6 +114,19 @@ export const getDueCards = async (deckId: string): Promise<Card[]> => {
   }
 }
 
+export const getDueCardsByTags = async (tags: string[]): Promise<Card[]> => {
+  try {
+    const decks = await getDecksByTags(tags);
+    const deckIds = decks.map(d => d.id);
+    const allCards = await getAllCards();
+    const now = Date.now();
+    return allCards.filter(c => deckIds.includes(c.deckId) && c.nextReview <= now);
+  } catch (error) {
+    console.error('Error loading due cards by tags:', error);
+    return [];
+  }
+}
+
 export const deleteCard = async (cardId: string): Promise<void> => {
   try {
     const cards = await getAllCards();
@@ -236,6 +249,7 @@ export interface ExportedDeck {
   deck: {
     name: string;
     description?: string;
+    tags?: string[];
   };
   cards: {
     front: string;
@@ -258,6 +272,7 @@ export const exportDeckToJSON = async (deckId: string): Promise<string> => {
       deck: {
         name: deck.name,
         description: deck.description,
+        tags: deck.tags,
       },
       cards: cards.map(card => ({
         front: card.front,
@@ -290,6 +305,7 @@ export const importDeckFromJSON = async (jsonString: string): Promise<string> =>
       description: exportData.deck.description,
       createdAt: now,
       cardCount: exportData.cards.length,
+      tags: exportData.deck.tags || [],
     };
 
     const newCards: Card[] = exportData.cards.map(cardData => ({
@@ -314,5 +330,35 @@ export const importDeckFromJSON = async (jsonString: string): Promise<string> =>
   } catch (error) {
     console.error('Error importing deck:', error);
     throw error;
+  }
+}
+
+export const getAllTags = async (): Promise<string[]> => {
+  try {
+    const decks = await getAllDecks();
+    const tagSet = new Set<string>();
+
+    decks.forEach(deck => {
+      if (deck.tags && deck.tags.length > 0) {
+        deck.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+
+    return Array.from(tagSet).sort();
+  } catch (error) {
+    console.error('Error getting all tags:', error);
+    return [];
+  }
+}
+
+export const getDecksByTags = async (tags: string[]): Promise<Deck[]> => {
+  try {
+    const decks = await getAllDecks();
+    return decks.filter(deck => 
+      deck.tags && tags.some(tag => deck.tags!.includes(tag))
+    );
+  } catch (error) {
+    console.error('Error getting decks by tags:', error);
+    return [];
   }
 }

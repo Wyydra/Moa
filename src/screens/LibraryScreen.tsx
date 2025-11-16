@@ -1,22 +1,52 @@
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable, ScrollView } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { useCallback, useState } from "react";
 import { Deck } from "../data/model";
-import { deleteDeck, getAllDecks } from "../data/storage";
+import { deleteDeck, getAllDecks, getAllTags, getDecksByTags } from "../data/storage";
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const loadDecks = async () => {
     const loadedDecks = await getAllDecks();
+    setAllDecks(loadedDecks);
     setDecks(loadedDecks);
+    
+    const tags = await getAllTags();
+    setAllTags(tags);
+  };
+
+  const filterByTags = async (tags: string[]) => {
+    if (tags.length === 0) {
+      setDecks(allDecks);
+    } else {
+      const filtered = await getDecksByTags(tags);
+      setDecks(filtered);
+    }
+  };
+
+  const handleTagPress = (tag: string) => {
+    const newSelectedTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    
+    setSelectedTags(newSelectedTags);
+    filterByTags(newSelectedTags);
+  };
+
+  const handleClearFilter = () => {
+    setSelectedTags([]);
+    setDecks(allDecks);
   };
 
   useFocusEffect(
@@ -105,6 +135,50 @@ export default function LibraryScreen({navigation}: any) {
      <View style={commonStyles.container}>
       <Text style={commonStyles.screenTitle}>{t('library.title')}</Text>
 
+      {allTags.length > 0 && (
+        <>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.tagsFilter}
+          >
+            {allTags.map((tag, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.filterTagChip,
+                  selectedTags.includes(tag) && styles.filterTagChipActive
+                ]}
+                onPress={() => handleTagPress(tag)}
+              >
+                <Text style={[
+                  styles.filterTagText,
+                  selectedTags.includes(tag) && styles.filterTagTextActive
+                ]}>{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {selectedTags.length > 0 && (
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={styles.clearFilterButton}
+                onPress={handleClearFilter}
+              >
+                <Ionicons name="close-circle" size={16} color={COLORS.skyBlue} />
+                <Text style={styles.clearFilterText}>{t('library.clearFilter')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[commonStyles.button, styles.studyAllButton]}
+                onPress={() => navigation.navigate('StudyScreen', { tags: selectedTags })}
+              >
+                <Ionicons name="school-outline" size={16} color="white" style={{ marginRight: 6 }} />
+                <Text style={[commonStyles.buttonText, styles.studyAllText]}>{t('library.studyAll')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
+      )}
+
       {decks.length === 0 ? (
         <>
           <Text style={commonStyles.emptyText}>{t('library.noDecks')}</Text>
@@ -159,6 +233,55 @@ export default function LibraryScreen({navigation}: any) {
 const styles = StyleSheet.create({
   createButton: {
     marginTop: SPACING.xl,
+  },
+  tagsFilter: {
+    marginBottom: SPACING.md,
+    maxHeight: 40,
+  },
+  filterTagChip: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: SPACING.sm,
+  },
+  filterTagChipActive: {
+    backgroundColor: COLORS.skyBlue,
+    borderColor: COLORS.skyBlue,
+  },
+  filterTagText: {
+    color: COLORS.textLight,
+    fontSize: 14,
+  },
+  filterTagTextActive: {
+    color: 'white',
+  },
+  filterActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  clearFilterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  clearFilterText: {
+    color: COLORS.skyBlue,
+    fontSize: 14,
+    marginLeft: SPACING.xs,
+  },
+  studyAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginLeft: SPACING.md,
+  },
+  studyAllText: {
+    fontSize: 14,
   },
   listContent: {
     paddingBottom: 100,

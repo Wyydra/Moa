@@ -31,7 +31,12 @@
     "createFirstDeck": "Create Your First Deck",
     "cardCount": "{{count}} cards",
     "deleteDeck": "Delete Deck",
-    "deleteDeckConfirm": "Are you sure you want to delete \"{{name}}\"? This will also delete all {{count}} cards in this deck."
+    "deleteDeckConfirm": "Are you sure you want to delete \"{{name}}\"? This will also delete all {{count}} cards in this deck.",
+    "filterByTags": "Filter by tags",
+    "clearFilter": "Clear filter",
+    "decksWithTag": "Decks with tag: {{tag}}",
+    "studyTagged": "Study {{count}} tagged decks",
+    "studyAll": "Study All"
   },
   "deck": {
     "cards": "cards",
@@ -42,6 +47,12 @@
     "deckName": "Deck Name",
     "description": "Description (Optional)",
     "descriptionPlaceholder": "Common Korean greetings",
+    "tags": "Tags",
+    "tagsPlaceholder": "Add tags (e.g., Korean, Beginner, TOPIK)",
+    "addTag": "Add tag",
+    "filterByTag": "Filter by tag",
+    "allDecks": "All Decks",
+    "noTagsAdded": "No tags added",
     "totalCards": "Total Cards",
     "dueForReview": "Due for Review",
     "startStudying": "Start Studying",

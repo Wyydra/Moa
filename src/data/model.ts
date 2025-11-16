@@ -16,4 +16,5 @@ export interface Deck {
   description?: string;
   createdAt: number;
   cardCount: number;
+  tags?: string[];
 }

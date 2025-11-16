@@ -31,7 +31,12 @@
     "createFirstDeck": "Créer votre premier paquet",
     "cardCount": "{{count}} cartes",
     "deleteDeck": "Supprimer le paquet",
-    "deleteDeckConfirm": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les {{count}} cartes de ce paquet."
+    "deleteDeckConfirm": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également toutes les {{count}} cartes de ce paquet.",
+    "filterByTags": "Filtrer par étiquettes",
+    "clearFilter": "Effacer le filtre",
+    "decksWithTag": "Paquets avec l'étiquette : {{tag}}",
+    "studyTagged": "Étudier {{count}} paquets étiquetés",
+    "studyAll": "Tout étudier"
   },
   "deck": {
     "cards": "cartes",
@@ -42,6 +47,12 @@
     "deckName": "Nom du paquet",
     "description": "Description (Optionnel)",
     "descriptionPlaceholder": "Salutations coréennes courantes",
+    "tags": "Étiquettes",
+    "tagsPlaceholder": "Ajouter des étiquettes (par ex., Coréen, Débutant, TOPIK)",
+    "addTag": "Ajouter une étiquette",
+    "filterByTag": "Filtrer par étiquette",
+    "allDecks": "Tous les paquets",
+    "noTagsAdded": "Aucune étiquette ajoutée",
     "totalCards": "Total de cartes",
     "dueForReview": "À réviser",
     "startStudying": "Commencer à étudier",

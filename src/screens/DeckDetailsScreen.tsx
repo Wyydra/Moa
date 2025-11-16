@@ -154,6 +154,16 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         <Text style={styles.description}>{deck.description}</Text>
       )}
 
+      {deck.tags && deck.tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {deck.tags.map((tag, index) => (
+            <View key={index} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <TouchableOpacity
         style={[commonStyles.button, styles.studyButton]}
         onPress={() => setShowModePicker(true)}
@@ -339,6 +349,23 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginBottom: SPACING.lg,
     lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: SPACING.lg,
+  },
+  tagChip: {
+    backgroundColor: COLORS.skyBlue,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  tagText: {
+    color: 'white',
+    fontSize: 14,
   },
   addButton: {
     marginTop: SPACING.xl,

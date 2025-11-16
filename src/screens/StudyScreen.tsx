@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
-import { getDueCards, saveCard } from "../data/storage";
+import { getDueCards, getDueCardsByTags, saveCard } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -10,7 +10,7 @@ import { COLORS, SPACING } from '../utils/constants';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId } = route.params;
+  const { deckId, tags } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
@@ -22,10 +22,15 @@ export default function StudyScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadDueCards();
-  }, [deckId]);
+  }, [deckId, tags]);
 
   const loadDueCards = async () => {
-    const dueCards = await getDueCards(deckId);
+    let dueCards: Card[];
+    if (tags && tags.length > 0) {
+      dueCards = await getDueCardsByTags(tags);
+    } else {
+      dueCards = await getDueCards(deckId);
+    }
     setCards(dueCards);
     setLoading(false);
     if (dueCards.length === 0) {
