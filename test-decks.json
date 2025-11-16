@@ -1,0 +1,62 @@
+{
+  "decks": [
+    {
+      "name": "Korean Basics",
+      "description": "Essential everyday vocabulary",
+      "tags": ["Korean", "Beginner", "TOPIK I"],
+      "cards": [
+        { "front": "Water", "back": "물" },
+        { "front": "House", "back": "집" },
+        { "front": "Dog", "back": "개" },
+        { "front": "Book", "back": "책" },
+        { "front": "Car", "back": "차" },
+        { "front": "Person", "back": "사람" },
+        { "front": "Food", "back": "음식" },
+        { "front": "School", "back": "학교" },
+        { "front": "Friend", "back": "친구" },
+        { "front": "Family", "back": "가족" }
+      ]
+    },
+    {
+      "name": "Nature & Weather",
+      "description": "Natural world and weather terms",
+      "tags": ["Korean", "Intermediate", "Nature"],
+      "cards": [
+        { "front": "Sky", "back": "하늘" },
+        { "front": "Tree", "back": "나무" },
+        { "front": "Mountain", "back": "산" },
+        { "front": "Sea", "back": "바다" },
+        { "front": "Sun", "back": "해" },
+        { "front": "Moon", "back": "달" },
+        { "front": "Star", "back": "별" },
+        { "front": "Flower", "back": "꽃" },
+        { "front": "Rain", "back": "비" },
+        { "front": "Wind", "back": "바람" }
+      ]
+    },
+    {
+      "name": "Body Parts",
+      "description": "Human body vocabulary",
+      "tags": ["Korean", "Beginner", "Medical"],
+      "cards": [
+        { "front": "Hand", "back": "손" },
+        { "front": "Foot", "back": "발" },
+        { "front": "Eye", "back": "눈" },
+        { "front": "Fire", "back": "불" },
+        { "front": "Heart", "back": "마음" }
+      ]
+    },
+    {
+      "name": "Abstract Concepts",
+      "description": "Love, time, work, and emotions",
+      "tags": ["Korean", "Advanced", "TOPIK II"],
+      "cards": [
+        { "front": "Love", "back": "사랑" },
+        { "front": "Time", "back": "시간" },
+        { "front": "Money", "back": "돈" },
+        { "front": "Work", "back": "일" },
+        { "front": "Country", "back": "나라" }
+      ]
+    }
+  ]
+}

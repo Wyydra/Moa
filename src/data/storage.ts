@@ -177,32 +177,41 @@ export const clearAllData = async (): Promise<void> => {
 };
 
 export const seedTestData = async (): Promise<void> => {
-  const testDeckData = require('../../test-deck.json');
+  const testDecksData = require('../../test-decks.json');
   const now = Date.now();
 
-  const testDeckId = generateId();
-  const testDeck: Deck = {
-    id: testDeckId,
-    name: testDeckData.deck.name,
-    description: testDeckData.deck.description,
-    createdAt: now,
-    cardCount: testDeckData.cards.length
-  };
+  const decks: Deck[] = [];
+  const cards: Card[] = [];
 
-  const testCards: Card[] = testDeckData.cards.map((cardData: any) => ({
-    id: generateId(),
-    front: cardData.front,
-    back: cardData.back,
-    deckId: testDeckId,
-    nextReview: now,
-    interval: 0,
-    easeFactor: 2.5,
-    repetitions: 0,
-    createdAt: now
-  }));
+  testDecksData.decks.forEach((deckData: any, index: number) => {
+    const deckId = generateId();
+    
+    decks.push({
+      id: deckId,
+      name: deckData.name,
+      description: deckData.description,
+      tags: deckData.tags,
+      createdAt: now + (index * 1000),
+      cardCount: deckData.cards.length
+    });
 
-  await AsyncStorage.setItem(DECKS_KEY, JSON.stringify([testDeck]));
-  await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(testCards));
+    deckData.cards.forEach((cardData: any) => {
+      cards.push({
+        id: generateId(),
+        front: cardData.front,
+        back: cardData.back,
+        deckId: deckId,
+        nextReview: now,
+        interval: 0,
+        easeFactor: 2.5,
+        repetitions: 0,
+        createdAt: now
+      });
+    });
+  });
+
+  await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+  await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(cards));
 };
 
 export const initializeStorage = async (): Promise<void> => {
