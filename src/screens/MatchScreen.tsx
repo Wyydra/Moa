@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
 import { getCardsByDeck } from "../data/storage";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from "../utils/constants";
@@ -215,12 +215,8 @@ export default function MatchScreen({ route, navigation }: any) {
 
       <Text style={styles.instruction}>{t('modes.match.selectTwo')}</Text>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.grid}>
-          {tiles.map(tile => {
+      <View style={styles.grid}>
+        {tiles.map(tile => {
           const isSelected = selectedTiles.find(t => t.id === tile.id);
           
           const scale = tile.animation.interpolate({
@@ -260,8 +256,7 @@ export default function MatchScreen({ route, navigation }: any) {
             </Animated.View>
           );
         })}
-        </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -310,18 +305,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SPACING.md,
   },
-  scrollContent: {
-    paddingBottom: SPACING.xl,
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: SPACING.xs,
+    flex: 1,
   },
   tile: {
     width: '31.5%',
-    height: screenHeight * 0.15,
+    height: screenHeight * 0.12,
     backgroundColor: COLORS.cardBg,
     borderRadius: 12,
     justifyContent: 'center',
