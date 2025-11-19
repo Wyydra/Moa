@@ -18,6 +18,10 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Keystore credentials (keep secure!)
+android/keystore.properties
+*.keystore
+
 # Metro
 .metro-health-check*
 
