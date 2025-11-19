@@ -236,3 +236,22 @@ Moa is built for learners who want to grow their Korean quietly and consistently
 No pressure, no clutter — just clear progress at your own rhythm.
 
 > *"Gather words, grow fluency. One Moa at a time."*
+
+## Project Philosophy
+
+Moa is first and foremost a personal tool, created to help me review Korean more effectively: reactivate what I already know, practice regularly, and keep my learning alive day by day.
+
+The app is then shared with classmates who want to train with the same modules — a small, motivated group using Moa in a spirit of support and shared progress.
+
+The goal is not to build a commercial product from the start, but to create something useful, simple, and enjoyable for myself and the people around me.
+Over time, depending on feedback and interest, Moa may evolve organically and eventually open up to a wider audience — naturally, without pressure.
+
+## Backend and Content Creation
+
+To make content creation easier, Moa includes a lightweight backend and an internal interface for writing, organizing, and publishing interactive modules (vocabulary, cloze tests, multiple choice, reactivation drills, etc.).
+
+This tool is not meant to be a commercial platform.
+It exists primarily to quickly produce small, personalized learning modules, tailored to my needs and to the needs of the classmates who use the app with me.
+
+The pipeline is designed to be generic, and could eventually support other languages if needed.
+For now, it remains an internal tool, built to streamline the creation of Korean content and ensure a consistent experience inside the app.
