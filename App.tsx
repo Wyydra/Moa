@@ -8,6 +8,7 @@ import AddCardScreen from './src/screens/AddCardScreen';
 import EditCardScreen from './src/screens/EditCardScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import ProgressScreen from './src/screens/ProgressScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
@@ -170,6 +171,16 @@ export default function App() {
           tabBarLabel: t('library.title'),
           tabBarIcon: ({color, size}) => (
             <Ionicons name='library' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{ 
+          tabBarLabel: t('progress.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='stats-chart' size={size} color={color} />
           ),
         }}
       />

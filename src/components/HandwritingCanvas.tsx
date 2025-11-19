@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
-import { validateStrokeOrder, validateMultipleCharacters, validateJamoSequence } from '../utils/strokeOrder/validator';
+import { validateStrokeOrder, validateJamoSequence } from '../utils/strokeOrder/validator';
 import { ValidationResult } from '../utils/strokeOrder/types';
 import { StrokeOrderFeedback, FeedbackMessage } from './StrokeOrderFeedback';
 import { StrokeGuide, StrokeAnimation, AnimationControls } from './StrokeAnimation';
@@ -24,7 +24,6 @@ interface HandwritingCanvasProps {
   onRecognitionResult?: (result: string[]) => void;
   width?: number;
   height?: number;
-  strokeColor?: string;
   strokeWidth?: number;
   practiceMode?: boolean;
   targetCharacter?: string;
@@ -36,7 +35,6 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
   onRecognitionResult,
   width = 300,
   height = 400,
-  strokeColor = '#FFD700',
   strokeWidth = 3,
   practiceMode = false,
   targetCharacter = '',

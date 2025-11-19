@@ -20,6 +20,8 @@
     "cardsDue": "cartes à réviser",
     "totalCards": "total de cartes",
     "readyToStudy": "Prêt à étudier",
+    "topPriority": "Priorité maximale",
+    "viewAll": "Tout voir",
     "allCaughtUp": "Tout est à jour ! 🎉",
     "noCardsDue": "Aucune carte à réviser pour le moment",
     "browseLibrary": "Parcourir la bibliothèque",
@@ -36,7 +38,10 @@
     "clearFilter": "Effacer le filtre",
     "decksWithTag": "Paquets avec l'étiquette : {{tag}}",
     "studyTagged": "Étudier {{count}} paquets étiquetés",
-    "studyAll": "Tout étudier"
+    "studyAll": "Tout étudier",
+    "totalDecks": "Paquets",
+    "totalCards": "Total de cartes",
+    "cardsDue": "À réviser"
   },
   "deck": {
     "cards": "cartes",
@@ -47,6 +52,9 @@
     "deckName": "Nom du paquet",
     "description": "Description (Optionnel)",
     "descriptionPlaceholder": "Salutations coréennes courantes",
+    "language": "Langue",
+    "languageDescription": "Sélectionnez la langue pour la prononciation synthèse vocale",
+    "languageAuto": "Détection automatique",
     "tags": "Étiquettes",
     "tagsPlaceholder": "Ajouter des tags",
     "addTag": "Ajouter une étiquette",
@@ -132,11 +140,41 @@
      "good": "Bien",
      "easy": "Facile"
    },
-     "settings": {
+      "settings": {
       "title": "Paramètres",
       "appLanguage": "Langue de l'application",
       "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
+      "systemDefault": "Par défaut système",
       "handwritingLanguage": "Langue d'écriture manuscrite",
-      "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite"
+      "handwritingLanguageDescription": "Sélectionnez le modèle de langue pour la reconnaissance d'écriture manuscrite",
+      "pronunciation": "Prononciation",
+      "ttsEnabled": "Activer la synthèse vocale",
+      "ttsEnabledDescription": "Lire la prononciation des cartes",
+      "ttsAutoPlay": "Lecture automatique de la prononciation",
+      "ttsAutoPlayDescription": "Lire automatiquement l'audio à l'apparition de la carte",
+      "ttsRate": "Vitesse de parole",
+      "ttsRateDescription": "Ajuster la vitesse de prononciation"
+    },
+    "progress": {
+      "title": "Progrès",
+      "dayStreak": "Série de jours",
+      "reviewsToday": "Révisions aujourd'hui",
+      "reviewsThisWeek": "Cette semaine",
+      "accuracy": "Précision",
+      "overallProgress": "Progrès global",
+      "totalCards": "Total de cartes",
+      "cardsDue": "Cartes à réviser",
+      "dueForReview": "À réviser",
+      "due": "à réviser",
+      "deckProgress": "Progrès des paquets",
+      "mastered": "Maîtrisées",
+      "learning": "En apprentissage",
+      "new": "Nouvelles",
+      "noDecks": "Aucun paquet pour le moment. Créez votre premier paquet pour commencer !",
+      "streakMessage": "Continuez ! Vous avez étudié pendant {{count}} jours consécutifs !",
+      "keepItUp": "Série incroyable ! Continuez votre excellent travail !",
+      "allCaughtUp": "Tout est à jour ! Vous avez tout révisé !",
+      "perfectDeck": "Parfait ! Toutes les cartes de ce paquet sont maîtrisées !",
+      "noProgress": "Pas encore de données d'étude. Commencez à réviser pour suivre vos progrès !"
     }
   }

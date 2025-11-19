@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { Card } from "../data/model";
-import { getDueCards, getDueCardsByTags, saveCard } from "../data/storage";
+import { Card, StudySession } from "../data/model";
+import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
+import PronunciationButton from '../components/PronunciationButton';
+import * as Speech from 'expo-speech';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -16,13 +18,22 @@ export default function StudyScreen({route, navigation}: any) {
   const [showBack, setShowBack] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
-  const flipAnim = useRef(new Animated.Value(0)).current;
-  const cardAnim = useRef(new Animated.Value(1)).current;
+  const [ttsEnabled, setTTSEnabled] = useState(true);
+  const [ttsAutoPlay, setTTSAutoPlay] = useState(false);
+  const [ttsRate, setTTSRate] = useState(1.0);
+  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
 
 
   useEffect(() => {
     loadDueCards();
+    loadTTSSettings();
   }, [deckId, tags]);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
 
   const loadDueCards = async () => {
     let dueCards: Card[];
@@ -33,50 +44,70 @@ export default function StudyScreen({route, navigation}: any) {
     }
     const shuffledCards = [...dueCards].sort(() => Math.random() - 0.5);
     setCards(shuffledCards);
+    
+    // Load deck to get language setting
+    if (deckId) {
+      const deck = await getDeckById(deckId);
+      if (deck) {
+        setDeckLanguage(deck.language);
+      }
+    }
+    
     setLoading(false);
     if (shuffledCards.length === 0) {
       setCompleted(true);
     }
   };
 
+  const loadTTSSettings = async () => {
+    const enabled = await getTTSEnabled();
+    const autoPlay = await getTTSAutoPlay();
+    const rate = await getTTSRate();
+    setTTSEnabled(enabled);
+    setTTSAutoPlay(autoPlay);
+    setTTSRate(rate);
+  };
+
   const handleFlip = () => {
-    Animated.sequence([
-      Animated.timing(flipAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(flipAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
-    setTimeout(() => setShowBack(!showBack), 200);
-  }
+    setShowBack(!showBack);
+  };
 
   const handleResponse = async (response: StudyResponse) => {
     const currentCard = cards[currentIndex];
     const updatedCard = calculateNextReview(currentCard, response);
     await saveCard(updatedCard);
 
-    Animated.timing(cardAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      if (currentIndex + 1 >= cards.length) {
-        setCompleted(true);
-      } else {
-        setCurrentIndex(currentIndex + 1);
-        setShowBack(false);
-        cardAnim.setValue(1);
-      }
-    });
+    // Track study session
+    const responseMap: Record<StudyResponse, 'again' | 'hard' | 'good' | 'easy'> = {
+      [StudyResponse.Again]: 'again',
+      [StudyResponse.Hard]: 'hard',
+      [StudyResponse.Good]: 'good',
+      [StudyResponse.Easy]: 'easy',
+    };
+    
+    const session: StudySession = {
+      id: generateId(),
+      deckId: currentCard.deckId,
+      cardId: currentCard.id,
+      timestamp: Date.now(),
+      response: responseMap[response],
+      correct: response === StudyResponse.Good || response === StudyResponse.Easy,
+    };
+    await saveStudySession(session);
+
+    // Stop any ongoing TTS before transitioning
+    await Speech.stop();
+
+    if (currentIndex + 1 >= cards.length) {
+      setCompleted(true);
+    } else {
+      setShowBack(false);
+      setCurrentIndex(currentIndex + 1);
+    }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    await Speech.stop();
     navigation.goBack();
   };
 
@@ -126,31 +157,22 @@ if (completed) {
       </View>
 
       <View style={styles.cardContainer}>
-        <Animated.View 
-          style={[
-            commonStyles.card, 
-            styles.flashcard,
-            {
-              opacity: cardAnim,
-              transform: [
-                {
-                  rotateY: flipAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '180deg'],
-                  }),
-                },
-                {
-                  scale: cardAnim,
-                },
-              ],
-            },
-          ]}
-        >
+        <View style={[commonStyles.card, styles.flashcard]}>
           <Text style={styles.cardLabel}>{showBack ? t('flashcard.answer') : t('flashcard.question')}</Text>
           <Text style={styles.cardText}>
             {showBack ? currentCard.back : currentCard.front}
           </Text>
-        </Animated.View>
+          {showBack && ttsEnabled && (
+            <View style={styles.pronunciationContainer}>
+              <PronunciationButton 
+                text={currentCard.back}
+                rate={ttsRate}
+                autoPlay={ttsAutoPlay}
+                language={deckLanguage}
+              />
+            </View>
+          )}
+        </View>
 
         {!showBack ? (
           <TouchableOpacity style={[commonStyles.button, styles.showButton]} onPress={handleFlip}>
@@ -306,5 +328,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textLight,
     marginBottom: SPACING.xl,
+  },
+  pronunciationContainer: {
+    marginTop: SPACING.lg,
+    alignItems: 'center',
   },
 });

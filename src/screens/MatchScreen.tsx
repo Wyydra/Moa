@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
-import { getCardsByDeck, getCardsByTags } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
+import { StudySession } from "../data/model";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
@@ -110,6 +111,22 @@ export default function MatchScreen({ route, navigation }: any) {
             useNativeDriver: true,
           }),
         ]).start();
+
+        // Track successful match as study session
+        (async () => {
+          const matchedCard = tiles.find(t => t.cardId === first.cardId);
+          if (matchedCard) {
+            const session: StudySession = {
+              id: generateId(),
+              deckId: deckId || '',
+              cardId: matchedCard.cardId,
+              timestamp: Date.now(),
+              response: 'good',
+              correct: true,
+            };
+            await saveStudySession(session);
+          }
+        })();
 
         setTimeout(() => {
           setTiles(prevTiles =>

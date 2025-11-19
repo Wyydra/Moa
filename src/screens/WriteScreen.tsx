@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { Card } from "../data/model";
-import { getCardsByDeck, getCardsByTags } from "../data/storage";
+import { Card, StudySession } from "../data/model";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
@@ -39,10 +39,23 @@ export default function WriteScreen({route, navigation}: any) {
     }
   };
 
-  const handleSubmit = () => {
-    const correct = userAnswer.trim().toLowerCase() === cards[currentIndex].back.trim().toLowerCase();
+  const handleSubmit = async () => {
+    const currentCard = cards[currentIndex];
+    const correct = userAnswer.trim().toLowerCase() === currentCard.back.trim().toLowerCase();
     setIsCorrect(correct);
     setShowResult(true);
+    
+    // Track study session
+    const session: StudySession = {
+      id: generateId(),
+      deckId: currentCard.deckId,
+      cardId: currentCard.id,
+      timestamp: Date.now(),
+      response: correct ? 'good' : 'again',
+      correct: correct,
+    };
+    await saveStudySession(session);
+    
     if (correct) {
       setCorrectCount(correctCount + 1);
       Animated.spring(resultAnim, {

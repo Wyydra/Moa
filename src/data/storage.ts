@@ -1,10 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Card, Deck } from "./model";
+import { Card, Deck, StudySession } from "./model";
 
 const DECKS_KEY = '@moa_decks';
 const CARDS_KEY = '@moa_cards';
+const STUDY_SESSIONS_KEY = '@moa_study_sessions';
 const LANGUAGE_PREF_KEY = '@moa_language_preference';
 const HANDWRITING_LANG_KEY = '@moa_handwriting_language';
+const TTS_ENABLED_KEY = '@moa_tts_enabled';
+const TTS_AUTO_PLAY_KEY = '@moa_tts_auto_play';
+const TTS_RATE_KEY = '@moa_tts_rate';
 
 export const generateId = (): string => {
   return Date.now().toString() + Math.random().toString(36).substring(2,9);
@@ -191,6 +195,7 @@ export const seedTestData = async (): Promise<void> => {
       name: deckData.name,
       description: deckData.description,
       tags: deckData.tags,
+      language: deckData.language,
       createdAt: now + (index * 1000),
       cardCount: deckData.cards.length
     });
@@ -269,6 +274,7 @@ export interface ExportedDeck {
     name: string;
     description?: string;
     tags?: string[];
+    language?: string;
   };
   cards: {
     front: string;
@@ -292,6 +298,7 @@ export const exportDeckToJSON = async (deckId: string): Promise<string> => {
         name: deck.name,
         description: deck.description,
         tags: deck.tags,
+        language: deck.language,
       },
       cards: cards.map(card => ({
         front: card.front,
@@ -325,6 +332,7 @@ export const importDeckFromJSON = async (jsonString: string): Promise<string> =>
       createdAt: now,
       cardCount: exportData.cards.length,
       tags: exportData.deck.tags || [],
+      language: exportData.deck.language,
     };
 
     const newCards: Card[] = exportData.cards.map(cardData => ({
@@ -381,3 +389,180 @@ export const getDecksByTags = async (tags: string[]): Promise<Deck[]> => {
     return [];
   }
 }
+
+export const getTTSEnabled = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem(TTS_ENABLED_KEY);
+    return value === null ? true : value === 'true';
+  } catch (error) {
+    console.error('Error loading TTS enabled:', error);
+    return true;
+  }
+};
+
+export const setTTSEnabled = async (enabled: boolean): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(TTS_ENABLED_KEY, enabled.toString());
+  } catch (error) {
+    console.error('Error saving TTS enabled:', error);
+    throw error;
+  }
+};
+export const getTTSAutoPlay = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem(TTS_AUTO_PLAY_KEY);
+    return value === 'true';
+  } catch (error) {
+    console.error('Error loading TTS auto-play:', error);
+    return false;
+  }
+};
+export const setTTSAutoPlay = async (enabled: boolean): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(TTS_AUTO_PLAY_KEY, enabled.toString());
+  } catch (error) {
+    console.error('Error saving TTS auto-play:', error);
+    throw error;
+  }
+};
+export const getTTSRate = async (): Promise<number> => {
+  try {
+    const value = await AsyncStorage.getItem(TTS_RATE_KEY);
+    return value ? parseFloat(value) : 1.0;
+  } catch (error) {
+    console.error('Error loading TTS rate:', error);
+    return 1.0;
+  }
+};
+export const setTTSRate = async (rate: number): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(TTS_RATE_KEY, rate.toString());
+  } catch (error) {
+    console.error('Error saving TTS rate:', error);
+    throw error;
+  }
+};
+
+// Study Session Functions
+export const saveStudySession = async (session: StudySession): Promise<void> => {
+  try {
+    const sessions = await getAllStudySessions();
+    sessions.push(session);
+    await AsyncStorage.setItem(STUDY_SESSIONS_KEY, JSON.stringify(sessions));
+  } catch (error) {
+    console.error('Error saving study session:', error);
+    throw error;
+  }
+};
+
+export const getAllStudySessions = async (): Promise<StudySession[]> => {
+  try {
+    const data = await AsyncStorage.getItem(STUDY_SESSIONS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error loading study sessions:', error);
+    return [];
+  }
+};
+
+export const getStudyStreak = async (): Promise<number> => {
+  try {
+    const sessions = await getAllStudySessions();
+    
+    if (sessions.length === 0) {
+      return 0;
+    }
+
+    // Group sessions by day
+    const daySet = new Set<string>();
+    sessions.forEach(session => {
+      const date = new Date(session.timestamp);
+      const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      daySet.add(dayKey);
+    });
+
+    const sortedDays = Array.from(daySet).sort().reverse();
+    
+    if (sortedDays.length === 0) {
+      return 0;
+    }
+
+    // Check if today has activity
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+    
+    let streak = 0;
+    let currentDate = new Date(today);
+    
+    // Start from today or yesterday depending on whether today has activity
+    if (sortedDays[0] !== todayKey) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    // Count consecutive days backwards
+    while (true) {
+      const checkKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
+      
+      if (daySet.has(checkKey)) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  } catch (error) {
+    console.error('Error calculating study streak:', error);
+    return 0;
+  }
+};
+
+export const getTodayReviewCount = async (): Promise<number> => {
+  try {
+    const sessions = await getAllStudySessions();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = today.getTime();
+
+    return sessions.filter(session => session.timestamp >= todayTimestamp).length;
+  } catch (error) {
+    console.error('Error counting today reviews:', error);
+    return 0;
+  }
+};
+
+export const getWeekReviewCount = async (): Promise<number> => {
+  try {
+    const sessions = await getAllStudySessions();
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setHours(0, 0, 0, 0);
+    const weekAgoTimestamp = weekAgo.getTime();
+
+    return sessions.filter(session => session.timestamp >= weekAgoTimestamp).length;
+  } catch (error) {
+    console.error('Error counting week reviews:', error);
+    return 0;
+  }
+};
+
+export const getOverallAccuracy = async (): Promise<number> => {
+  try {
+    const sessions = await getAllStudySessions();
+    
+    if (sessions.length === 0) {
+      return 0;
+    }
+
+    // For flashcard-style responses, consider 'good' and 'easy' as correct
+    const correctCount = sessions.filter(session => 
+      session.correct || session.response === 'good' || session.response === 'easy'
+    ).length;
+
+    return Math.round((correctCount / sessions.length) * 100);
+  } catch (error) {
+    console.error('Error calculating accuracy:', error);
+    return 0;
+  }
+};

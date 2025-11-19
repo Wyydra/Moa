@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,13 +7,27 @@ import { COLORS, SPACING } from '../utils/constants';
 import { saveDeck, generateId, getAllTags } from '../data/storage';
 import { Deck } from "../data/model";
 
+const LANGUAGES = [
+  { code: undefined, name: 'Auto-detect', nativeName: '🌐' },
+  { code: 'ko-KR', name: 'Korean', nativeName: '한국어' },
+  { code: 'ja-JP', name: 'Japanese', nativeName: '日本語' },
+  { code: 'zh-CN', name: 'Chinese', nativeName: '中文' },
+  { code: 'en-US', name: 'English', nativeName: 'English' },
+  { code: 'fr-FR', name: 'French', nativeName: 'Français' },
+  { code: 'es-ES', name: 'Spanish', nativeName: 'Español' },
+  { code: 'de-DE', name: 'German', nativeName: 'Deutsch' },
+  { code: 'ar-SA', name: 'Arabic', nativeName: 'العربية' },
+];
+
 export default function CreateDeckScreen({ navigation }: any) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [language, setLanguage] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   useEffect(() => {
     loadTags();
@@ -48,6 +62,7 @@ export default function CreateDeckScreen({ navigation }: any) {
       createdAt: Date.now(),
       cardCount: 0,
       tags: tags,
+      language: language,
     };
 
     await saveDeck(newDeck);
@@ -58,7 +73,7 @@ export default function CreateDeckScreen({ navigation }: any) {
     navigation.goBack();
   };
 
-return (
+ return (
     <View style={commonStyles.container}>
       <View style={styles.header}>
         <View style={styles.spacer} />
@@ -68,7 +83,8 @@ return (
         </TouchableOpacity>
       </View>
 
-      <Text style={commonStyles.label}>{t('deck.deckName')}</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={commonStyles.label}>{t('deck.deckName')}</Text>
       <TextInput
         style={commonStyles.input}
         value={name}
@@ -85,6 +101,66 @@ return (
         multiline
         numberOfLines={3}
       />
+
+      <Text style={commonStyles.label}>{t('deck.language')}</Text>
+      <Text style={styles.languageDescription}>{t('deck.languageDescription')}</Text>
+      
+      <TouchableOpacity 
+        style={styles.languageSelector}
+        onPress={() => setShowLanguagePicker(true)}
+      >
+        <View style={styles.languageSelectorContent}>
+          <Text style={styles.languageSelectorNative}>
+            {LANGUAGES.find(l => l.code === language)?.nativeName || '🌐'}
+          </Text>
+          <Text style={styles.languageSelectorText}>
+            {LANGUAGES.find(l => l.code === language)?.name || t('deck.languageAuto')}
+          </Text>
+        </View>
+        <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
+      </TouchableOpacity>
+
+      <Modal
+        visible={showLanguagePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLanguagePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('deck.language')}</Text>
+              <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView>
+              {LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code || 'auto'}
+                  style={[
+                    styles.languageOption,
+                    language === lang.code && styles.languageOptionSelected
+                  ]}
+                  onPress={() => {
+                    setLanguage(lang.code);
+                    setShowLanguagePicker(false);
+                  }}
+                >
+                  <Text style={styles.languageOptionNative}>{lang.nativeName}</Text>
+                  <Text style={styles.languageOptionName}>
+                    {lang.code === undefined ? t('deck.languageAuto') : lang.name}
+                  </Text>
+                  {language === lang.code && (
+                    <Ionicons name="checkmark" size={24} color={COLORS.skyBlue} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <Text style={commonStyles.label}>{t('deck.tags')}</Text>
       <View style={styles.tagsContainer}>
@@ -137,12 +213,13 @@ return (
         </ScrollView>
       )}
 
-      <TouchableOpacity
-        style={[commonStyles.button, styles.saveButton]}
-        onPress={handleSave}
-      >
-        <Text style={commonStyles.buttonText}>{t('deck.createDeck')}</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[commonStyles.button, styles.saveButton]}
+          onPress={handleSave}
+        >
+          <Text style={commonStyles.buttonText}>{t('deck.createDeck')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -215,5 +292,77 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 32,
+  },
+  languageDescription: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginBottom: SPACING.sm,
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  languageSelectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  languageSelectorNative: {
+    fontSize: 24,
+  },
+  languageSelectorText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    gap: 12,
+  },
+  languageOptionSelected: {
+    backgroundColor: COLORS.skyBlue + '10',
+  },
+  languageOptionNative: {
+    fontSize: 28,
+  },
+  languageOptionName: {
+    fontSize: 16,
+    color: COLORS.text,
+    flex: 1,
   },
 });

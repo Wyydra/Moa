@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { Card } from "../data/model";
-import { getCardsByDeck, getCardsByTags } from "../data/storage";
+import { Card, StudySession } from "../data/model";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING } from '../utils/constants';
@@ -103,13 +103,26 @@ export default function TestScreen({route, navigation}: any) {
     setLoading(false);
   }
 
-  const handleSelectAnswer = (answer: string) => {
+  const handleSelectAnswer = async (answer: string) => {
     if (showResult) return;
 
     setSelectedAnswer(answer);
     setShowResult(true);
 
-    const isCorrect = answer === questions[currentIndex].correctAnswer;
+    const currentQuestion = questions[currentIndex];
+    const isCorrect = answer === currentQuestion.correctAnswer;
+    
+    // Track study session
+    const session: StudySession = {
+      id: generateId(),
+      deckId: currentQuestion.card.deckId,
+      cardId: currentQuestion.card.id,
+      timestamp: Date.now(),
+      response: isCorrect ? 'good' : 'again',
+      correct: isCorrect,
+    };
+    await saveStudySession(session);
+    
     if (isCorrect) {
       setCorrectCount(correctCount + 1);
     }
