@@ -8,6 +8,7 @@ import { deleteDeck, getAllDecks, getAllTags, getDecksByTags, getDeckById, impor
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
@@ -120,9 +121,11 @@ export default function LibraryScreen({navigation}: any) {
         return;
       }
 
-      const file = result.assets[0];
-      const response = await fetch(file.uri);
-      const jsonString = await response.text();
+      const pickedFile = result.assets[0];
+      
+      // Use new FileSystem API (File class) to properly handle UTF-8 encoding
+      const file = new File(pickedFile.uri);
+      const jsonString = await file.text();
 
       const newDeckId = await importDeckFromJSON(jsonString);
       const deck = await getDeckById(newDeckId);
