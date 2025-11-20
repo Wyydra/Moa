@@ -8,7 +8,7 @@ import { deleteDeck, getAllDecks, getAllTags, getDecksByTags, getDeckById, impor
 import { COLORS, SPACING } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
-import { File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
@@ -112,6 +112,7 @@ export default function LibraryScreen({navigation}: any) {
 
   const handleImportDeck = async () => {
     try {
+      // Note: Using '*/*' because Android may not recognize .moa files as application/json
       const result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
         copyToCacheDirectory: true,
@@ -123,9 +124,41 @@ export default function LibraryScreen({navigation}: any) {
 
       const pickedFile = result.assets[0];
       
-      // Use new FileSystem API (File class) to properly handle UTF-8 encoding
-      const file = new File(pickedFile.uri);
-      const jsonString = await file.text();
+      // Validate file extension
+      const fileName = pickedFile.name || '';
+      if (!fileName.endsWith('.json') && !fileName.endsWith('.moa')) {
+        Alert.alert(
+          t('common.error'),
+          t('deck.invalidFileType') || 'Please select a valid .moa or .json deck file'
+        );
+        return;
+      }
+      
+      // Use legacy FileSystem API for better compatibility with document URIs
+      const jsonString = await FileSystem.readAsStringAsync(pickedFile.uri, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      
+      // Validate that the content is valid JSON
+      let parsedData;
+      try {
+        parsedData = JSON.parse(jsonString);
+      } catch (parseError) {
+        Alert.alert(
+          t('common.error'),
+          t('deck.invalidFileFormat') || 'The selected file is not a valid deck file. Please select a .moa file exported from Moa.'
+        );
+        return;
+      }
+      
+      // Validate that it has the expected structure
+      if (!parsedData.version || !parsedData.deck || !parsedData.cards) {
+        Alert.alert(
+          t('common.error'),
+          t('deck.invalidDeckStructure') || 'The selected file does not contain a valid deck structure.'
+        );
+        return;
+      }
 
       const newDeckId = await importDeckFromJSON(jsonString);
       const deck = await getDeckById(newDeckId);
@@ -141,7 +174,7 @@ export default function LibraryScreen({navigation}: any) {
       console.error('Import error:', error);
       Alert.alert(
         t('common.error'),
-        `${t('deck.importError')}\n\nDebug: ${error instanceof Error ? error.message : String(error)}`
+        `${t('deck.importError')}\n\n${error instanceof Error ? error.message : String(error)}`
       );
     }
   };

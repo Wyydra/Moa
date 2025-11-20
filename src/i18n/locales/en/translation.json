@@ -71,6 +71,9 @@
     "exportError": "Failed to export deck",
     "importSuccess": "Imported deck: {{name}}",
     "importError": "Failed to import deck",
+    "invalidFileType": "Please select a valid .moa or .json deck file",
+    "invalidFileFormat": "The selected file is not a valid deck file. Please select a .moa file exported from Moa.",
+    "invalidDeckStructure": "The selected file does not contain a valid deck structure.",
     "exportAsFile": "Export as File",
     "shareNotAvailable": "Sharing is not available on this device",
     "exportDeck": "Export Deck"

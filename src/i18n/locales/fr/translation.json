@@ -71,6 +71,9 @@
     "exportError": "Échec de l'exportation du paquet",
     "importSuccess": "Paquet importé : {{name}}",
     "importError": "Échec de l'importation du paquet",
+    "invalidFileType": "Veuillez sélectionner un fichier de paquet .moa ou .json valide",
+    "invalidFileFormat": "Le fichier sélectionné n'est pas un fichier de paquet valide. Veuillez sélectionner un fichier .moa exporté depuis Moa.",
+    "invalidDeckStructure": "Le fichier sélectionné ne contient pas une structure de paquet valide.",
     "exportAsFile": "Exporter comme fichier",
     "shareNotAvailable": "Le partage n'est pas disponible sur cet appareil",
     "exportDeck": "Exporter le paquet"
