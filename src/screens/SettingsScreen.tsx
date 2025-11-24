@@ -5,8 +5,9 @@ import Slider from '@react-native-community/slider';
 import { getLocales } from 'expo-localization';
 import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled } from '../data/storage';
 import { commonStyles } from '../styles/commonStyles';
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const APP_LANGUAGES = [
   { code: 'system', name: 'System Default', icon: '🌐' },
@@ -21,6 +22,7 @@ const HANDWRITING_LANGUAGES = [
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [appLanguage, setAppLanguage] = useState(i18n.language);
   const [handwritingLanguage, setHandwritingLanguage] = useState('ko');
   const [ttsEnabled, setTTSEnabledState] = useState(true);
@@ -88,7 +90,10 @@ export default function SettingsScreen() {
 
   return (
     <View style={commonStyles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: insets.top + SPACING.md }}
+      >
         <Text style={commonStyles.screenTitle}>{t('settings.title')}</Text>
         
         <View style={styles.content}>
@@ -118,8 +123,8 @@ export default function SettingsScreen() {
             <Switch
               value={ttsEnabled}
               onValueChange={handleTTSEnabledChange}
-              trackColor={{ false: COLORS.border, true: COLORS.skyBlue }}
-              thumbColor={COLORS.cardBg}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor={COLORS.surface}
             />
           </View>
 
@@ -133,8 +138,8 @@ export default function SettingsScreen() {
                 <Switch
                   value={ttsAutoPlay}
                   onValueChange={handleTTSAutoPlayChange}
-                  trackColor={{ false: COLORS.border, true: COLORS.skyBlue }}
-                  thumbColor={COLORS.cardBg}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                  thumbColor={COLORS.surface}
                 />
               </View>
 
@@ -152,9 +157,9 @@ export default function SettingsScreen() {
                     step={0.1}
                     value={ttsRate}
                     onValueChange={handleTTSRateChange}
-                    minimumTrackTintColor={COLORS.skyBlue}
+                    minimumTrackTintColor={COLORS.primary}
                     maximumTrackTintColor={COLORS.border}
-                    thumbTintColor={COLORS.skyBlue}
+                    thumbTintColor={COLORS.primary}
                   />
                   <Text style={styles.sliderValue}>2.0x</Text>
                 </View>
@@ -170,68 +175,77 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: 0,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginBottom: SPACING.xs,
+    marginBottom: SPACING.lg,
+    marginTop: SPACING.lg,
+    letterSpacing: -0.3,
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   settingColumn: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   settingInfo: {
     flex: 1,
-    marginRight: SPACING.md,
+    marginRight: SPACING.lg,
   },
   settingLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     marginBottom: SPACING.xs,
+    letterSpacing: -0.2,
   },
   settingDescription: {
-    fontSize: 13,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
+    lineHeight: TYPOGRAPHY.fontSize.sm * 1.4,
   },
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: SPACING.sm,
+    marginTop: SPACING.lg,
   },
   slider: {
     flex: 1,
     height: 40,
-    marginHorizontal: SPACING.sm,
+    marginHorizontal: SPACING.md,
   },
   sliderValue: {
-    fontSize: 13,
-    color: COLORS.textLight,
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textMedium,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   currentRateValue: {
-    fontSize: 16,
-    color: COLORS.skyBlue,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     textAlign: 'center',
-    marginTop: SPACING.xs,
+    marginTop: SPACING.md,
   },
-
 });

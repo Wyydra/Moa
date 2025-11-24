@@ -1,15 +1,17 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { getAllDecks, getDueCards, getStudyStreak, getTodayReviewCount } from '../data/storage';
 import { Deck } from '../data/model';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [totalDue, setTotalDue] = useState(0);
   const [totalDecks, setTotalDecks] = useState(0);
   const [totalCards, setTotalCards] = useState(0);
@@ -89,7 +91,11 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={commonStyles.container} 
+      contentContainerStyle={{ paddingTop: insets.top + SPACING.md }}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Moa</Text>
         <Text style={styles.subtitle}>{t('home.welcome')}</Text>
@@ -107,17 +113,17 @@ export default function HomeScreen({ navigation }: any) {
       >
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Ionicons name="albums" size={24} color={COLORS.skyBlue} />
+            <Ionicons name="albums" size={28} color={COLORS.info} />
             <Text style={styles.statNumber}>{totalDecks}</Text>
             <Text style={styles.statLabel}>{t('library.totalDecks')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="layers" size={24} color={COLORS.mintGreen} />
+            <Ionicons name="layers" size={28} color={COLORS.success} />
             <Text style={styles.statNumber}>{totalCards}</Text>
             <Text style={styles.statLabel}>{t('library.totalCards')}</Text>
           </View>
           <View style={[styles.statCard, styles.statCardHighlight]}>
-            <Ionicons name="time" size={24} color="white" />
+            <Ionicons name="time" size={28} color={COLORS.textInverse} />
             <Text style={[styles.statNumber, styles.statNumberHighlight]}>{totalDue}</Text>
             <Text style={[styles.statLabel, styles.statLabelHighlight]}>{t('library.cardsDue')}</Text>
           </View>
@@ -140,12 +146,12 @@ export default function HomeScreen({ navigation }: any) {
         >
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Ionicons name="flame" size={24} color={COLORS.coral} />
+              <Ionicons name="flame" size={28} color={COLORS.warning} />
               <Text style={styles.statNumber}>{streak}</Text>
               <Text style={styles.statLabel}>{t('progress.dayStreak')}</Text>
             </View>
             <View style={styles.statCard}>
-              <Ionicons name="checkmark-circle" size={24} color={COLORS.mintGreen} />
+              <Ionicons name="checkmark-circle" size={28} color={COLORS.success} />
               <Text style={styles.statNumber}>{todayReviews}</Text>
               <Text style={styles.statLabel}>{t('progress.reviewsToday')}</Text>
             </View>
@@ -189,14 +195,14 @@ export default function HomeScreen({ navigation }: any) {
       {/* Empty State */}
       {topDecks.length === 0 && !loading && (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle-outline" size={64} color={COLORS.mint} />
+          <Ionicons name="checkmark-circle-outline" size={72} color={COLORS.success} />
           <Text style={styles.emptyTitle}>{t('home.allCaughtUp')}</Text>
           <Text style={styles.emptyText}>{t('home.noCardsDue')}</Text>
           <TouchableOpacity
             style={[commonStyles.button, styles.libraryButton]}
             onPress={() => navigation.navigate('Library')}
           >
-            <Ionicons name="library-outline" size={20} color="white" style={{ marginRight: 8 }} />
+            <Ionicons name="library-outline" size={22} color={COLORS.textInverse} />
             <Text style={commonStyles.buttonText}>{t('home.browseLibrary')}</Text>
           </TouchableOpacity>
         </View>
@@ -209,18 +215,20 @@ export default function HomeScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   header: {
-    marginTop: 60,
-    marginBottom: SPACING.lg,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xxl,
   },
   title: {
-    fontSize: 48,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.display,
+    fontWeight: TYPOGRAPHY.fontWeight.extrabold,
     color: COLORS.text,
     marginBottom: SPACING.xs,
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 16,
-    color: COLORS.textLight,
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    color: COLORS.textMedium,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   statsSection: {
     marginBottom: SPACING.xl,
@@ -231,112 +239,129 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   statCardHighlight: {
-    backgroundColor: COLORS.skyBlue,
-    borderColor: COLORS.skyBlue,
+    backgroundColor: COLORS.primary,
+    ...SHADOWS.colored(COLORS.primary),
   },
   statNumber: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginTop: SPACING.xs,
+    marginTop: SPACING.sm,
     marginBottom: SPACING.xs,
+    letterSpacing: -0.5,
   },
   statNumberHighlight: {
-    color: 'white',
+    color: COLORS.textInverse,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.textLight,
     textAlign: 'center',
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   statLabelHighlight: {
-    color: 'white',
-    opacity: 0.9,
+    color: COLORS.textInverse,
+    opacity: 0.85,
   },
   section: {
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.xxl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
+    letterSpacing: -0.5,
   },
   viewAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.skyBlue,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.primary,
+    letterSpacing: 0.3,
   },
   deckCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: SPACING.md,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   deckInfo: {
     flex: 1,
   },
   deckName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
+    letterSpacing: -0.2,
   },
   deckDescription: {
-    fontSize: 13,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
+    lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
   },
   dueBadge: {
-    backgroundColor: COLORS.skyBlue,
-    borderRadius: 16,
-    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
-    minWidth: 36,
+    minWidth: 44,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.colored(COLORS.primary),
   },
   dueBadgeText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: 'white',
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.textInverse,
   },
   emptyState: {
     alignItems: 'center',
-    marginTop: SPACING.xl * 2,
+    marginTop: SPACING.xxxl,
+    paddingHorizontal: SPACING.xl,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.md,
+    letterSpacing: -0.3,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.textLight,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.xxl,
+    textAlign: 'center',
+    lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
   libraryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: SPACING.sm,
   },
   bottomPadding: {
     height: 40,

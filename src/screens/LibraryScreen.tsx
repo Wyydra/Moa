@@ -5,13 +5,15 @@ import { commonStyles } from '../styles/commonStyles';
 import { useCallback, useState } from "react";
 import { Deck } from "../data/model";
 import { deleteDeck, getAllDecks, getAllTags, getDecksByTags, getDeckById, importDeckFromJSON } from "../data/storage";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -204,7 +206,9 @@ export default function LibraryScreen({navigation}: any) {
 
   return (
      <View style={commonStyles.container}>
-      <Text style={commonStyles.screenTitle}>{t('library.title')}</Text>
+      <View style={{ paddingTop: insets.top + SPACING.md }}>
+        <Text style={commonStyles.screenTitle}>{t('library.title')}</Text>
+      </View>
 
       {allTags.length > 0 && (
         <View style={styles.filterSection}>
@@ -336,98 +340,104 @@ export default function LibraryScreen({navigation}: any) {
 
 const styles = StyleSheet.create({
   createButton: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.xxl,
   },
   filterSection: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   filterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
-    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+    gap: SPACING.sm,
   },
   filterLabel: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textMedium,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   tagsFilter: {
-    marginBottom: SPACING.md,
-    maxHeight: 40,
+    marginBottom: SPACING.lg,
+    maxHeight: 44,
   },
   filterTagChip: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
-    borderWidth: 1,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 2,
     borderColor: COLORS.border,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    marginRight: SPACING.md,
   },
   filterTagChipActive: {
-    backgroundColor: COLORS.skyBlue,
-    borderColor: COLORS.skyBlue,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterTagText: {
-    color: COLORS.textLight,
-    fontSize: 14,
+    color: COLORS.textMedium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   filterTagTextActive: {
-    color: 'white',
+    color: COLORS.textInverse,
   },
   clearFilterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   clearFilterText: {
-    color: COLORS.skyBlue,
-    fontSize: 14,
-    marginLeft: SPACING.xs,
+    color: COLORS.primary,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    marginLeft: SPACING.sm,
   },
   modeButtons: {
     flexDirection: 'row',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   modeButton: {
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.sm,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     gap: SPACING.xs,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   modeButtonLearn: {
-    backgroundColor: COLORS.skyBlue,
+    backgroundColor: COLORS.learn,
   },
   modeButtonTest: {
-    backgroundColor: '#34C759',
+    backgroundColor: COLORS.test,
   },
   modeButtonWrite: {
-    backgroundColor: '#FF9500',
+    backgroundColor: COLORS.write,
   },
   modeButtonMatch: {
-    backgroundColor: '#AF52DE',
+    backgroundColor: COLORS.match,
   },
   modeButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    letterSpacing: 0.3,
   },
   listContent: {
     paddingBottom: 100,
   },
   deckCard: {
-    marginBottom: SPACING.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: SPACING.lg,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   deckContent: {
     flexDirection: 'row',
@@ -438,76 +448,72 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   deckName: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     marginBottom: SPACING.xs,
+    letterSpacing: -0.3,
   },
   deckCount: {
-    fontSize: 14,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   menuButton: {
-    padding: SPACING.sm,
+    padding: SPACING.md,
   },
   importFab: {
     position: 'absolute',
     bottom: 30,
-    right: 100,
-    backgroundColor: COLORS.coral,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    right: 104,
+    backgroundColor: COLORS.accent,
+    width: 60,
+    height: 60,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...SHADOWS.colored(COLORS.accent),
   },
   fab: {
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: COLORS.skyBlue,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    width: 64,
+    height: 64,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...SHADOWS.colored(COLORS.primary),
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   actionSheet: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: BORDER_RADIUS.xxl,
+    borderTopRightRadius: BORDER_RADIUS.xxl,
     paddingBottom: 34,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.lg,
-    gap: SPACING.md,
+    padding: SPACING.xl,
+    gap: SPACING.lg,
   },
   actionText: {
-    fontSize: 17,
+    fontSize: TYPOGRAPHY.fontSize.lg,
     color: COLORS.text,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   deleteText: {
-    color: '#FF3B30',
+    color: COLORS.danger,
   },
   actionDivider: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: COLORS.divider,
+    marginHorizontal: SPACING.lg,
   },
 });

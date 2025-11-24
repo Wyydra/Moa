@@ -4,7 +4,8 @@ import { getDeckById, saveDeck, getAllTags } from "../data/storage";
 import { View, Alert, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, Modal } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LANGUAGES = [
   { code: undefined, name: 'Auto-detect', nativeName: '🌐' },
@@ -20,6 +21,7 @@ const LANGUAGES = [
 
 export default function EditDeckScreen({ route, navigation}: any) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { deckId } = route.params;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -90,7 +92,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
   }
  return (
     <View style={commonStyles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <View style={styles.spacer} />
         <Text style={commonStyles.screenTitle}>{t('deck.editDeck')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -167,8 +169,8 @@ export default function EditDeckScreen({ route, navigation}: any) {
                   <Text style={styles.languageOptionName}>
                     {lang.code === undefined ? t('deck.languageAuto') : lang.name}
                   </Text>
-                  {language === lang.code && (
-                    <Ionicons name="checkmark" size={24} color={COLORS.skyBlue} />
+                   {language === lang.code && (
+                    <Ionicons name="checkmark" size={24} color={COLORS.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -202,7 +204,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
           style={styles.addTagButton}
           onPress={handleAddTag}
         >
-          <Ionicons name="add-circle" size={28} color={COLORS.skyBlue} />
+          <Ionicons name="add-circle" size={28} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -244,12 +246,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: SPACING.md,
   },
   spacer: {
     width: 28,
   },
   closeButton: {
-    marginTop: 60,
   },
   descriptionInput: {
     height: 80,
@@ -264,12 +266,15 @@ const styles = StyleSheet.create({
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.skyBlue,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
     marginRight: SPACING.sm,
     marginBottom: SPACING.sm,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   tagText: {
     color: 'white',
@@ -293,12 +298,12 @@ const styles = StyleSheet.create({
     maxHeight: 40,
   },
   suggestedTagChip: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.full,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
     marginRight: SPACING.sm,
   },
   suggestedTagText: {
@@ -306,7 +311,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   saveButton: {
-    marginTop: 32,
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   languageDescription: {
     fontSize: 12,
@@ -317,12 +323,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   languageSelectorContent: {
     flexDirection: 'row',
@@ -333,9 +340,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   languageSelectorText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   modalOverlay: {
     flex: 1,
@@ -358,8 +365,8 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
   },
   languageOption: {
@@ -370,7 +377,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   languageOptionSelected: {
-    backgroundColor: COLORS.skyBlue + '10',
+    backgroundColor: COLORS.primary + '15',
   },
   languageOptionNative: {
     fontSize: 28,

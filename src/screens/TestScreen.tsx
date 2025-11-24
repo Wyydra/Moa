@@ -4,7 +4,7 @@ import { Card, StudySession } from "../data/model";
 import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 
 interface Question {
@@ -161,7 +161,7 @@ export default function TestScreen({route, navigation}: any) {
           </TouchableOpacity>
         </View>
           <View style={styles.completedContainer}>
-            <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
+            <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
             <Text style={styles.completedTitle}>{t('modes.test.sessionComplete')}</Text>
             <Text style={styles.completedText}>
               {t('modes.test.score', { correct: correctCount, total: questions.length, percentage })}
@@ -237,11 +237,11 @@ export default function TestScreen({route, navigation}: any) {
                   disabled={showResult}
                 >
                   <Text style={styles.optionText}>{option}</Text>
-                  {showResult && isCorrect && (
-                    <Ionicons name="checkmark-circle" size={24} color="#51CF66" />
+                   {showResult && isCorrect && (
+                    <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
                   )}
                   {showResult && isSelected && !isCorrect && (
-                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+                    <Ionicons name="close-circle" size={24} color={COLORS.danger} />
                   )}
                 </TouchableOpacity>
               </Animated.View>
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
     width: 28,
   },
   progress: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
   },
   testContainer: {
@@ -291,11 +291,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   cardLabel: {
     fontSize: 14,
@@ -305,7 +303,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   cardText: {
-    fontSize: 24,
+    fontSize: TYPOGRAPHY.fontSize.xxl,
     color: COLORS.text,
     textAlign: 'center',
     lineHeight: 32,
@@ -314,52 +312,40 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   option: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
     borderColor: COLORS.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    ...SHADOWS.sm,
   },
   optionCorrect: {
-    backgroundColor: '#51CF6620',
-    borderRadius: 12,
+    backgroundColor: COLORS.success + '20',
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
-    borderColor: '#51CF66',
+    borderColor: COLORS.success,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    ...SHADOWS.sm,
   },
   optionIncorrect: {
-    backgroundColor: '#FF6B6B20',
-    borderRadius: 12,
+    backgroundColor: COLORS.danger + '20',
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.danger,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    ...SHADOWS.sm,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
     flex: 1,
   },
@@ -372,8 +358,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   completedTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,

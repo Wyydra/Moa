@@ -3,13 +3,15 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "reac
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from '../utils/constants';
+import { COLORS, SPACING } from '../utils/constants';
 import { saveCard, getAllCards, deleteCard } from "../data/storage";
 import { Card } from "../data/model";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function EditCardScreen({ route, navigation }: any) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { cardId } = route.params;
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -84,9 +86,9 @@ export default function EditCardScreen({ route, navigation }: any) {
 
   return (
     <View style={commonStyles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-          <Ionicons name="trash-outline" size={24} color={COLORS.coral} />
+          <Ionicons name="trash-outline" size={24} color={COLORS.danger} />
         </TouchableOpacity>
         <Text style={commonStyles.screenTitle}>{t('card.editCard')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -124,14 +126,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingBottom: SPACING.md,
+    paddingTop: SPACING.md,
   },
   closeButton: {
-    marginTop: 60,
   },
   deleteButton: {
-    marginTop: 60,
   },
   saveButton: {
-    marginTop: 32,
+    marginTop: SPACING.xl,
   },
 });

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { commonStyles } from '../styles/commonStyles';
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { 
   getAllDecks, 
   getAllCards, 
@@ -27,6 +28,7 @@ interface DeckProgress {
 
 export default function ProgressScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
   const [todayReviews, setTodayReviews] = useState(0);
@@ -100,7 +102,9 @@ export default function ProgressScreen() {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={[commonStyles.screenTitle, styles.title]}>{t('progress.title')}</Text>
+        <View style={{ paddingTop: insets.top + SPACING.md }}>
+          <Text style={[commonStyles.screenTitle, styles.title]}>{t('progress.title')}</Text>
+        </View>
         <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
       </View>
     );
@@ -108,31 +112,33 @@ export default function ProgressScreen() {
 
   return (
     <View style={commonStyles.container}>
-      <Text style={[commonStyles.screenTitle, styles.title]}>{t('progress.title')}</Text>
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: insets.top + SPACING.md }}
+      >
+        <Text style={[commonStyles.screenTitle, styles.title]}>{t('progress.title')}</Text>
         {/* Main Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, styles.statCardPrimary]}>
-            <Ionicons name="flame" size={32} color={COLORS.coral} />
+            <Ionicons name="flame" size={32} color={COLORS.danger} />
             <Text style={styles.statValue}>{streak}</Text>
             <Text style={styles.statLabel}>{t('progress.dayStreak')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="checkmark-circle" size={32} color={COLORS.skyBlue} />
+            <Ionicons name="checkmark-circle" size={32} color={COLORS.primary} />
             <Text style={styles.statValue}>{todayReviews}</Text>
             <Text style={styles.statLabel}>{t('progress.reviewsToday')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="calendar" size={32} color={COLORS.mintGreen} />
+            <Ionicons name="calendar" size={32} color={COLORS.success} />
             <Text style={styles.statValue}>{weekReviews}</Text>
             <Text style={styles.statLabel}>{t('progress.reviewsThisWeek')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="trophy" size={32} color={COLORS.gold} />
+            <Ionicons name="trophy" size={32} color={COLORS.warning} />
             <Text style={styles.statValue}>{accuracy}%</Text>
             <Text style={styles.statLabel}>{t('progress.accuracy')}</Text>
           </View>
@@ -223,7 +229,7 @@ export default function ProgressScreen() {
         {/* Motivational Message */}
         {streak >= 7 && (
           <View style={styles.motivationCard}>
-            <Ionicons name="star" size={24} color={COLORS.gold} />
+            <Ionicons name="star" size={24} color={COLORS.warning} />
             <Text style={styles.motivationText}>
               {t('progress.keepItUp')}
             </Text>
@@ -232,7 +238,7 @@ export default function ProgressScreen() {
 
         {totalDue === 0 && totalCards > 0 && (
           <View style={styles.motivationCard}>
-            <Ionicons name="checkmark-done-circle" size={24} color={COLORS.mintGreen} />
+            <Ionicons name="checkmark-done-circle" size={24} color={COLORS.success} />
             <Text style={styles.motivationText}>
               {t('progress.allCaughtUp')}
             </Text>
@@ -255,27 +261,27 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   statCardPrimary: {
-    borderColor: COLORS.coral,
-    borderWidth: 2,
+    ...SHADOWS.md,
   },
   statValue: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.huge,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
     marginTop: SPACING.xs,
     marginBottom: SPACING.xxs,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.textLight,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -285,17 +291,18 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     marginBottom: SPACING.md,
   },
   overallCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   overallRow: {
     flexDirection: 'row',
@@ -304,24 +311,25 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
   },
   overallLabel: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
   },
   overallValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
   },
   overallValueDue: {
-    color: COLORS.skyBlue,
+    color: COLORS.primary,
   },
   deckCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   deckHeader: {
     flexDirection: 'row',
@@ -330,21 +338,21 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   deckName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     flex: 1,
   },
   dueBadge: {
-    backgroundColor: COLORS.skyBlue,
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 4,
   },
   dueBadgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   progressBarContainer: {
     marginBottom: SPACING.sm,
@@ -352,7 +360,7 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 8,
     backgroundColor: COLORS.border,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS.xs,
     flexDirection: 'row',
     overflow: 'hidden',
   },
@@ -360,10 +368,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   progressMastered: {
-    backgroundColor: COLORS.mintGreen,
+    backgroundColor: COLORS.success,
   },
   progressLearning: {
-    backgroundColor: COLORS.skyBlue,
+    backgroundColor: COLORS.primary,
   },
   deckStats: {
     flexDirection: 'row',
@@ -378,35 +386,36 @@ const styles = StyleSheet.create({
   statDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS.xs,
     marginRight: SPACING.xs,
   },
   statDotMastered: {
-    backgroundColor: COLORS.mintGreen,
+    backgroundColor: COLORS.success,
   },
   statDotLearning: {
-    backgroundColor: COLORS.skyBlue,
+    backgroundColor: COLORS.primary,
   },
   statDotNew: {
     backgroundColor: COLORS.border,
   },
   deckStatText: {
-    fontSize: 13,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
   },
   motivationCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.gold,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   motivationText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     marginLeft: SPACING.sm,
     flex: 1,

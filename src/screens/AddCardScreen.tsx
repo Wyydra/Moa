@@ -6,10 +6,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING } from '../utils/constants';
 import { generateId, saveCard } from "../data/storage";
 import { Card } from "../data/model";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function AddCardScreen({ route, navigation }: any) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { deckId } = route.params;
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -41,7 +43,7 @@ export default function AddCardScreen({ route, navigation }: any) {
 
   return (
     <View style={commonStyles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <View style={styles.spacer} />
         <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -79,14 +81,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingBottom: SPACING.md,
+    paddingTop: SPACING.md,
   },
   spacer: {
     width: 28,
   },
   closeButton: {
-    marginTop: 60,
   },
   saveButton: {
-    marginTop: 32,
+    marginTop: SPACING.xl,
   },
 });

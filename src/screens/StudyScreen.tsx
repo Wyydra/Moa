@@ -6,7 +6,7 @@ import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import PronunciationButton from '../components/PronunciationButton';
 import * as Speech from 'expo-speech';
 
@@ -125,11 +125,11 @@ if (completed) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={28} color={COLORS.text} />
+            <Ionicons name="close" size={32} color={COLORS.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
+          <Ionicons name="checkmark-circle" size={96} color={COLORS.success} />
           <Text style={styles.completedTitle}>{t('study.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {cards.length === 0 ? t('study.noDueCards') : t('study.reviewedCards', { count: cards.length })}
@@ -152,7 +152,7 @@ if (completed) {
           {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={32} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
@@ -228,109 +228,117 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: SPACING.md,
+    paddingBottom: SPACING.lg,
   },
   spacer: {
-    width: 28,
+    width: 32,
   },
   progress: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
+    letterSpacing: -0.2,
   },
   cardContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
   },
   flashcard: {
     width: '100%',
-    minHeight: 300,
+    minHeight: 320,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    padding: SPACING.xxl,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.xl,
   },
   cardLabel: {
-    fontSize: 14,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.textLight,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
   },
   cardText: {
-    fontSize: 24,
+    fontSize: TYPOGRAPHY.fontSize.xxl,
     color: COLORS.text,
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: TYPOGRAPHY.fontSize.xxl * TYPOGRAPHY.lineHeight.normal,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   showButton: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.xxl,
     width: '100%',
   },
   responseButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: SPACING.xl,
+    marginTop: SPACING.xxl,
     width: '100%',
+    gap: SPACING.sm,
   },
   responseButton: {
     flex: 1,
-    padding: SPACING.md,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: 'center',
+    ...SHADOWS.md,
   },
   againButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.danger,
   },
   hardButton: {
-    backgroundColor: '#FFA94D',
+    backgroundColor: COLORS.warning,
   },
   goodButton: {
-    backgroundColor: COLORS.skyBlue,
+    backgroundColor: COLORS.primary,
   },
   easyButton: {
-    backgroundColor: '#51CF66',
+    backgroundColor: COLORS.success,
   },
   responseButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 14,
-    marginBottom: 4,
+    color: COLORS.textInverse,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: SPACING.xs,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   responseTime: {
-    color: 'white',
-    fontSize: 12,
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    opacity: 0.9,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   completedContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
   },
   completedTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.md,
+    letterSpacing: -0.5,
   },
   completedText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.textLight,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.xxl,
+    textAlign: 'center',
+    lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
   pronunciationContainer: {
-    marginTop: SPACING.lg,
+    marginTop: SPACING.xl,
     alignItems: 'center',
   },
 });

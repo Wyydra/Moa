@@ -1,86 +1,117 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 
 export const commonStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    padding: SPACING.lg,
+    padding: SPACING.xl,
   },
 
   screenTitle: {
-    fontSize: 28,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.huge,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginTop: 60,
-    marginBottom: 20,
+    marginBottom: SPACING.xl,
+    letterSpacing: -0.5,
   },
 
   card: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 2,
+    ...SHADOWS.md,
+    borderWidth: 0,
+  },
+
+  cardSubtle: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
 
   button: {
-    backgroundColor: COLORS.accent,
-    borderRadius: 12,
-    padding: SPACING.md,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
     alignItems: 'center',
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
+    ...SHADOWS.colored(COLORS.primary),
   },
- buttonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
+
+  buttonSecondary: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+
+  buttonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.textInverse,
+    letterSpacing: 0.3,
+  },
+
+  buttonTextSecondary: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.primary,
+    letterSpacing: 0.3,
   },
 
   input: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1.5,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.text,
+    borderWidth: 2,
     borderColor: COLORS.border,
   },
 
+  inputFocused: {
+    borderColor: COLORS.primary,
+    ...SHADOWS.sm,
+  },
+
   label: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 
   emptyText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.textLight,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: SPACING.xxxl,
+    lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
 
   modalContent: {
-    backgroundColor: COLORS.cardBg,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: BORDER_RADIUS.xxl,
+    borderTopRightRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.xl,
     paddingBottom: 40,
   },
 
@@ -88,18 +119,19 @@ export const commonStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
 
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
+    letterSpacing: -0.3,
   },
 
   modalCloseButton: {
-    fontSize: 28,
+    fontSize: TYPOGRAPHY.fontSize.xxxl,
     color: COLORS.textLight,
-    fontWeight: '300',
+    fontWeight: TYPOGRAPHY.fontWeight.regular,
   },
 });

@@ -17,7 +17,7 @@ interface PronunciationButtonProps {
 export default function PronunciationButton({
   text,
   size = 24,
-    color = COLORS.skyBlue,
+    color = COLORS.primary,
     rate = 1.0,
     autoPlay = false,
     language,
@@ -162,6 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   speaking: {
-    backgroundColor: COLORS.skyBlue + '20',
+    backgroundColor: COLORS.primary + '20',
   },
 });

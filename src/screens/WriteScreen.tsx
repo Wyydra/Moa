@@ -5,7 +5,7 @@ import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "..
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { HandwritingCanvas } from '../components/HandwritingCanvas';
 
 export default function WriteScreen({route, navigation}: any) {
@@ -117,7 +117,7 @@ export default function WriteScreen({route, navigation}: any) {
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
+          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
           <Text style={styles.completedTitle}>{t('modes.write.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {t('modes.write.score', { correct: correctCount, total: cards.length, percentage })}
@@ -157,7 +157,7 @@ export default function WriteScreen({route, navigation}: any) {
               style={styles.handwritingButton}
               disabled={showResult}
             >
-              <Ionicons name="brush-outline" size={20} color={showResult ? COLORS.textLight : COLORS.skyBlue} />
+              <Ionicons name="brush-outline" size={20} color={showResult ? COLORS.textLight : COLORS.primary} />
               <Text style={[styles.handwritingButtonText, showResult && styles.handwritingButtonDisabled]}>
                 {t('modes.write.writeByHand')}
               </Text>
@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
     width: 28,
   },
   progress: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
   },
   cardContainer: {
@@ -293,6 +293,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -333,29 +335,29 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   handwritingButtonText: {
-    fontSize: 14,
-    color: COLORS.skyBlue,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.primary,
     marginLeft: 4,
   },
   handwritingButtonDisabled: {
     color: COLORS.textLight,
   },
   input: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
-    fontSize: 18,
+    fontSize: TYPOGRAPHY.fontSize.lg,
     color: COLORS.text,
     borderWidth: 2,
     borderColor: COLORS.border,
   },
   inputCorrect: {
-    borderColor: '#51CF66',
-    backgroundColor: '#51CF6620',
+    borderColor: COLORS.success,
+    backgroundColor: COLORS.success + '20',
   },
   inputIncorrect: {
-    borderColor: '#FF6B6B',
-    backgroundColor: '#FF6B6B20',
+    borderColor: COLORS.danger,
+    backgroundColor: COLORS.danger + '20',
   },
   resultSection: {
     marginBottom: SPACING.lg,
@@ -365,32 +367,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.md,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.lg,
   },
   correctBadge: {
-    backgroundColor: '#51CF66',
+    backgroundColor: COLORS.success,
   },
   incorrectBadge: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.danger,
   },
   resultText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
   },
   correctAnswerBox: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.surface,
     padding: SPACING.md,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.skyBlue,
+    borderLeftColor: COLORS.info,
+    ...SHADOWS.sm,
   },
   correctAnswerLabel: {
     fontSize: 12,
@@ -399,9 +402,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   correctAnswerText: {
-    fontSize: 18,
+    fontSize: TYPOGRAPHY.fontSize.lg,
     color: COLORS.text,
-    fontWeight: '600',
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   submitButton: {
     marginTop: SPACING.md,
@@ -418,8 +421,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   completedTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,

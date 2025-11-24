@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 
 export interface Option {
   code: string;
@@ -84,7 +84,7 @@ export default function OptionPicker({
                     {option.nativeName || option.name}
                   </Text>
                   {value === option.code && (
-                    <Ionicons name="checkmark" size={24} color={COLORS.skyBlue} />
+                    <Ionicons name="checkmark" size={24} color={COLORS.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -101,13 +101,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   label: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     marginBottom: SPACING.xs,
   },
   description: {
-    fontSize: 14,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
     marginBottom: SPACING.md,
   },
@@ -115,12 +115,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     minHeight: 50,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   selectorContent: {
     flexDirection: 'row',
@@ -131,9 +132,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   selectorText: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   modalOverlay: {
     flex: 1,
@@ -142,8 +143,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: COLORS.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: '70%',
     paddingBottom: 40,
   },
@@ -156,8 +157,8 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
   },
   option: {
@@ -168,13 +169,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionSelected: {
-    backgroundColor: COLORS.skyBlue + '10',
+    backgroundColor: COLORS.primary + '10',
   },
   optionIcon: {
     fontSize: 28,
   },
   optionName: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
     flex: 1,
   },

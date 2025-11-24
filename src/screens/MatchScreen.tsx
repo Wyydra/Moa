@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "
 import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
 import { StudySession } from "../data/model";
 import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING } from "../utils/constants";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -189,7 +189,7 @@ export default function MatchScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.skyBlue} />
+          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
           <Text style={styles.completedTitle}>{t('modes.match.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {t('modes.match.stats', { matches: matchedCount, tries })}
@@ -294,8 +294,8 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
   },
   spacer: {
@@ -305,9 +305,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: SPACING.lg,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   stat: {
     alignItems: 'center',
@@ -319,8 +322,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
   },
   instruction: {
@@ -339,17 +342,13 @@ const styles = StyleSheet.create({
   tile: {
     width: '31.5%',
     height: screenHeight * 0.12,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: COLORS.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...SHADOWS.md,
   },
   tileTouchable: {
     width: '100%',
@@ -359,20 +358,14 @@ const styles = StyleSheet.create({
     padding: SPACING.xs,
   },
   tileSelected: {
-    borderColor: COLORS.skyBlue,
-    backgroundColor: COLORS.skyBlue,
-    shadowColor: COLORS.skyBlue,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
+    ...SHADOWS.colored(COLORS.primary),
   },
   tileWrong: {
-    borderColor: '#FF6B6B',
-    backgroundColor: '#FF6B6B',
-    shadowColor: '#FF6B6B',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderColor: COLORS.danger,
+    backgroundColor: COLORS.danger,
+    ...SHADOWS.colored(COLORS.danger),
   },
   tileText: {
     fontSize: 13,
@@ -386,8 +379,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   completedTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
@@ -404,6 +397,6 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     marginTop: SPACING.sm,
-    backgroundColor: COLORS.textLight,
+    backgroundColor: COLORS.textMedium,
   },
 });
