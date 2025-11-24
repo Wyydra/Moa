@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 import { Link, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
@@ -87,6 +88,88 @@ function SettingsStackNavigator() {
   )
 }
 
+function MainNavigator() {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#6366F1',
+        tabBarInactiveTintColor: '#A1A1AA',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E4E4E7',
+          borderTopWidth: 1,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 8,
+          height: 60 + Math.max(insets.bottom, 0),
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 0.3,
+        },
+      }}
+    >
+      <Tab.Screen
+        name='Home'
+        component={HomeScreen}
+        options={{ 
+          tabBarLabel: t('home.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='home' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Library"
+        component={LibraryStackNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Always navigate to LibraryList when tab is pressed, resetting the stack
+            navigation.navigate('Library', { screen: 'LibraryList' });
+          },
+        })}
+        options={{ 
+          tabBarLabel: t('library.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='library' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{ 
+          tabBarLabel: t('progress.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='stats-chart' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsStackNavigator}
+        options={{ 
+          tabBarLabel: t('settings.title'),
+          tabBarIcon: ({color, size}) => (
+            <Ionicons name='settings' size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
 export default function App() {
   const { t } = useTranslation();
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -142,60 +225,11 @@ export default function App() {
   }
 
   return (
-  <NavigationContainer>
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#B8D8E8',
-        tabBarInactiveTintColor: '#999',
-        tabBarStyle: {
-          backgroundColor: '#FFF8F0',
-          borderTopColor: '#E0E0E0',
-        },
-      }}
-    >
-      <Tab.Screen
-        name='Home'
-        component={HomeScreen}
-        options={{ 
-          tabBarLabel: t('home.title'),
-          tabBarIcon: ({color, size}) => (
-            <Ionicons name='home' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Library"
-        component={LibraryStackNavigator}
-        options={{ 
-          tabBarLabel: t('library.title'),
-          tabBarIcon: ({color, size}) => (
-            <Ionicons name='library' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Progress"
-        component={ProgressScreen}
-        options={{ 
-          tabBarLabel: t('progress.title'),
-          tabBarIcon: ({color, size}) => (
-            <Ionicons name='stats-chart' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsStackNavigator}
-        options={{ 
-          tabBarLabel: t('settings.title'),
-          tabBarIcon: ({color, size}) => (
-            <Ionicons name='settings' size={size} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-    <StatusBar style='auto'/>
-  </NavigationContainer>
+  <SafeAreaProvider>
+    <NavigationContainer>
+      <MainNavigator />
+      <StatusBar style='auto'/>
+    </NavigationContainer>
+  </SafeAreaProvider>
   );
 }

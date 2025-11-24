@@ -1,7 +1,7 @@
 import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING } from '../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
@@ -11,8 +11,10 @@ import { encodeDeckToUrl as encodeDeckToURL } from "../utils/deepLinking";
 import QRCode from 'react-native-qrcode-svg';
 import * as Sharing from 'expo-sharing';
 import { Paths, File } from 'expo-file-system';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DeckDetailsScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { deckId } = route.params;
   const [deck, setDeck] = useState<Deck | null>(null);
@@ -21,14 +23,20 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   const [showModePicker, setShowModePicker] = useState(false);
   const [deckJSON, setDeckJSON] = useState<string>('');
   const [showQRModal, setShowQRModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadDeckAndCards = async () => {
+    setIsLoading(true);
+    setDeck(null);
+    setCards([]);
+    setDueCount(0);
     const loadedDeck = await getDeckById(deckId);
     const loadedCards = await getCardsByDeck(deckId);
     const due = await getDueCards(deckId);
     setCards(loadedCards);
     setDeck(loadedDeck);
     setDueCount(due.length);
+    setIsLoading(false);
   };
 
   useFocusEffect(
@@ -42,7 +50,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    navigation.navigate('LibraryList');
   };
 
   const handleEditDeck = () => {
@@ -131,7 +139,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
     );
   };
 
-  if (!deck) {
+  if (isLoading || !deck) {
     return (
       <View style={commonStyles.container}>
         <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
@@ -141,20 +149,20 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
 
   return (
     <View style={commonStyles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={COLORS.text} />
         </TouchableOpacity>
         <Text style={[commonStyles.screenTitle, styles.title]}>{deck.name}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleShareDeck} style={styles.actionButton}>
-            <Ionicons name="share-outline" size={24} color={COLORS.skyBlue} />
+            <Ionicons name="share-outline" size={24} color={COLORS.primary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleEditDeck} style={styles.actionButton}>
-            <Ionicons name="create-outline" size={24} color={COLORS.text} />
+            <Ionicons name="create-outline" size={24} color={COLORS.textMedium} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDeleteDeck} style={styles.actionButton}>
-            <Ionicons name="trash-outline" size={24} color={COLORS.coral} />
+            <Ionicons name="trash-outline" size={24} color={COLORS.danger} />
           </TouchableOpacity>
         </View>
       </View>
@@ -189,7 +197,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         style={[commonStyles.button, styles.studyButton]}
         onPress={() => setShowModePicker(true)}
       >
-        <Ionicons name="school-outline" size={20} color="white" style={{ marginRight: 8 }} />
+        <Ionicons name="school-outline" size={22} color={COLORS.textInverse} />
         <Text style={commonStyles.buttonText}>{t('deck.startStudying')}</Text>
       </TouchableOpacity>
 
@@ -241,7 +249,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('StudyScreen', { deckId });
               }}
             >
-              <Ionicons name="book-outline" size={24} color={COLORS.skyBlue} />
+              <Ionicons name="book-outline" size={28} color={COLORS.learn} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.learn.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.learn.description')}</Text>
@@ -255,7 +263,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('WriteScreen', { deckId });
               }}
             >
-              <Ionicons name="create-outline" size={24} color={COLORS.skyBlue} />
+              <Ionicons name="create-outline" size={28} color={COLORS.write} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.write.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.write.description')}</Text>
@@ -269,7 +277,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('TestScreen', { deckId });
               }}
             >
-              <Ionicons name="clipboard-outline" size={24} color={COLORS.skyBlue} />
+              <Ionicons name="clipboard-outline" size={28} color={COLORS.test} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.test.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.test.description')}</Text>
@@ -283,7 +291,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('MatchScreen', { deckId });
               }}
             >
-              <Ionicons name="git-compare-outline" size={24} color={COLORS.skyBlue} />
+              <Ionicons name="git-compare-outline" size={28} color={COLORS.match} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.match.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.match.description')}</Text>
@@ -338,7 +346,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 await handleExportFile();
               }}
             >
-              <Ionicons name="download-outline" size={20} color="white" style={{ marginRight: 8 }} />
+              <Ionicons name="download-outline" size={22} color={COLORS.textInverse} />
               <Text style={commonStyles.buttonText}>{t('deck.exportAsFile')}</Text>
             </TouchableOpacity>
 
@@ -360,78 +368,76 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
+    paddingTop: SPACING.md,
   },
   backButton: {
-    marginRight: SPACING.md,
-    marginTop: 60,
+    marginRight: SPACING.lg,
   },
   title: {
     flex: 1,
   },
   headerActions: {
     flexDirection: 'row',
-    marginTop: 60,
+    gap: SPACING.md,
   },
   actionButton: {
-    marginLeft: SPACING.md,
+    padding: SPACING.sm,
   },
   description: {
-    fontSize: 15,
-    color: COLORS.textLight,
-    marginBottom: SPACING.lg,
-    lineHeight: 20,
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.textMedium,
+    marginBottom: SPACING.xl,
+    lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
   },
   tagChip: {
-    backgroundColor: COLORS.skyBlue,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: SPACING.sm,
-    marginBottom: SPACING.sm,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
   },
   tagText: {
-    color: 'white',
-    fontSize: 14,
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   addButton: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.xxl,
   },
   listContent: {
     paddingBottom: 100,
   },
   cardItem: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: SPACING.md,
     flex: 1,
   },
   cardChevron: {
-    marginLeft: SPACING.sm,
+    marginLeft: SPACING.md,
   },
   cardFront: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
     flex: 1,
   },
   cardBack: {
-    fontSize: 16,
+    fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.textLight,
     flex: 1,
   },
@@ -439,83 +445,82 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: COLORS.skyBlue,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    width: 64,
+    height: 64,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...SHADOWS.colored(COLORS.primary),
   },
   studyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
   },
   statsCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
+    letterSpacing: -0.5,
   },
   statNumberDue: {
-    color: COLORS.skyBlue,
+    color: COLORS.primary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.textLight,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   statDivider: {
     width: 1,
-    backgroundColor: COLORS.border,
-    marginHorizontal: SPACING.md,
+    backgroundColor: COLORS.divider,
+    marginHorizontal: SPACING.xl,
   },
   modeOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.md,
+    padding: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: COLORS.divider,
   },
   modeOptionDisabled: {
     opacity: 0.5,
   },
   modeTextContainer: {
-    marginLeft: SPACING.md,
+    marginLeft: SPACING.lg,
     flex: 1,
   },
   modeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
+    letterSpacing: -0.2,
   },
   modeDescription: {
-    fontSize: 13,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.textLight,
+    lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
   },
   modeDisabled: {
     color: COLORS.textLight,
@@ -525,25 +530,30 @@ const styles = StyleSheet.create({
     minHeight: 400,
   },
   qrContainer: {
-    backgroundColor: 'white',
-    padding: SPACING.lg,
-    borderRadius: 12,
-    marginVertical: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.xl,
+    borderRadius: BORDER_RADIUS.lg,
+    marginVertical: SPACING.xl,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
   qrInstructions: {
-    fontSize: 14,
-    color: COLORS.textLight,
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.textMedium,
     textAlign: 'center',
-    marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+    lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
   exportButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.sm,
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   closeButton: {
-    backgroundColor: COLORS.textLight,
+    backgroundColor: COLORS.textMedium,
   },
 });
