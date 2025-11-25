@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
-import { Link, NavigationContainer } from '@react-navigation/native';
+import { Alert, Linking } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Notifications from 'expo-notifications';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
@@ -18,14 +19,15 @@ import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
 import { useEffect, useState } from 'react';
-import { initializeStorage } from './src/data/storage';
+import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
 import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
-import { t } from 'i18next';
 import * as Font from 'expo-font';
+import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount } from './src/utils/notifications';
+import { useRef } from 'react';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -173,6 +175,8 @@ function MainNavigator() {
 export default function App() {
   const { t } = useTranslation();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
   
   useEffect(() => {
     async function loadFonts() {
@@ -183,6 +187,61 @@ export default function App() {
     }
     loadFonts();
     initializeStorage();
+  }, []);
+
+  // Initialize notifications
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        // Update badge count on app start
+        await updateBadgeCount();
+
+        // Get user preferences
+        const notificationsEnabled = await getNotificationsEnabled();
+        const streakRemindersEnabled = await getStreakRemindersEnabled();
+        const notificationTime = await getNotificationTime();
+
+        // Schedule notifications if enabled
+        if (notificationsEnabled) {
+          await scheduleDailyReminder(notificationTime.hour, notificationTime.minute);
+          
+          if (streakRemindersEnabled) {
+            await scheduleStreakReminder();
+          }
+        }
+
+        // Setup notification listeners
+        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+          console.log('Notification received:', notification);
+        });
+
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log('Notification tapped:', response);
+          // Handle notification tap - could navigate to specific screen
+          const notificationType = response.notification.request.content.data?.type;
+          
+          if (notificationType === 'daily-reminder' || notificationType === 'streak-reminder') {
+            // Navigate to Home screen to start studying
+            // This would require access to navigation ref
+            console.log('User wants to study from notification');
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+
+    // Cleanup notification listeners
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -217,6 +276,7 @@ export default function App() {
         handleDeepLink({ url });
       }
     });
+    
     return () => subscription.remove();
   }, [t]);
 
