@@ -12,18 +12,33 @@ A minimalist Korean learning app featuring spaced repetition flashcards, multipl
 
 ## 📸 Screenshots
 
+### Study Modes
 <p align="center">
-  <img src="images/library.jpeg" width="200" alt="Library - Deck overview"/>
-  <img src="images/learn_mode.jpeg" width="200" alt="Learn Mode - Flashcard review"/>
-  <img src="images/write_mode.jpeg" width="200" alt="Write Mode - Handwriting practice"/>
-  <img src="images/handwriting.jpeg" width="200" alt="Handwriting Recognition"/>
+  <img src="images/learn_mode.jpeg" width="250" alt="Learn Mode"/>
+  <img src="images/write_mode.jpeg" width="250" alt="Write Mode"/>
+  <img src="images/test_mode.jpeg" width="250" alt="Test Mode"/>
+</p>
+<p align="center">
+  <em>Learn Mode • Write Mode • Test Mode</em>
 </p>
 
+### Features
 <p align="center">
-  <img src="images/test_mode.jpeg" width="200" alt="Test Mode - Multiple choice quiz"/>
-  <img src="images/match_mode.jpeg" width="200" alt="Match Mode - Matching game"/>
-  <img src="images/progress.jpeg" width="200" alt="Progress Tracking"/>
-  <img src="images/share_qr.jpeg" width="200" alt="QR Code Sharing"/>
+  <img src="images/match_mode.jpeg" width="250" alt="Match Mode"/>
+  <img src="images/handwriting.jpeg" width="250" alt="Handwriting"/>
+  <img src="images/progress.jpeg" width="250" alt="Progress"/>
+</p>
+<p align="center">
+  <em>Match Mode • Handwriting Recognition • Progress Tracking</em>
+</p>
+
+### Library & Sharing
+<p align="center">
+  <img src="images/library.jpeg" width="250" alt="Library"/>
+  <img src="images/share_qr.jpeg" width="250" alt="QR Sharing"/>
+</p>
+<p align="center">
+  <em>Deck Library • QR Code Sharing</em>
 </p>
 
 ---
