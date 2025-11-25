@@ -19,10 +19,9 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
@@ -110,11 +109,10 @@ export const scheduleDailyReminder = async (
     }
 
     // Schedule notification to trigger daily at specified time
-    const trigger: Notifications.CalendarTriggerInput = {
-      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+    const trigger: Notifications.DailyTriggerInput = {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
-      repeats: true,
     };
 
     const id = await Notifications.scheduleNotificationAsync({
@@ -170,12 +168,11 @@ export const scheduleStreakReminder = async (): Promise<string | null> => {
       return null;
     }
 
-    // Schedule for 9 PM if user hasn't studied
-    const trigger: Notifications.CalendarTriggerInput = {
-      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+    // Schedule for 9 PM daily if user hasn't studied
+    const trigger: Notifications.DailyTriggerInput = {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour: 21,
       minute: 0,
-      repeats: true,
     };
 
     const id = await Notifications.scheduleNotificationAsync({
