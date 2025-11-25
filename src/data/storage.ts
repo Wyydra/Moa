@@ -9,6 +9,9 @@ const HANDWRITING_LANG_KEY = '@moa_handwriting_language';
 const TTS_ENABLED_KEY = '@moa_tts_enabled';
 const TTS_AUTO_PLAY_KEY = '@moa_tts_auto_play';
 const TTS_RATE_KEY = '@moa_tts_rate';
+const NOTIFICATIONS_ENABLED_KEY = '@moa_notifications_enabled';
+const NOTIFICATIONS_TIME_KEY = '@moa_notifications_time';
+const NOTIFICATIONS_STREAK_KEY = '@moa_notifications_streak';
 
 export const generateId = (): string => {
   return Date.now().toString() + Math.random().toString(36).substring(2,9);
@@ -591,5 +594,69 @@ export const getOverallAccuracy = async (): Promise<number> => {
   } catch (error) {
     console.error('Error calculating accuracy:', error);
     return 0;
+  }
+};
+
+// Notification Settings Functions
+export const getNotificationsEnabled = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+    return value === null ? true : value === 'true';
+  } catch (error) {
+    console.error('Error loading notifications enabled:', error);
+    return true;
+  }
+};
+
+export const setNotificationsEnabled = async (enabled: boolean): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, enabled.toString());
+  } catch (error) {
+    console.error('Error saving notifications enabled:', error);
+    throw error;
+  }
+};
+
+export const getNotificationTime = async (): Promise<{ hour: number; minute: number }> => {
+  try {
+    const value = await AsyncStorage.getItem(NOTIFICATIONS_TIME_KEY);
+    if (value) {
+      return JSON.parse(value);
+    }
+    return { hour: 20, minute: 0 }; // Default: 8 PM
+  } catch (error) {
+    console.error('Error loading notification time:', error);
+    return { hour: 20, minute: 0 };
+  }
+};
+
+export const setNotificationTime = async (hour: number, minute: number): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(
+      NOTIFICATIONS_TIME_KEY,
+      JSON.stringify({ hour, minute })
+    );
+  } catch (error) {
+    console.error('Error saving notification time:', error);
+    throw error;
+  }
+};
+
+export const getStreakRemindersEnabled = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem(NOTIFICATIONS_STREAK_KEY);
+    return value === null ? true : value === 'true';
+  } catch (error) {
+    console.error('Error loading streak reminders enabled:', error);
+    return true;
+  }
+};
+
+export const setStreakRemindersEnabled = async (enabled: boolean): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(NOTIFICATIONS_STREAK_KEY, enabled.toString());
+  } catch (error) {
+    console.error('Error saving streak reminders enabled:', error);
+    throw error;
   }
 };
