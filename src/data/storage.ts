@@ -157,6 +157,33 @@ export const deleteCard = async (cardId: string): Promise<void> => {
   }
 };
 
+export const moveCardsToAnotherDeck = async (cardIds: string[], targetDeckId: string): Promise<void> => {
+  try {
+    const cards = await getAllCards();
+    const sourceDeckIds = new Set<string>();
+
+    // Update deckId for all selected cards
+    const updatedCards = cards.map(card => {
+      if (cardIds.includes(card.id)) {
+        sourceDeckIds.add(card.deckId);
+        return { ...card, deckId: targetDeckId };
+      }
+      return card;
+    });
+
+    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(updatedCards));
+
+    // Update card counts for both source and target decks
+    await updateDeckCardCount(targetDeckId);
+    for (const sourceDeckId of sourceDeckIds) {
+      await updateDeckCardCount(sourceDeckId);
+    }
+  } catch (error) {
+    console.error('Error moving cards to another deck:', error);
+    throw error;
+  }
+};
+
 const updateDeckCardCount = async (deckId: string): Promise<void> => {
   try {
     const cards = await getCardsByDeck(deckId);

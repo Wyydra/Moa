@@ -8,6 +8,7 @@ export interface Card {
   easeFactor: number;
   repetitions: number;
   createdAt: number;
+  tags?: string[];
 }
 
 export interface Deck {
