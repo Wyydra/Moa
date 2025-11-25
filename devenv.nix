@@ -48,6 +48,10 @@ in
     package = pkgs.nodejs;
   };
 
+  languages.go = {
+    enable = true;
+  };
+
   # https://devenv.sh/basics/
   enterShell = ''
     echo "Moa development environment"
