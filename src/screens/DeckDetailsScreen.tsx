@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, BackHandler, TextInput, ScrollView } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, BackHandler, TextInput, ScrollView, Dimensions } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
@@ -849,6 +849,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           numColumns={viewMode === 'grid' ? 2 : 1}
+          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
           key={viewMode}
         />
       )}
@@ -1206,6 +1207,9 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   );
 }
 
+const { width: screenWidth } = Dimensions.get('window');
+const cardWidth = (screenWidth - (SPACING.lg * 2) - (SPACING.xs * 3)) / 2;
+
 const styles = StyleSheet.create({
   // Header
   header: {
@@ -1417,10 +1421,12 @@ const styles = StyleSheet.create({
   },
 
   // Grid View Card Items
+  gridRow: {
+    justifyContent: 'flex-start',
+  },
   gridCardItem: {
-    flex: 1,
+    width: cardWidth,
     margin: SPACING.xs,
-    maxWidth: '48%',
     minHeight: 120,
     borderWidth: 0.5,
     borderColor: COLORS.border,
