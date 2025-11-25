@@ -4,7 +4,27 @@
 
 **Moa** (모아) means *"to gather"* in Korean — collecting words, knowledge, and small daily moments of progress.
 
-A minimalist Korean learning app featuring spaced repetition flashcards, multiple study modes, handwriting recognition, and text-to-speech pronunciation.
+A minimalist Korean learning app featuring spaced repetition flashcards, multiple study modes, handwriting recognition, and text-to-speech pronunciation. Built for learners who want to grow their Korean skills quietly and consistently.
+
+**Free, offline-first, and privacy-focused.** All your data stays on your device. No account required. No ads, no subscriptions, no data collection.
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="images/library.jpeg" width="200" alt="Library - Deck overview"/>
+  <img src="images/learn_mode.jpeg" width="200" alt="Learn Mode - Flashcard review"/>
+  <img src="images/write_mode.jpeg" width="200" alt="Write Mode - Handwriting practice"/>
+  <img src="images/handwriting.jpeg" width="200" alt="Handwriting Recognition"/>
+</p>
+
+<p align="center">
+  <img src="images/test_mode.jpeg" width="200" alt="Test Mode - Multiple choice quiz"/>
+  <img src="images/match_mode.jpeg" width="200" alt="Match Mode - Matching game"/>
+  <img src="images/progress.jpeg" width="200" alt="Progress Tracking"/>
+  <img src="images/share_qr.jpeg" width="200" alt="QR Code Sharing"/>
+</p>
 
 ---
 
@@ -108,147 +128,28 @@ A minimalist Korean learning app featuring spaced repetition flashcards, multipl
 
 ## 🌸 Design Philosophy
 
-Moa is built for learners who want to grow their Korean quietly and consistently.
+Moa is built on core principles that guide every feature:
 
-**Core principles:**
 - **Small steps every day** - "한 걸음씩 (one step at a time)"
 - **Minimal visual noise** - Clean typography, calm colors
 - **Encouraging progress** - Not perfection
-- **Personal tool first** - Created to help learners review effectively, then shared with others
+- **Personal learning tool** - Created to help learners review effectively, then shared with others
 
 > *"Gather words, grow fluency. One Moa at a time."*
 
 ---
 
-## 🔐 Offline-First & Privacy-Focused
+## 📥 Download
 
-All your data stays on your device. No account required. No internet needed for studying (except for downloading handwriting models or importing via URL).
+🚀 **Coming Soon** - Launching on Google Play Store
 
-**Free & Open** - No ads, no subscriptions, no data collection.
-
----
-
-## 🚀 Getting Started (Developers)
-
-```bash
-# Clone and install
-git clone https://github.com/yourusername/moa.git
-cd moa
-npm install
-
-# Start development
-npm start
-
-# Build for Android
-npx expo run:android --variant release
-```
-
-See [AGENTS.md](./AGENTS.md) for detailed build instructions and code style guidelines.
+In the meantime, check out [ROADMAP.md](./ROADMAP.md) to see what's being worked on for v1.0 and beyond!
 
 ---
 
-## 🏗️ Tech Stack
+## 🛠️ For Developers
 
-- **React Native** + **Expo** + **TypeScript**
-- **React Navigation** v7
-- **AsyncStorage** (local persistence)
-- **SM-2** spaced repetition algorithm
-- **expo-speech** (TTS)
-- **Google ML Kit** Digital Ink Recognition
-- **react-i18next** (English/French)
-
----
-
-## 📂 Project Structure
-
-```
-src/
-├── screens/       # Main app screens (Home, Study, Write, Test, Match, Browse, etc.)
-├── components/    # Reusable UI (HandwritingCanvas, PronunciationButton, etc.)
-├── data/          # Models and AsyncStorage persistence
-├── utils/         # SRS algorithm, language detection, deep linking
-├── i18n/          # Translations (EN/FR)
-└── styles/        # Shared styles and constants
-```
-
----
-
-## 🎯 Development Status
-
-**v1.0** - 92% Complete, awaiting Play Store validation
-
-See [ROADMAP.md](./ROADMAP.md) for detailed progress and future plans.
-
----
-
-## 📱 Play Store Submission Guide
-
-### App Title (30 chars max)
-**Moa - Learn Korean**
-
-### Short Description (80 chars max)
-Learn Korean with flashcards, handwriting, quizzes, and smart spaced repetition
-
-### Keywords
-korean learning, flashcards, spaced repetition, korean vocabulary, hangul practice, korean handwriting, language learning, study korean, korean quiz, vocabulary trainer, korean pronunciation, learn hangul, korean alphabet, topik preparation, korean study app
-
-### Category
-**Education**
-
-### Target Audience
-- Korean language learners (beginner to intermediate)
-- Students preparing for TOPIK exams
-- Self-study enthusiasts
-- Language exchange participants
-- Anyone wanting to maintain/improve Korean vocabulary
-- Educators creating custom study materials for students
-
-### Screenshots Needed (4-8 recommended)
-- Home screen showing deck overview
-- Learn mode with flashcard
-- Write mode with handwriting canvas
-- Test mode with quiz question
-- Match mode with matching tiles
-- Browse mode navigation
-- Progress dashboard with streaks
-- Settings screen
-
-**Dimensions:** Minimum 320px, Maximum 3840px (use actual device resolution, e.g., 1080x2340)
-
-### Assets Required
-- [ ] App icon (512x512 PNG)
-- [ ] Feature graphic (1024x500 PNG)
-- [ ] 4-8 phone screenshots
-- [ ] Privacy policy (hosted URL - required)
-- [ ] Signed AAB file
-
-### Release Notes Template
-
-**Version 1.0.0**
-
-🎉 Initial release of Moa - Learn Korean!
-
-**Features:**
-- ✅ 5 study modes: Learn, Write, Test, Match, Browse
-- ✅ Smart spaced repetition (SM-2 algorithm)
-- ✅ Google ML Kit handwriting recognition
-- ✅ Text-to-speech with auto-language detection
-- ✅ Progress tracking with study streaks
-- ✅ Import/export decks via JSON and QR codes
-- ✅ Bilingual UI (English/French)
-
-**What's coming in v1.1:**
-- Spell mode (audio dictation)
-- CSV import/export
-- Study mode picker UI
-- Enhanced test mode (true/false, written questions)
-
----
-
-## 🔒 Security (Contributors)
-
-- **NEVER** commit `android/keystore.properties` or `*.keystore` files
-- Production keystore is stored securely outside the repository
+Want to contribute or build from source? See [APP.md](./APP.md) for technical documentation, architecture details, and development setup.
 
 ---
 
