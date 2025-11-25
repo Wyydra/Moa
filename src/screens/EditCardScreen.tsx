@@ -15,6 +15,8 @@ export default function EditCardScreen({ route, navigation }: any) {
   const { cardId } = route.params;
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function EditCardScreen({ route, navigation }: any) {
     if (card) {
       setFront(card.front);
       setBack(card.back);
+      setTags(card.tags || []);
     }
     setLoading(false);
   };
@@ -44,6 +47,7 @@ export default function EditCardScreen({ route, navigation }: any) {
         ...existingCard,
         front: front.trim(),
         back: back.trim(),
+        tags: tags.length > 0 ? tags : undefined,
       };
       await saveCard(updatedCard);
     }
@@ -74,6 +78,18 @@ export default function EditCardScreen({ route, navigation }: any) {
 
   const handleClose = () => {
     navigation.goBack();
+  };
+
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   if (loading) {
@@ -111,6 +127,34 @@ export default function EditCardScreen({ route, navigation }: any) {
         onChangeText={setBack}
       />
 
+      <Text style={commonStyles.label}>{t('card.tags')}</Text>
+      <View style={styles.tagInputContainer}>
+        <TextInput
+          style={styles.tagInput}
+          value={tagInput}
+          onChangeText={setTagInput}
+          placeholder={t('card.tagsPlaceholder')}
+          onSubmitEditing={handleAddTag}
+          returnKeyType="done"
+        />
+        <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
+          <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+
+      {tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {tags.map((tag, index) => (
+            <View key={index} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
+              <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
+                <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
       <TouchableOpacity
         style={[commonStyles.button, styles.saveButton]}
         onPress={handleSave}
@@ -132,6 +176,46 @@ const styles = StyleSheet.create({
   closeButton: {
   },
   deleteButton: {
+  },
+  tagInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  tagInput: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  addTagButton: {
+    padding: SPACING.xs,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    gap: SPACING.xs,
+  },
+  tagText: {
+    color: COLORS.textInverse,
+    fontSize: 14,
+    fontWeight: '600',
   },
   saveButton: {
     marginTop: SPACING.xl,
