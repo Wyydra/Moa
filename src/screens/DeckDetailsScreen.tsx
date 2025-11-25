@@ -1208,7 +1208,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
-const cardWidth = (screenWidth - (SPACING.lg * 2) - (SPACING.xs * 3)) / 2;
+const cardWidth = (screenWidth - (SPACING.xl * 2) - (SPACING.xs * 4)) / 2;
 
 const styles = StyleSheet.create({
   // Header
