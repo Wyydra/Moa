@@ -1,16 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { HandwritingCanvas } from '../components/HandwritingCanvas';
+import PronunciationButton from '../components/PronunciationButton';
+import * as Speech from 'expo-speech';
 
 export default function WriteScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId, tags } = route.params;
+  const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
@@ -20,12 +22,29 @@ export default function WriteScreen({route, navigation}: any) {
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showHandwriting, setShowHandwriting] = useState(false);
+  const [ttsEnabled, setTTSEnabled] = useState(true);
+  const [ttsRate, setTTSRate] = useState(1.0);
+  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const resultAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCards();
+    loadTTSSettings();
   }, [deckId, tags]);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  const loadTTSSettings = async () => {
+    const enabled = await getTTSEnabled();
+    const rate = await getTTSRate();
+    setTTSEnabled(enabled);
+    setTTSRate(rate);
+  };
 
   const loadCards = async () => {
     const allCards = tags 
@@ -37,11 +56,20 @@ export default function WriteScreen({route, navigation}: any) {
     if (shuffledCards.length === 0) {
       setCompleted(true);
     }
+    
+    // Load deck language for TTS
+    if (deckId) {
+      const deck = await getDeckById(deckId);
+      if (deck) {
+        setDeckLanguage(deck.language);
+      }
+    }
   };
 
   const handleSubmit = async () => {
     const currentCard = cards[currentIndex];
-    const correct = userAnswer.trim().toLowerCase() === currentCard.back.trim().toLowerCase();
+    const correctAnswer = reversed ? currentCard.front : currentCard.back;
+    const correct = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
     setIsCorrect(correct);
     setShowResult(true);
     
@@ -146,7 +174,17 @@ export default function WriteScreen({route, navigation}: any) {
       <View style={styles.cardContainer}>
         <View style={[commonStyles.card, styles.questionCard]}>
           <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
-          <Text style={styles.cardText}>{currentCard.front}</Text>
+          <Text style={styles.cardText}>{reversed ? currentCard.back : currentCard.front}</Text>
+          {ttsEnabled && (
+            <View style={styles.ttsContainer}>
+              <PronunciationButton
+                text={reversed ? currentCard.back : currentCard.front}
+                rate={ttsRate}
+                autoPlay={false}
+                language={deckLanguage}
+              />
+            </View>
+          )}
         </View>
 
         <View style={styles.answerSection}>
@@ -214,7 +252,17 @@ export default function WriteScreen({route, navigation}: any) {
             {!isCorrect && (
               <View style={styles.correctAnswerBox}>
                 <Text style={styles.correctAnswerLabel}>{t('modes.write.correctAnswer')}:</Text>
-                <Text style={styles.correctAnswerText}>{currentCard.back}</Text>
+                <Text style={styles.correctAnswerText}>{reversed ? currentCard.front : currentCard.back}</Text>
+                {ttsEnabled && (
+                  <View style={styles.ttsContainer}>
+                    <PronunciationButton
+                      text={reversed ? currentCard.front : currentCard.back}
+                      rate={ttsRate}
+                      autoPlay={false}
+                      language={deckLanguage}
+                    />
+                  </View>
+                )}
               </View>
             )}
           </Animated.View>
@@ -313,6 +361,10 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     textAlign: 'center',
     lineHeight: 32,
+  },
+  ttsContainer: {
+    marginTop: SPACING.md,
+    alignItems: 'center',
   },
   answerSection: {
     marginBottom: SPACING.lg,

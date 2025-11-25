@@ -8,6 +8,7 @@
     "loading": "Loading...",
     "done": "Done",
     "next": "Next",
+    "previous": "Previous",
     "finish": "Finish",
     "success": "Success",
     "error": "Error",
@@ -136,7 +137,8 @@
     "sessionComplete": "Study Session Complete!",
     "noDueCards": "No cards due for review",
     "reviewedCards": "Reviewed {{count}} cards",
-    "progress": "{{current}} / {{total}}"
+    "progress": "{{current}} / {{total}}",
+    "reverseCards": "Reverse cards (Back → Front)"
   },
   "modes": {
     "learn": {
@@ -172,6 +174,10 @@
       "stats": "{{matches}} matches in {{tries}} tries",
       "newGame": "New Game"
     },
+    "browse": {
+      "title": "Browse",
+      "description": "Navigate freely through all cards"
+    },
     "spell": {
       "title": "Spell",
       "description": "Listen and type what you hear (coming soon)"
@@ -181,6 +187,7 @@
      "question": "Question",
      "answer": "Answer",
      "showAnswer": "Show Answer",
+     "showQuestion": "Show Question",
      "again": "Again",
      "hard": "Hard",
      "good": "Good",

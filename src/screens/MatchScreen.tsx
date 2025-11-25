@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getTTSEnabled, getTTSRate } from "../data/storage";
 import { StudySession } from "../data/model";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
+import * as Speech from 'expo-speech';
+import { detectLanguage } from '../utils/languageDetection';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -16,11 +18,12 @@ interface Tile {
   cardId: string;
   matched: boolean;
   animation: Animated.Value;
+  language?: string;
 }
 
 export default function MatchScreen({ route, navigation }: any) {
   const { t } = useTranslation();
-  const { deckId, tags } = route.params;
+  const { deckId, tags, reversed = false } = route.params;
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [selectedTiles, setSelectedTiles] = useState<Tile[]>([]);
   const [completed, setCompleted] = useState(false);
@@ -28,9 +31,12 @@ export default function MatchScreen({ route, navigation }: any) {
   const [tries, setTries] = useState(0);
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [ttsEnabled, setTTSEnabled] = useState(true);
+  const [ttsRate, setTTSRate] = useState(1.0);
 
   useEffect(() => {
     loadCardsAndGenerateTiles();
+    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -42,6 +48,19 @@ export default function MatchScreen({ route, navigation }: any) {
 
     return () => clearInterval(timer);
   }, [loading, completed, startTime]);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  const loadTTSSettings = async () => {
+    const enabled = await getTTSEnabled();
+    const rate = await getTTSRate();
+    setTTSEnabled(enabled);
+    setTTSRate(rate);
+  };
 
   const loadCardsAndGenerateTiles = async () => {
     const allCards = tags 
@@ -61,21 +80,27 @@ export default function MatchScreen({ route, navigation }: any) {
 
     const generatedTiles: Tile[] = [];
     cardsToUse.forEach(card => {
+      // Detect language for each side of the card
+      const frontText = reversed ? card.back : card.front;
+      const backText = reversed ? card.front : card.back;
+      
       generatedTiles.push({
         id: `${card.id}-front`,
-        text: card.front,
+        text: frontText,
         type: 'front',
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
+        language: detectLanguage(frontText),
       });
       generatedTiles.push({
         id: `${card.id}-back`,
-        text: card.back,
+        text: backText,
         type: 'back',
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
+        language: detectLanguage(backText),
       });
     });
 
@@ -87,6 +112,14 @@ export default function MatchScreen({ route, navigation }: any) {
   const handleTilePress = (tile: Tile) => {
     if (tile.matched || selectedTiles.find(t => t.id === tile.id)) {
       return;
+    }
+
+    // Play TTS for the tile text when pressed, using the tile's specific language
+    if (ttsEnabled) {
+      Speech.speak(tile.text, {
+        rate: ttsRate,
+        language: tile.language,
+      });
     }
 
     const newSelected = [...selectedTiles, tile];

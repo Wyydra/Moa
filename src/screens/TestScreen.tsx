@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
+import PronunciationButton from '../components/PronunciationButton';
+import * as Speech from 'expo-speech';
 
 interface Question {
   card: Card;
@@ -15,7 +17,7 @@ interface Question {
 
 export default function TestScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId, tags } = route.params;
+  const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -24,11 +26,15 @@ export default function TestScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [ttsEnabled, setTTSEnabled] = useState(true);
+  const [ttsRate, setTTSRate] = useState(1.0);
+  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
   const optionAnims = useRef<Animated.Value[]>([]).current;
   const questionAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadCardsAndGenerateQuestions()
+    loadCardsAndGenerateQuestions();
+    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -37,6 +43,19 @@ export default function TestScreen({route, navigation}: any) {
       animateQuestion();
     }
   }, [currentIndex, questions]);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  const loadTTSSettings = async () => {
+    const enabled = await getTTSEnabled();
+    const rate = await getTTSRate();
+    setTTSEnabled(enabled);
+    setTTSRate(rate);
+  };
 
   const animateQuestion = () => {
     questionAnim.setValue(0);
@@ -81,11 +100,11 @@ export default function TestScreen({route, navigation}: any) {
     }
 
     const generatedQuestions: Question[] = shuffledCards.map((card) => {
-      const correctAnswer = card.back;
+      const correctAnswer = reversed ? card.front : card.back;
 
       const wrongAnswer = shuffledCards
         .filter(c => c.id !== card.id)
-        .map(c => c.back)
+        .map(c => reversed ? c.front : c.back)
         .sort(() => Math.random() - 0.5)
         .slice(0,3);
 
@@ -101,6 +120,14 @@ export default function TestScreen({route, navigation}: any) {
 
     setQuestions(generatedQuestions);
     setLoading(false);
+    
+    // Load deck language for TTS
+    if (deckId) {
+      const deck = await getDeckById(deckId);
+      if (deck) {
+        setDeckLanguage(deck.language);
+      }
+    }
   }
 
   const handleSelectAnswer = async (answer: string) => {
@@ -204,7 +231,17 @@ export default function TestScreen({route, navigation}: any) {
           ]}
         >
           <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
-          <Text style={styles.cardText}>{currentQuestion.card.front}</Text>
+          <Text style={styles.cardText}>{reversed ? currentQuestion.card.back : currentQuestion.card.front}</Text>
+          {ttsEnabled && (
+            <View style={styles.ttsContainer}>
+              <PronunciationButton
+                text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
+                rate={ttsRate}
+                autoPlay={false}
+                language={deckLanguage}
+              />
+            </View>
+          )}
         </Animated.View>
 
         <View style={styles.optionsContainer}>
@@ -237,12 +274,22 @@ export default function TestScreen({route, navigation}: any) {
                   disabled={showResult}
                 >
                   <Text style={styles.optionText}>{option}</Text>
-                   {showResult && isCorrect && (
-                    <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
-                  )}
-                  {showResult && isSelected && !isCorrect && (
-                    <Ionicons name="close-circle" size={24} color={COLORS.danger} />
-                  )}
+                  <View style={styles.optionRightContent}>
+                    {showResult && isCorrect && ttsEnabled && (
+                      <PronunciationButton
+                        text={option}
+                        rate={ttsRate}
+                        autoPlay={false}
+                        language={deckLanguage}
+                      />
+                    )}
+                    {showResult && isCorrect && (
+                      <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
+                    )}
+                    {showResult && isSelected && !isCorrect && (
+                      <Ionicons name="close-circle" size={24} color={COLORS.danger} />
+                    )}
+                  </View>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -308,6 +355,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 32,
   },
+  ttsContainer: {
+    marginTop: SPACING.md,
+    alignItems: 'center',
+  },
   optionsContainer: {
     gap: SPACING.md,
   },
@@ -348,6 +399,11 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.md,
     color: COLORS.text,
     flex: 1,
+  },
+  optionRightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
   nextButton: {
     marginTop: SPACING.xl,

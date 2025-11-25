@@ -8,6 +8,7 @@
     "loading": "Chargement...",
     "done": "Terminé",
     "next": "Suivant",
+    "previous": "Précédent",
     "finish": "Terminer",
     "success": "Succès",
     "error": "Erreur",
@@ -136,7 +137,8 @@
     "sessionComplete": "Session d'étude terminée !",
     "noDueCards": "Aucune carte à réviser",
     "reviewedCards": "{{count}} cartes révisées",
-    "progress": "{{current}} / {{total}}"
+    "progress": "{{current}} / {{total}}",
+    "reverseCards": "Inverser les cartes (Verso → Recto)"
   },
   "modes": {
     "learn": {
@@ -172,6 +174,10 @@
       "stats": "{{matches}} correspondances en {{tries}} essais",
       "newGame": "Nouvelle partie"
     },
+    "browse": {
+      "title": "Parcourir",
+      "description": "Naviguez librement à travers toutes les cartes"
+    },
     "spell": {
       "title": "Épeler",
       "description": "Écoutez et tapez ce que vous entendez (prochainement)"
@@ -181,6 +187,7 @@
      "question": "Question",
      "answer": "Réponse",
      "showAnswer": "Afficher la réponse",
+     "showQuestion": "Afficher la question",
      "again": "Encore",
      "hard": "Difficile",
      "good": "Bien",

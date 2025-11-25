@@ -13,7 +13,7 @@ import { updateBadgeCount } from '../utils/notifications';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
-  const { deckId, tags } = route.params;
+  const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
@@ -163,14 +163,20 @@ if (completed) {
         <View style={[commonStyles.card, styles.flashcard]}>
           <Text style={styles.cardLabel}>{showBack ? t('flashcard.answer') : t('flashcard.question')}</Text>
           <Text style={styles.cardText}>
-            {showBack ? currentCard.back : currentCard.front}
+            {showBack 
+              ? (reversed ? currentCard.front : currentCard.back)
+              : (reversed ? currentCard.back : currentCard.front)
+            }
           </Text>
-          {showBack && ttsEnabled && (
+          {ttsEnabled && (
             <View style={styles.pronunciationContainer}>
               <PronunciationButton 
-                text={currentCard.back}
+                text={showBack 
+                  ? (reversed ? currentCard.front : currentCard.back)
+                  : (reversed ? currentCard.back : currentCard.front)
+                }
                 rate={ttsRate}
-                autoPlay={ttsAutoPlay}
+                autoPlay={showBack && ttsAutoPlay}
                 language={deckLanguage}
               />
             </View>

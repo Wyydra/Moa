@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, BackHandler, TextInput, ScrollView, Dimensions } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, BackHandler, TextInput, ScrollView, Dimensions, Switch } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
@@ -47,6 +47,9 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   const [allCardTags, setAllCardTags] = useState<string[]>([]);
   const [selectedCardTags, setSelectedCardTags] = useState<string[]>([]);
   const [filteredCards, setFilteredCards] = useState<Card[]>([]);
+  
+  // Reverse cards state
+  const [reverseCards, setReverseCards] = useState(false);
 
   // Helper function to determine card status based on SRS data
   const getCardStatus = (card: Card): CardStatus => {
@@ -960,11 +963,25 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               </TouchableOpacity>
             </View>
 
+            {/* Reverse Cards Toggle */}
+            <View style={styles.reverseToggleContainer}>
+              <View style={styles.reverseToggleInfo}>
+                <Ionicons name="swap-horizontal" size={22} color={COLORS.primary} />
+                <Text style={styles.reverseToggleText}>{t('study.reverseCards')}</Text>
+              </View>
+              <Switch
+                value={reverseCards}
+                onValueChange={setReverseCards}
+                trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                thumbColor={COLORS.surface}
+              />
+            </View>
+
             <TouchableOpacity
               style={styles.modeOption}
               onPress={() => {
                 setShowModePicker(false);
-                navigation.navigate('StudyScreen', { deckId });
+                navigation.navigate('StudyScreen', { deckId, reversed: reverseCards });
               }}
             >
               <Ionicons name="book-outline" size={28} color={COLORS.learn} />
@@ -978,7 +995,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               style={styles.modeOption}
               onPress={() => {
                 setShowModePicker(false);
-                navigation.navigate('WriteScreen', { deckId });
+                navigation.navigate('WriteScreen', { deckId, reversed: reverseCards });
               }}
             >
               <Ionicons name="create-outline" size={28} color={COLORS.write} />
@@ -992,7 +1009,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               style={styles.modeOption}
               onPress={() => {
                 setShowModePicker(false);
-                navigation.navigate('TestScreen', { deckId });
+                navigation.navigate('TestScreen', { deckId, reversed: reverseCards });
               }}
             >
               <Ionicons name="clipboard-outline" size={28} color={COLORS.test} />
@@ -1006,13 +1023,27 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               style={styles.modeOption}
               onPress={() => {
                 setShowModePicker(false);
-                navigation.navigate('MatchScreen', { deckId });
+                navigation.navigate('MatchScreen', { deckId, reversed: reverseCards });
               }}
             >
               <Ionicons name="git-compare-outline" size={28} color={COLORS.match} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.match.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.match.description')}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modeOption}
+              onPress={() => {
+                setShowModePicker(false);
+                navigation.navigate('BrowseScreen', { deckId, reversed: reverseCards });
+              }}
+            >
+              <Ionicons name="eye-outline" size={28} color={COLORS.info} />
+              <View style={styles.modeTextContainer}>
+                <Text style={styles.modeTitle}>{t('modes.browse.title')}</Text>
+                <Text style={styles.modeDescription}>{t('modes.browse.description')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -1698,5 +1729,27 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
+  },
+  
+  // Reverse Cards Toggle
+  reverseToggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    backgroundColor: COLORS.surfaceAlt,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.lg,
+  },
+  reverseToggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  reverseToggleText: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.text,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
 });
