@@ -7,9 +7,10 @@
 ## 🎉 v1.0 Status: READY TO SHIP!
 
 **Moa is feature-complete and ready for production release.** All core functionality is working:
-- 4 study modes fully functional (Learn, Write, Test, Match)
+- 5 study modes fully functional (Learn, Write, Test, Match, Browse)
 - Complete progress tracking with streaks and analytics
-- TTS pronunciation system with speed control
+- TTS pronunciation system with speed control and auto-language detection
+- Reverse cards option across all study modes
 - Handwriting recognition with Google ML Kit
 - Import/export via JSON files and QR codes
 - Bilingual support (English/French)
@@ -29,8 +30,8 @@
 
 ## 📊 Overall Progress
 
-**Core Features:** 90% Complete (v1.0 Ready!)
-**Study Modes:** 80% Complete (4/5 modes working: Learn ✅, Write ✅, Test ✅, Match ✅, Spell 🚧 in feature branch)
+**Core Features:** 92% Complete (v1.0 Ready!)
+**Study Modes:** 100% Complete (5/5 modes working: Learn ✅, Write ✅, Test ✅, Match ✅, Browse ✅, Spell 🚧 in feature branch)
 **Import/Export:** 100% Complete (JSON ✅, CSV pending but optional, Quizlet/PDF abandoned)
 **Progress Tracking:** 100% Complete ✅
 **Community Features:** 0% Complete (Phase 6 - Future)
@@ -56,15 +57,18 @@
 - [x] Add cards (front/back content)
 - [x] Edit cards
 
-### Study Modes ✅ COMPLETE (4/5 modes)
+### Study Modes ✅ COMPLETE (5/5 modes)
 - [x] Study screen with flashcard review (StudyScreen.tsx)
 - [x] Flip animation and SRS ratings (Again/Hard/Good/Easy)
 - [x] Test mode - Auto-generated multiple choice quiz (TestScreen.tsx)
 - [x] Match mode - Timed matching game with animations (MatchScreen.tsx)
 - [x] Write mode - Handwriting canvas with ML Kit recognition (WriteScreen.tsx)
+- [x] Browse mode - Free navigation through cards without SRS (BrowseScreen.tsx)
 - [x] Tag-based study support (all modes)
 - [x] Card shuffling (all modes)
+- [x] Reverse cards option (all modes)
 - [x] Study session tracking (all modes)
+- [x] TTS pronunciation button (all modes)
 
 ### Handwriting ✅ COMPLETE
 - [x] Handwriting canvas component (HandwritingCanvas.tsx)
@@ -78,13 +82,17 @@
 - [x] Clear button and navigation arrows
 - [x] Language selection in Settings
 
-### Audio & Pronunciation
+### Audio & Pronunciation ✅ COMPLETE
 - [x] Text-to-Speech (TTS) integration
 - [x] PronunciationButton component
-- [x] Language detection (Korean/Japanese/Chinese via franc)
+- [x] Consolidated language detection utility (languageDetection.ts)
+- [x] Two-stage detection: Unicode ranges (CJK) + franc library
+- [x] Support for Korean, Japanese, Chinese, English, French, Spanish, German, Arabic
+- [x] BCP 47 language codes (ko-KR, ja-JP, etc.)
 - [x] Deck-specific language settings
 - [x] Dropdown language selector (modal-based)
-- [x] TTS in Study screen
+- [x] TTS in all study modes (Study, Test, Write, Match, Browse)
+- [x] Per-tile TTS in Match mode with auto-language detection
 - [x] TTS speed control (0.5x - 2.0x slider in Settings)
 - [x] TTS auto-play setting (SettingsScreen)
 - [x] TTS enable/disable toggle
@@ -121,9 +129,18 @@
 
 **Decision:** Ship v1.0 without Spell mode, release in v1.1 when issue is resolved
 
+### Browse Mode ✅ COMPLETE
+- [x] Create BrowseScreen component for free navigation
+- [x] No SRS ratings - just Next/Previous navigation
+- [x] Card flip animation with front/back
+- [x] Card counter (e.g., "1 / 25")
+- [x] TTS pronunciation button
+- [x] Reverse cards toggle support
+- [x] Integration with DeckDetailsScreen
+
 ### Study Mode Picker
 - [ ] Create unified mode selection screen
-- [ ] Show available modes: Learn, Write, Spell, Test, Match
+- [ ] Show available modes: Learn, Write, Spell, Test, Match, Browse
 - [ ] Mode descriptions and icons
 - [ ] Navigate to selected mode with deck context
 - [ ] Update navigation from DeckDetailsScreen
@@ -134,6 +151,10 @@
 - [x] Save speed preference per user (AsyncStorage)
 - [x] Apply auto-play in Study screen if enabled
 - [x] Speed control UI (slider with current value display)
+- [x] TTS added to all study modes (Study, Test, Write, Match, Browse)
+- [x] Consolidated language detection utility
+- [x] Per-tile language detection in Match mode
+- [x] Reverse cards functionality across all modes
 
 ### Write Mode Enhancements (Optional - Post v1.0)
 - [ ] Add typed answer mode (not just handwriting)
@@ -330,10 +351,11 @@
 ✅ **All Essential Features Working:**
 1. ~~**Spell Mode**~~ - Exists in feature branch but blocked by permissions (ship in v1.1)
 2. ~~**Progress Dashboard**~~ - ✅ COMPLETE
-3. **4 Study Modes** - Learn, Write, Test, Match ✅ COMPLETE
-4. **TTS System** - Full pronunciation with speed control ✅ COMPLETE
-5. **Handwriting Recognition** - ML Kit integration ✅ COMPLETE
-6. **Import/Export** - JSON + QR codes ✅ COMPLETE
+3. **5 Study Modes** - Learn, Write, Test, Match, Browse ✅ COMPLETE
+4. **TTS System** - Full pronunciation with speed control and auto-language detection ✅ COMPLETE
+5. **Reverse Cards** - Toggle option across all study modes ✅ COMPLETE
+6. **Handwriting Recognition** - ML Kit integration ✅ COMPLETE
+7. **Import/Export** - JSON + QR codes ✅ COMPLETE
 
 **To Ship v1.0 NOW:**
 - [ ] Generate release keystore (5 min)
@@ -351,17 +373,18 @@
 
 ## 📅 Milestone Targets
 
-### ✅ MVP COMPLETE - v1.0 Ready! (90%)
-- ✅ 4 core study modes working (Learn ✅, Write ✅, Test ✅, Match ✅)
+### ✅ MVP COMPLETE - v1.0 Ready! (92%)
+- ✅ 5 core study modes working (Learn ✅, Write ✅, Test ✅, Match ✅, Browse ✅)
 - 🚧 Spell mode in feature branch (can ship in v1.1)
 - ✅ Full progress tracking dashboard with analytics
-- ✅ TTS fully functional with speed control and auto-play
+- ✅ TTS fully functional with speed control, auto-play, and auto-language detection
+- ✅ Reverse cards option across all study modes
 - ✅ Import/Export complete (JSON file + QR + deep link)
 - ✅ Handwriting recognition with ML Kit
 - ✅ Bilingual support (EN/FR)
 - **Status:** READY TO SHIP - Only needs keystore + privacy policy
 
-### v1.1 Feature Complete (90% → 95%)
+### v1.1 Feature Complete (92% → 95%)
 - [ ] Spell mode permission issue resolved
 - [ ] CSV Import/Export (optional enhancement)
 - [ ] Study mode picker UI
@@ -436,18 +459,19 @@
 
 ---
 
-**Last Updated:** November 24, 2025
+**Last Updated:** November 25, 2025
 **Current Phase:** v1.0 Release Preparation 🚀
-**Completion Status:** 90% - MVP COMPLETE, ready to ship!
+**Completion Status:** 92% - MVP COMPLETE, ready to ship!
 **Blockers:** 
 - ⚠️ Need to generate production keystore (5 min task)
 - ⚠️ Need to create Privacy Policy (required for Play Store)
 - 🚧 Spell Mode exists in feature branch but has permission issue (can ship in v1.1)
 
 **What's Working in v1.0:**
-- ✅ 4 Study Modes: Learn (SRS flashcards), Write (handwriting), Test (multiple choice), Match (timed game)
+- ✅ 5 Study Modes: Learn (SRS flashcards), Write (handwriting), Test (multiple choice), Match (timed game), Browse (free navigation)
 - ✅ Complete Progress Dashboard with streak tracking and analytics
-- ✅ Full TTS system with speed control (0.5x-2.0x) and auto-play
+- ✅ Full TTS system with speed control (0.5x-2.0x), auto-play, and auto-language detection
+- ✅ Reverse cards option across all study modes
 - ✅ ML Kit handwriting recognition (Korean/Japanese)
 - ✅ Import/Export: JSON files + QR codes + deep linking
 - ✅ Deck management: Create, edit, add/edit cards, tags support
