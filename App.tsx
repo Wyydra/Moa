@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react';
 import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
+import BrowseScreen from './src/screens/BrowseScreen';
 import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
@@ -76,6 +77,11 @@ function LibraryStackNavigator() {
       <LibraryStack.Screen
         name='MatchScreen'
         component={MatchScreen}
+        options={{ presentation: 'modal'}}
+        />
+      <LibraryStack.Screen
+        name='BrowseScreen'
+        component={BrowseScreen}
         options={{ presentation: 'modal'}}
         />
     </LibraryStack.Navigator>
