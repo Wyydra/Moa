@@ -199,7 +199,20 @@
       "ttsAutoPlay": "Auto-play Pronunciation",
       "ttsAutoPlayDescription": "Automatically play audio when card appears",
       "ttsRate": "Speech Rate",
-      "ttsRateDescription": "Adjust pronunciation speed"
+      "ttsRateDescription": "Adjust pronunciation speed",
+      "notifications": {
+        "title": "Notifications",
+        "enabled": "Enable Notifications",
+        "enabledDescription": "Receive reminders to study",
+        "dailyReminderTime": "Daily Reminder Time",
+        "dailyReminderTimeDescription": "When to send daily study reminders",
+        "streakReminders": "Streak Protection",
+        "streakRemindersDescription": "Get reminded if you haven't studied yet today",
+        "testNotification": "Send Test Notification",
+        "testSent": "Test Sent",
+        "testSentDescription": "Check your notifications to see the test message",
+        "testError": "Failed to send test notification. Please check your notification permissions."
+      }
     },
     "progress": {
       "title": "Progress",

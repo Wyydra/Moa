@@ -199,7 +199,20 @@
       "ttsAutoPlay": "Lecture automatique de la prononciation",
       "ttsAutoPlayDescription": "Lire automatiquement l'audio à l'apparition de la carte",
       "ttsRate": "Vitesse de parole",
-      "ttsRateDescription": "Ajuster la vitesse de prononciation"
+      "ttsRateDescription": "Ajuster la vitesse de prononciation",
+      "notifications": {
+        "title": "Notifications",
+        "enabled": "Activer les notifications",
+        "enabledDescription": "Recevoir des rappels pour étudier",
+        "dailyReminderTime": "Heure du rappel quotidien",
+        "dailyReminderTimeDescription": "Quand envoyer les rappels d'étude quotidiens",
+        "streakReminders": "Protection de série",
+        "streakRemindersDescription": "Être rappelé si vous n'avez pas encore étudié aujourd'hui",
+        "testNotification": "Envoyer une notification test",
+        "testSent": "Test envoyé",
+        "testSentDescription": "Vérifiez vos notifications pour voir le message de test",
+        "testError": "Échec de l'envoi de la notification de test. Veuillez vérifier vos autorisations de notification."
+      }
     },
     "progress": {
       "title": "Progrès",
