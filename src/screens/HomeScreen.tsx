@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { getAllDecks, getDueCards, getStudyStreak, getTodayReviewCount } from '../data/storage';
+import { updateBadgeCount } from '../utils/notifications';
 import { Deck } from '../data/model';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -70,6 +71,9 @@ export default function HomeScreen({ navigation }: any) {
       setStreak(streakDays);
       setTodayReviews(todayCount);
       setTopDecks(topPriorityDecks);
+      
+      // Update app badge count with due cards
+      await updateBadgeCount();
     } catch (error) {
       console.error('Error loading home stats:', error);
     } finally {

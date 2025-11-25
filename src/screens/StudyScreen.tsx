@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId } from "../data/storage";
+import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId, getStudyStreak } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import PronunciationButton from '../components/PronunciationButton';
 import * as Speech from 'expo-speech';
+import { updateBadgeCount } from '../utils/notifications';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -100,6 +101,8 @@ export default function StudyScreen({route, navigation}: any) {
 
     if (currentIndex + 1 >= cards.length) {
       setCompleted(true);
+      // Update badge count after completing study session
+      await updateBadgeCount();
     } else {
       setShowBack(false);
       setCurrentIndex(currentIndex + 1);
