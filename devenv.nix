@@ -34,6 +34,7 @@ in
     watchman
     jdk17
     gradle_8
+    android-tools
   ];
 
   env.JAVA_HOME = "${pkgs.jdk17}/lib/openjdk";
