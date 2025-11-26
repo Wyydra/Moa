@@ -18,8 +18,9 @@ import CreateDeckScreen from './src/screens/CreateDeckScreen';
 import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
+import { runMigrations } from './src/data/migrations';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
 import BrowseScreen from './src/screens/BrowseScreen';
@@ -28,7 +29,6 @@ import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import * as Font from 'expo-font';
 import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount } from './src/utils/notifications';
-import { useRef } from 'react';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -185,14 +185,18 @@ export default function App() {
   const responseListener = useRef<Notifications.Subscription | null>(null);
   
   useEffect(() => {
-    async function loadFonts() {
+    async function initialize() {
+      // Load fonts
       await Font.loadAsync({
         ...Ionicons.font,
       });
       setFontsLoaded(true);
+      
+      // Run migrations before initializing storage
+      await runMigrations();
+      await initializeStorage();
     }
-    loadFonts();
-    initializeStorage();
+    initialize();
   }, []);
 
   // Initialize notifications
