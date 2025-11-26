@@ -253,8 +253,7 @@ export const initializeStorage = async (): Promise<void> => {
   try {
     const decks = await getAllDecks();
     if (decks.length === 0) {
-      console.log('No existing data found. Seeding test data...');
-      await seedTestData();
+      console.log('No existing data found. Starting with empty library.');
     }
   } catch (error) {
     console.error('Error initializing storage:', error);
