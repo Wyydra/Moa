@@ -10,6 +10,9 @@ CREATE TABLE cards (
     interval INTEGER,
     ease_factor REAL,
     repetitions INTEGER,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at DATETIME,
     FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_cards_deck_id ON cards(deck_id);
+CREATE INDEX idx_cards_deleted ON cards(deleted);
