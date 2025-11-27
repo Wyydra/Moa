@@ -21,7 +21,7 @@ import EditDeckScreen from './src/screens/EditDeckScreen';
 import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
 import { useEffect, useState, useRef } from 'react';
-import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
+import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled, cleanupOldDeleted } from './src/data/storage';
 import { runMigrations } from './src/data/migrations';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
@@ -210,6 +210,9 @@ function AppContent() {
       // Run migrations before initializing storage
       await runMigrations();
       await initializeStorage();
+      
+      // Clean up old deleted items (30+ days old)
+      await cleanupOldDeleted();
     }
     initialize();
   }, []);
