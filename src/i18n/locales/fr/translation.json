@@ -14,6 +14,31 @@
     "error": "Erreur",
     "ok": "OK"
   },
+  "auth": {
+    "tagline": "Maîtrisez votre vocabulaire",
+    "welcomeBack": "Bon retour",
+    "signInToContinue": "Connectez-vous pour continuer à apprendre",
+    "createAccount": "Créer un compte",
+    "signUpToGetStarted": "Inscrivez-vous pour commencer",
+    "syncDescription": "Connectez-vous pour synchroniser vos paquets sur tous vos appareils",
+    "email": "Email",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "error": "Erreur",
+    "emailPasswordRequired": "Email et mot de passe requis",
+    "allFieldsRequired": "Tous les champs sont requis",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "signInFailed": "Échec de la connexion",
+    "signInError": "Échec de la connexion",
+    "registrationFailed": "Échec de l'inscription",
+    "registrationError": "Échec de la création du compte"
+  },
   "home": {
     "title": "Accueil",
     "welcome": "Bienvenue sur MOA",
@@ -219,7 +244,11 @@
         "testSent": "Test envoyé",
         "testSentDescription": "Vérifiez vos notifications pour voir le message de test",
         "testError": "Échec de l'envoi de la notification de test. Veuillez vérifier vos autorisations de notification."
-      }
+      },
+      "account": "Compte",
+      "signOut": "Se déconnecter",
+      "signOutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+      "signOutError": "Échec de la déconnexion. Veuillez réessayer."
     },
     "progress": {
       "title": "Progrès",

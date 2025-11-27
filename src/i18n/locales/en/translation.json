@@ -14,6 +14,31 @@
     "error": "Error",
     "ok": "OK"
   },
+  "auth": {
+    "tagline": "Master Your Vocabulary",
+    "welcomeBack": "Welcome Back",
+    "signInToContinue": "Sign in to continue learning",
+    "createAccount": "Create Account",
+    "signUpToGetStarted": "Sign up to get started",
+    "syncDescription": "Sign in to sync your decks across devices and access them anywhere",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "error": "Error",
+    "emailPasswordRequired": "Email and password are required",
+    "allFieldsRequired": "All fields are required",
+    "passwordMismatch": "Passwords don't match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "signInFailed": "Sign In Failed",
+    "signInError": "Failed to sign in",
+    "registrationFailed": "Registration Failed",
+    "registrationError": "Failed to create account"
+  },
   "home": {
     "title": "Home",
     "welcome": "Welcome to MOA",
@@ -219,7 +244,11 @@
         "testSent": "Test Sent",
         "testSentDescription": "Check your notifications to see the test message",
         "testError": "Failed to send test notification. Please check your notification permissions."
-      }
+      },
+      "account": "Account",
+      "signOut": "Sign Out",
+      "signOutConfirm": "Are you sure you want to sign out?",
+      "signOutError": "Failed to sign out. Please try again."
     },
     "progress": {
       "title": "Progress",

@@ -10,6 +10,8 @@ import OptionPicker from '../components/OptionPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder, sendTestNotification } from '../utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuth } from '../contexts/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 
 const APP_LANGUAGES = [
   { code: 'system', name: 'System Default', icon: '🌐' },
@@ -22,9 +24,10 @@ const HANDWRITING_LANGUAGES = [
   { code: 'ja', name: 'Japanese', nativeName: '日本語' },
 ];
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: any) {
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { user, signOut } = useAuth();
   const [appLanguage, setAppLanguage] = useState(i18n.language);
   const [handwritingLanguage, setHandwritingLanguage] = useState('ko');
   const [ttsEnabled, setTTSEnabledState] = useState(true);
@@ -157,6 +160,34 @@ export default function SettingsScreen() {
         t('settings.notifications.testError')
       );
     }
+  };
+
+  const handleSignOut = async (): Promise<void> => {
+    Alert.alert(
+      t('settings.signOut'),
+      t('settings.signOutConfirm'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('settings.signOut'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error('Sign out error:', error);
+              Alert.alert(
+                t('common.error'),
+                t('settings.signOutError')
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatTime = (hour: number, minute: number): string => {
@@ -305,6 +336,56 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </>
           )}
+
+          <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
+          
+          {user ? (
+            <>
+              <View style={styles.accountCard}>
+                <View style={styles.accountInfo}>
+                  <Ionicons name="person-circle" size={48} color={COLORS.primary} />
+                  <View style={styles.accountDetails}>
+                    <Text style={styles.accountName}>{user.username}</Text>
+                    <Text style={styles.accountEmail}>{user.email}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.signOutButton}
+                onPress={handleSignOut}
+              >
+                <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
+                <Text style={styles.signOutButtonText}>{t('settings.signOut')}</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.authCard}>
+                <Ionicons name="cloud-outline" size={48} color={COLORS.textLight} />
+                <Text style={styles.authCardTitle}>{t('auth.createAccount')}</Text>
+                <Text style={styles.authCardDescription}>
+                  {t('auth.syncDescription')}
+                </Text>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.signInButton}
+                onPress={() => navigation.navigate('Login')}
+              >
+                <Ionicons name="log-in-outline" size={20} color={COLORS.surface} />
+                <Text style={styles.signInButtonText}>{t('auth.signIn')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.registerButton}
+                onPress={() => navigation.navigate('Register')}
+              >
+                <Ionicons name="person-add-outline" size={20} color={COLORS.primary} />
+                <Text style={styles.registerButtonText}>{t('auth.signUp')}</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -407,6 +488,117 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.surface,
+    letterSpacing: 0.5,
+  },
+  accountCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  accountInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  accountDetails: {
+    marginLeft: SPACING.md,
+    flex: 1,
+  },
+  accountName: {
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  accountEmail: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textLight,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.danger,
+  },
+  signOutButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.danger,
+    marginLeft: SPACING.sm,
+    letterSpacing: 0.5,
+  },
+  authCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.md,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  authCardTitle: {
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xs,
+  },
+  authCardDescription: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    lineHeight: TYPOGRAPHY.fontSize.sm * 1.4,
+  },
+  signInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  signInButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.surface,
+    marginLeft: SPACING.sm,
+    letterSpacing: 0.5,
+  },
+  registerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  registerButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.primary,
+    marginLeft: SPACING.sm,
     letterSpacing: 0.5,
   },
 });

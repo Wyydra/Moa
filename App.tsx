@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import EditCardScreen from './src/screens/EditCardScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DeckDetailsScreen from './src/screens/DeckDetailsScreen';
@@ -29,6 +31,8 @@ import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import * as Font from 'expo-font';
 import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount } from './src/utils/notifications';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { COLORS } from './src/utils/constants';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -92,6 +96,16 @@ function SettingsStackNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name='SettingsList' component={SettingsScreen} />
+      <SettingsStack.Screen 
+        name='Login' 
+        component={LoginScreen}
+        options={{ presentation: 'modal'}}
+      />
+      <SettingsStack.Screen 
+        name='Register' 
+        component={RegisterScreen}
+        options={{ presentation: 'modal'}}
+      />
     </SettingsStack.Navigator>
   )
 }
@@ -178,8 +192,9 @@ function MainNavigator() {
   );
 }
 
-export default function App() {
+function AppContent() {
   const { t } = useTranslation();
+  const { loading } = useAuth();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
@@ -290,16 +305,28 @@ export default function App() {
     return () => subscription.remove();
   }, [t]);
 
-  if (!fontsLoaded) {
-    return null;
+  if (!fontsLoaded || loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
   }
 
   return (
-  <SafeAreaProvider>
     <NavigationContainer>
       <MainNavigator />
       <StatusBar style='auto'/>
     </NavigationContainer>
-  </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

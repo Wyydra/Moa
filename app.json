@@ -30,8 +30,7 @@
       "package": "dev.wydry.moa",
       "permissions": [
         "POST_NOTIFICATIONS"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "notification": {
       "icon": "./assets/icon.png",
