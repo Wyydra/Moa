@@ -38,16 +38,29 @@ export const saveDeck = async (deck: Deck): Promise<void> => {
 export const getAllDecks = async (): Promise<Deck[]> => {
   try {
     const data = await AsyncStorage.getItem(DECKS_KEY);
-    return data ? JSON.parse(data): [];
+    const decks: Deck[] = data ? JSON.parse(data) : [];
+    // Filter out soft-deleted decks
+    return decks.filter(d => !d.deleted);
   } catch (error) {
     console.error('Error loading decks:', error);
     return [];
   }
 }
 
+export const getAllDecksIncludingDeleted = async (): Promise<Deck[]> => {
+  try {
+    const data = await AsyncStorage.getItem(DECKS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error loading decks including deleted:', error);
+    return [];
+  }
+};
+
 export const getDeckById = async (deckId: string): Promise<Deck | null> => {
   try {
     const decks = await getAllDecks();
+    // getAllDecks already filters deleted items
     return decks.find(d => d.id === deckId) || null;
   } catch (error) {
     console.error('Error loading deck:', error);
@@ -57,13 +70,26 @@ export const getDeckById = async (deckId: string): Promise<Deck | null> => {
 
 export const deleteDeck = async (deckId: string): Promise<void> => {
   try {
-    const decks = await getAllDecks();
-    const filtered = decks.filter(d => d.id !== deckId);
-    await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(filtered));
+    const data = await AsyncStorage.getItem(DECKS_KEY);
+    const decks: Deck[] = data ? JSON.parse(data) : [];
+    
+    // Soft delete: mark deck as deleted
+    const updatedDecks = decks.map(d => 
+      d.id === deckId 
+        ? { ...d, deleted: true, deletedAt: Date.now() }
+        : d
+    );
+    await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(updatedDecks));
 
-    const cards = await getAllCards();
-    const filteredCards = cards.filter(c => c.deckId !== deckId);
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(filteredCards));
+    // Cascade soft delete to cards
+    const cardsData = await AsyncStorage.getItem(CARDS_KEY);
+    const cards: Card[] = cardsData ? JSON.parse(cardsData) : [];
+    const updatedCards = cards.map(c =>
+      c.deckId === deckId
+        ? { ...c, deleted: true, deletedAt: Date.now() }
+        : c
+    );
+    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(updatedCards));
   } catch (error) {
     console.error('Error deleting deck:', error);
     throw error;
@@ -93,9 +119,21 @@ export const saveCard = async (card: Card): Promise<void> => {
 export const getAllCards = async (): Promise<Card[]> => {
   try {
     const data = await AsyncStorage.getItem(CARDS_KEY);
-    return data ? JSON.parse(data) : [];
+    const cards: Card[] = data ? JSON.parse(data) : [];
+    // Filter out soft-deleted cards
+    return cards.filter(c => !c.deleted);
   } catch (error) {
     console.error('Error loading cards:', error);
+    return [];
+  }
+};
+
+export const getAllCardsIncludingDeleted = async (): Promise<Card[]> => {
+  try {
+    const data = await AsyncStorage.getItem(CARDS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error loading cards including deleted:', error);
     return [];
   }
 };
@@ -103,6 +141,7 @@ export const getAllCards = async (): Promise<Card[]> => {
 export const getCardsByDeck = async (deckId: string): Promise<Card[]> => {
   try {
     const cards = await getAllCards();
+    // getAllCards already filters deleted items
     return cards.filter(c => c.deckId === deckId);
   } catch (error) {
     console.error('Error loading cards for deck:', error);
@@ -146,10 +185,18 @@ export const getCardsByTags = async (tags: string[]): Promise<Card[]> => {
 
 export const deleteCard = async (cardId: string): Promise<void> => {
   try {
-    const cards = await getAllCards();
+    const data = await AsyncStorage.getItem(CARDS_KEY);
+    const cards: Card[] = data ? JSON.parse(data) : [];
+    
     const card = cards.find(c => c.id === cardId);
-    const filtered = cards.filter(c => c.id !== cardId);
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(filtered));
+    
+    // Soft delete: mark card as deleted
+    const updatedCards = cards.map(c =>
+      c.id === cardId
+        ? { ...c, deleted: true, deletedAt: Date.now() }
+        : c
+    );
+    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(updatedCards));
 
     if (card) {
       await updateDeckCardCount(card.deckId);
@@ -657,5 +704,34 @@ export const setStreakRemindersEnabled = async (enabled: boolean): Promise<void>
   } catch (error) {
     console.error('Error saving streak reminders enabled:', error);
     throw error;
+  }
+};
+
+// Cleanup function to permanently delete items soft-deleted more than 30 days ago
+export const cleanupOldDeleted = async (): Promise<void> => {
+  try {
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+
+    // Cleanup decks
+    const decksData = await AsyncStorage.getItem(DECKS_KEY);
+    if (decksData) {
+      const decks: Deck[] = JSON.parse(decksData);
+      const filteredDecks = decks.filter(d => 
+        !d.deleted || (d.deletedAt && d.deletedAt > thirtyDaysAgo)
+      );
+      await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(filteredDecks));
+    }
+
+    // Cleanup cards
+    const cardsData = await AsyncStorage.getItem(CARDS_KEY);
+    if (cardsData) {
+      const cards: Card[] = JSON.parse(cardsData);
+      const filteredCards = cards.filter(c =>
+        !c.deleted || (c.deletedAt && c.deletedAt > thirtyDaysAgo)
+      );
+      await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(filteredCards));
+    }
+  } catch (error) {
+    console.error('Error cleaning up old deleted items:', error);
   }
 };
