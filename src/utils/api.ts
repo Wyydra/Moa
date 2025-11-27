@@ -117,11 +117,12 @@ class ApiClient {
   }
 
   // Deck endpoints
-  async getDecks(): Promise<ApiResponse<any[]>> {
-    return this.get('/decks');
+  async getDecks(includeDeleted: boolean = false): Promise<ApiResponse<any[]>> {
+    const query = includeDeleted ? '?include_deleted=true' : '';
+    return this.get(`/decks${query}`);
   }
 
-  async getDeck(id: number): Promise<ApiResponse<any>> {
+  async getDeck(id: string): Promise<ApiResponse<any>> {
     return this.get(`/decks/${id}`);
   }
 
@@ -129,12 +130,42 @@ class ApiClient {
     return this.post('/decks', deck);
   }
 
-  async updateDeck(id: number, deck: any): Promise<ApiResponse<any>> {
+  async updateDeck(id: string, deck: any): Promise<ApiResponse<any>> {
     return this.put(`/decks/${id}`, deck);
   }
 
-  async deleteDeck(id: number): Promise<ApiResponse<void>> {
+  async deleteDeck(id: string): Promise<ApiResponse<void>> {
     return this.delete(`/decks/${id}`);
+  }
+
+  // Card endpoints
+  async getCards(deckId: string, includeDeleted: boolean = false): Promise<ApiResponse<any[]>> {
+    const query = includeDeleted ? '?include_deleted=true' : '';
+    return this.get(`/decks/${deckId}/cards${query}`);
+  }
+
+  async getCard(id: string): Promise<ApiResponse<any>> {
+    return this.get(`/cards/${id}`);
+  }
+
+  async createCard(card: any): Promise<ApiResponse<any>> {
+    return this.post('/cards', card);
+  }
+
+  async updateCard(id: string, card: any): Promise<ApiResponse<any>> {
+    return this.put(`/cards/${id}`, card);
+  }
+
+  async deleteCard(id: string): Promise<ApiResponse<void>> {
+    return this.delete(`/cards/${id}`);
+  }
+
+  async updateCardProgress(id: string, progress: any): Promise<ApiResponse<any>> {
+    return this.put(`/cards/${id}/progress`, progress);
+  }
+
+  async getDueCards(deckId: string): Promise<ApiResponse<any[]>> {
+    return this.get(`/decks/${deckId}/cards/due`);
   }
 }
 
