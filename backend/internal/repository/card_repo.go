@@ -19,8 +19,8 @@ func NewCardRepository(db *database.Database) *CardRepository {
 // CreateCard inserts a new card into the database
 func (r *CardRepository) CreateCard(card *models.Card) error {
 	query := `
-		INSERT INTO cards (id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO cards (id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	now := time.Now()
@@ -37,6 +37,8 @@ func (r *CardRepository) CreateCard(card *models.Card) error {
 		card.Interval,
 		card.EaseFactor,
 		card.Repetitions,
+		card.Deleted,
+		card.DeletedAt,
 	)
 	if err != nil {
 		return err
@@ -60,8 +62,8 @@ func (r *CardRepository) CreateCards(cards []models.Card) error {
 	defer tx.Rollback()
 
 	query := `
-		INSERT INTO cards (id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO cards (id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	stmt, err := tx.Preparex(query)
@@ -84,6 +86,8 @@ func (r *CardRepository) CreateCards(cards []models.Card) error {
 			cards[i].Interval,
 			cards[i].EaseFactor,
 			cards[i].Repetitions,
+			cards[i].Deleted,
+			cards[i].DeletedAt,
 		)
 		if err != nil {
 			return err
@@ -95,11 +99,30 @@ func (r *CardRepository) CreateCards(cards []models.Card) error {
 	return tx.Commit()
 }
 
-// GetCardsByDeckID retrieves all cards for a specific deck
+// GetCardsByDeckID retrieves all non-deleted cards for a specific deck
 func (r *CardRepository) GetCardsByDeckID(deckID string) ([]models.Card, error) {
 	var cards []models.Card
 	query := `
-		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions
+		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at
+		FROM cards
+		WHERE deck_id = ? AND deleted = FALSE
+		ORDER BY created_at ASC
+	`
+
+	err := r.db.Select(&cards, query, deckID)
+	if err != nil {
+		return nil, err
+	}
+
+	return cards, nil
+}
+
+// GetCardsByDeckIDIncludingDeleted retrieves all cards (including soft-deleted) for a specific deck
+// This is used for sync operations to propagate tombstones
+func (r *CardRepository) GetCardsByDeckIDIncludingDeleted(deckID string) ([]models.Card, error) {
+	var cards []models.Card
+	query := `
+		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at
 		FROM cards
 		WHERE deck_id = ?
 		ORDER BY created_at ASC
@@ -113,13 +136,13 @@ func (r *CardRepository) GetCardsByDeckID(deckID string) ([]models.Card, error) 
 	return cards, nil
 }
 
-// GetCardByID retrieves a single card by ID
+// GetCardByID retrieves a single non-deleted card by ID
 func (r *CardRepository) GetCardByID(cardID string) (*models.Card, error) {
 	var card models.Card
 	query := `
-		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions
+		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at
 		FROM cards
-		WHERE id = ?
+		WHERE id = ? AND deleted = FALSE
 	`
 
 	err := r.db.Get(&card, query, cardID)
@@ -137,7 +160,7 @@ func (r *CardRepository) GetCardByID(cardID string) (*models.Card, error) {
 func (r *CardRepository) UpdateCard(card *models.Card) error {
 	query := `
 		UPDATE cards
-		SET updated_at = ?, front = ?, back = ?, tags = ?, next_review = ?, interval = ?, ease_factor = ?, repetitions = ?
+		SET updated_at = ?, front = ?, back = ?, tags = ?, next_review = ?, interval = ?, ease_factor = ?, repetitions = ?, deleted = ?, deleted_at = ?
 		WHERE id = ?
 	`
 
@@ -152,6 +175,8 @@ func (r *CardRepository) UpdateCard(card *models.Card) error {
 		card.Interval,
 		card.EaseFactor,
 		card.Repetitions,
+		card.Deleted,
+		card.DeletedAt,
 		card.ID,
 	)
 	if err != nil {
@@ -174,27 +199,45 @@ func (r *CardRepository) UpdateCardProgress(cardID string, nextReview int64, int
 	return err
 }
 
-// DeleteCard deletes a single card
+// DeleteCard soft deletes a single card
 func (r *CardRepository) DeleteCard(cardID string) error {
-	query := `DELETE FROM cards WHERE id = ?`
-	_, err := r.db.Exec(query, cardID)
+	query := `UPDATE cards SET deleted = TRUE, deleted_at = ?, updated_at = ? WHERE id = ?`
+	now := time.Now()
+	_, err := r.db.Exec(query, now, now, cardID)
 	return err
 }
 
-// DeleteCardsByDeckID deletes all cards in a deck
+// DeleteCardsByDeckID soft deletes all cards in a deck (used internally by cascade)
 func (r *CardRepository) DeleteCardsByDeckID(deckID string) error {
-	query := `DELETE FROM cards WHERE deck_id = ?`
-	_, err := r.db.Exec(query, deckID)
+	query := `UPDATE cards SET deleted = TRUE, deleted_at = ?, updated_at = ? WHERE deck_id = ?`
+	now := time.Now()
+	_, err := r.db.Exec(query, now, now, deckID)
 	return err
 }
 
-// GetCardsDueForReview retrieves cards that are due for review
+// SoftDeleteCardsByDeckID soft deletes all cards in a deck
+func (r *CardRepository) SoftDeleteCardsByDeckID(deckID string) error {
+	return r.DeleteCardsByDeckID(deckID)
+}
+
+// CleanupOldDeletedCards hard deletes cards that have been soft deleted for more than 30 days
+func (r *CardRepository) CleanupOldDeletedCards() (int64, error) {
+	cutoffTime := time.Now().AddDate(0, 0, -30)
+	query := `DELETE FROM cards WHERE deleted = TRUE AND deleted_at < ?`
+	result, err := r.db.Exec(query, cutoffTime)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+// GetCardsDueForReview retrieves non-deleted cards that are due for review
 func (r *CardRepository) GetCardsDueForReview(deckID string, currentTime int64) ([]models.Card, error) {
 	var cards []models.Card
 	query := `
-		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions
+		SELECT id, created_at, updated_at, deck_id, front, back, tags, next_review, interval, ease_factor, repetitions, deleted, deleted_at
 		FROM cards
-		WHERE deck_id = ? AND (next_review IS NULL OR next_review <= ?)
+		WHERE deck_id = ? AND deleted = FALSE AND (next_review IS NULL OR next_review <= ?)
 		ORDER BY next_review ASC
 	`
 
