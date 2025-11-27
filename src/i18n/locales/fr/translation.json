@@ -245,6 +245,23 @@
         "testSentDescription": "Vérifiez vos notifications pour voir le message de test",
         "testError": "Échec de l'envoi de la notification de test. Veuillez vérifier vos autorisations de notification."
       },
+      "sync": {
+        "title": "Synchronisation des données",
+        "description": "Synchroniser vos paquets et cartes",
+        "details": "Gardez vos données d'étude synchronisées sur tous vos appareils. Les données locales seront fusionnées avec vos données cloud.",
+        "syncNow": "Synchroniser maintenant",
+        "syncing": "Synchronisation...",
+        "success": "Synchronisation terminée",
+        "successMessage": "Téléversés {{decksUp}}P/{{cardsUp}}C, Téléchargés {{decksDown}}P/{{cardsDown}}C, Mis à jour {{decksUpdated}}P/{{cardsUpdated}}C, Résolu {{conflictsResolved}} conflits",
+        "error": "Échec de la synchronisation. Vérifiez votre connexion et réessayez.",
+        "signInRequired": "Connexion requise",
+        "signInDescription": "Connectez-vous pour synchroniser vos paquets et cartes sur tous vos appareils",
+        "lastSync": "Dernière synchronisation",
+        "uploadedShort": "↑",
+        "downloadedShort": "↓",
+        "updatedShort": "✓",
+        "conflictsShort": "⚡"
+      },
       "account": "Compte",
       "signOut": "Se déconnecter",
       "signOutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",

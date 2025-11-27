@@ -12,6 +12,7 @@ import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, can
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import SyncService, { SyncResult } from '../utils/syncService';
 
 const APP_LANGUAGES = [
   { code: 'system', name: 'System Default', icon: '🌐' },
@@ -37,6 +38,8 @@ export default function SettingsScreen({ navigation }: any) {
   const [notificationTime, setNotificationTimeState] = useState({ hour: 20, minute: 0 });
   const [streakRemindersEnabled, setStreakRemindersEnabledState] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
 
   useEffect(() => {
     loadPreferences();
@@ -197,6 +200,50 @@ export default function SettingsScreen({ navigation }: any) {
     return `${displayHour}:${displayMinute} ${period}`;
   };
 
+  const handleSync = async (): Promise<void> => {
+    if (!user) {
+      Alert.alert(
+        t('common.error'),
+        t('settings.sync.signInRequired')
+      );
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await SyncService.syncAll();
+      setLastSyncResult(result);
+
+      if (result.success) {
+        Alert.alert(
+          t('settings.sync.success'),
+          t('settings.sync.successMessage', {
+            decksUp: result.decksUploaded,
+            cardsUp: result.cardsUploaded,
+            decksDown: result.decksDownloaded,
+            cardsDown: result.cardsDownloaded,
+            decksUpdated: result.decksUpdated,
+            cardsUpdated: result.cardsUpdated,
+            conflictsResolved: result.conflictsResolved,
+          })
+        );
+      } else {
+        Alert.alert(
+          t('common.error'),
+          result.error || t('settings.sync.error')
+        );
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      Alert.alert(
+        t('common.error'),
+        t('settings.sync.error')
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <View style={commonStyles.container}>
       <ScrollView 
@@ -334,6 +381,48 @@ export default function SettingsScreen({ navigation }: any) {
               >
                 <Text style={styles.testButtonText}>{t('settings.notifications.testNotification')}</Text>
               </TouchableOpacity>
+            </>
+          )}
+
+          {user && (
+            <>
+              <Text style={styles.sectionTitle}>{t('settings.sync.title')}</Text>
+
+              <View style={styles.settingColumn}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t('settings.sync.description')}</Text>
+                  <Text style={styles.settingDescription}>
+                    {t('settings.sync.details')}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.syncButton, isSyncing && styles.syncButtonDisabled]}
+                onPress={handleSync}
+                disabled={isSyncing}
+              >
+                <Ionicons 
+                  name={isSyncing ? "sync" : "cloud-upload-outline"} 
+                  size={20} 
+                  color={COLORS.surface} 
+                />
+                <Text style={styles.syncButtonText}>
+                  {isSyncing ? t('settings.sync.syncing') : t('settings.sync.syncNow')}
+                </Text>
+              </TouchableOpacity>
+
+              {lastSyncResult && lastSyncResult.success && (
+                <View style={styles.syncResultCard}>
+                  <Text style={styles.syncResultText}>
+                    {t('settings.sync.lastSync')}: {' '}
+                    ↑ {lastSyncResult.decksUploaded}D/{lastSyncResult.cardsUploaded}C  {' '}
+                    ↓ {lastSyncResult.decksDownloaded}D/{lastSyncResult.cardsDownloaded}C  {' '}
+                    ✓ {lastSyncResult.decksUpdated}D/{lastSyncResult.cardsUpdated}C
+                    {lastSyncResult.conflictsResolved > 0 && ` ⚡ ${lastSyncResult.conflictsResolved}`}
+                  </Text>
+                </View>
+              )}
             </>
           )}
 
@@ -600,5 +689,42 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginLeft: SPACING.sm,
     letterSpacing: 0.5,
+  },
+  syncButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  syncButtonDisabled: {
+    opacity: 0.6,
+  },
+  syncButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.surface,
+    marginLeft: SPACING.sm,
+    letterSpacing: 0.5,
+  },
+  syncResultCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '20',
+  },
+  syncResultText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textMedium,
+    textAlign: 'center',
   },
 });

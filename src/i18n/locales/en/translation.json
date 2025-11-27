@@ -245,6 +245,23 @@
         "testSentDescription": "Check your notifications to see the test message",
         "testError": "Failed to send test notification. Please check your notification permissions."
       },
+      "sync": {
+        "title": "Data Sync",
+        "description": "Synchronize your decks and cards",
+        "details": "Keep your study data in sync across all your devices. Local data will be merged with your cloud data.",
+        "syncNow": "Sync Now",
+        "syncing": "Syncing...",
+        "success": "Sync Complete",
+        "successMessage": "Uploaded {{decksUp}}D/{{cardsUp}}C, Downloaded {{decksDown}}D/{{cardsDown}}C, Updated {{decksUpdated}}D/{{cardsUpdated}}C, Resolved {{conflictsResolved}} conflicts",
+        "error": "Failed to sync. Please check your connection and try again.",
+        "signInRequired": "Sign In Required",
+        "signInDescription": "Sign in to sync your decks and cards across devices",
+        "lastSync": "Last sync",
+        "uploadedShort": "↑",
+        "downloadedShort": "↓",
+        "updatedShort": "✓",
+        "conflictsShort": "⚡"
+      },
       "account": "Account",
       "signOut": "Sign Out",
       "signOutConfirm": "Are you sure you want to sign out?",
