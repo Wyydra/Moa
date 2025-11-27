@@ -19,11 +19,20 @@ const initI18n = async () => {
   const savedLanguage = await getLanguagePreference();
   const deviceLanguage = Localization.getLocales()[0]?.languageCode || 'en';
   
+  // Determine actual language to use
+  let actualLanguage = deviceLanguage;
+  if (savedLanguage && savedLanguage !== 'system') {
+    actualLanguage = savedLanguage;
+  } else if (savedLanguage === 'system' || !savedLanguage) {
+    // Use system language, but only if supported
+    actualLanguage = deviceLanguage === 'fr' ? 'fr' : 'en';
+  }
+  
   i18n
     .use(initReactI18next)
     .init({
       resources,
-      lng: savedLanguage || deviceLanguage,
+      lng: actualLanguage,
       fallbackLng: 'en',
       compatibilityJSON: 'v4',
       interpolation: {

@@ -11,8 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder, sendTestNotification } from '../utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const APP_LANGUAGES = [
-  { code: 'system', name: 'System Default', icon: '🌐' },
+const getAppLanguages = (t: any) => [
+  { code: 'system', name: t('settings.systemDefault'), icon: '🌐' },
   { code: 'en', name: 'English', icon: '🇬🇧' },
   { code: 'fr', name: 'Français', icon: '🇫🇷' },
 ];
@@ -49,14 +49,8 @@ export default function SettingsScreen() {
     const savedNotificationTime = await getNotificationTime();
     const savedStreakRemindersEnabled = await getStreakRemindersEnabled();
     
-    if (savedAppLang) {
-      setAppLanguage(savedAppLang);
-    } else {
-      // If no saved preference, use system default
-      const systemLocale = getLocales()[0]?.languageCode || 'en';
-      const supportedLang = systemLocale === 'fr' ? 'fr' : 'en';
-      setAppLanguage(supportedLang);
-    }
+    // Default to 'system' if no preference saved
+    setAppLanguage(savedAppLang || 'system');
     if (savedHandwritingLang) {
       setHandwritingLanguage(savedHandwritingLang);
     }
@@ -179,7 +173,7 @@ export default function SettingsScreen() {
             label={t('settings.appLanguage')}
             description={t('settings.appLanguageDescription')}
             value={appLanguage}
-            options={APP_LANGUAGES}
+            options={getAppLanguages(t)}
             onValueChange={handleAppLanguageChange}
           />
 
