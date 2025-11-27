@@ -48,6 +48,7 @@ type UpdateDeckRequest struct {
 }
 
 // List returns all decks for the authenticated user
+// Supports ?include_deleted=true query parameter for sync operations
 func (h *DeckHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
@@ -55,7 +56,18 @@ func (h *DeckHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decks, err := h.DeckRepo.GetDecksByUserID(userID)
+	// Check if we should include deleted items (for sync)
+	includeDeleted := r.URL.Query().Get("include_deleted") == "true"
+
+	var decks []models.Deck
+	var err error
+
+	if includeDeleted {
+		decks, err = h.DeckRepo.GetDecksByUserIDIncludingDeleted(userID)
+	} else {
+		decks, err = h.DeckRepo.GetDecksByUserID(userID)
+	}
+
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "failed to fetch decks")
 		return
@@ -243,7 +255,7 @@ func (h *DeckHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.DeckRepo.DeleteDeck(deckID); err != nil {
+	if err := h.DeckRepo.SoftDeleteDeckWithCards(deckID); err != nil {
 		utils.Error(w, http.StatusInternalServerError, "failed to delete deck")
 		return
 	}

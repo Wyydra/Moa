@@ -61,6 +61,7 @@ func (s *Server) SetupRouter() chi.Router {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(s.UserRepo)
 	deckHandler := handlers.NewDeckHandler(s.DeckRepo, s.CardRepo)
+	cardHandler := handlers.NewCardHandler(s.CardRepo, s.DeckRepo)
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
@@ -72,11 +73,22 @@ func (s *Server) SetupRouter() chi.Router {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth)
 			r.Get("/me", authHandler.GetMe)
+
+			// Deck routes
 			r.Get("/decks", deckHandler.List)
 			r.Post("/decks", deckHandler.Create)
 			r.Get("/decks/{id}", deckHandler.Get)
 			r.Put("/decks/{id}", deckHandler.Update)
 			r.Delete("/decks/{id}", deckHandler.Delete)
+
+			// Card routes
+			r.Post("/cards", cardHandler.Create)
+			r.Get("/cards/{id}", cardHandler.Get)
+			r.Put("/cards/{id}", cardHandler.Update)
+			r.Delete("/cards/{id}", cardHandler.Delete)
+			r.Put("/cards/{id}/progress", cardHandler.UpdateProgress)
+			r.Get("/decks/{deckId}/cards", cardHandler.GetByDeck)
+			r.Get("/decks/{deckId}/cards/due", cardHandler.GetDueCards)
 		})
 	})
 
