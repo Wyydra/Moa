@@ -9,6 +9,8 @@ export interface Card {
   repetitions: number;
   createdAt: number;
   tags?: string[];
+  deleted?: boolean;
+  deletedAt?: number;
 }
 
 export interface Deck {
@@ -19,6 +21,8 @@ export interface Deck {
   cardCount: number;
   tags?: string[];
   language?: string; // BCP 47 language code (e.g., 'ko-KR', 'ja-JP', 'en-US')
+  deleted?: boolean;
+  deletedAt?: number;
 }
 
 export interface StudySession {
