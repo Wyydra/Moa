@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
@@ -181,8 +182,8 @@ function MainNavigator() {
 export default function App() {
   const { t } = useTranslation();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const notificationListener = useRef<Notifications.Subscription | null>(null);
-  const responseListener = useRef<Notifications.Subscription | null>(null);
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
   
   useEffect(() => {
     async function initialize() {
@@ -295,11 +296,13 @@ export default function App() {
   }
 
   return (
-  <SafeAreaProvider>
-    <NavigationContainer>
-      <MainNavigator />
-      <StatusBar style='auto'/>
-    </NavigationContainer>
-  </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <MainNavigator />
+          <StatusBar style='auto'/>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
