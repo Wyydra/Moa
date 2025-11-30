@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Platform, Alert, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Slider from '@react-native-community/slider';
 import { getLocales } from 'expo-localization';
-import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled } from '../data/storage';
+import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled, exportAllData, importAllData, getStorageSize } from '../data/storage';
 import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder, sendTestNotification } from '../utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Paths, File } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 
 const getAppLanguages = (t: any) => [
   { code: 'system', name: t('settings.systemDefault'), icon: '🌐' },
@@ -34,6 +37,7 @@ export default function SettingsScreen() {
   const [notificationTime, setNotificationTimeState] = useState({ hour: 20, minute: 0 });
   const [streakRemindersEnabled, setStreakRemindersEnabledState] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [storageSize, setStorageSize] = useState(0);
 
   useEffect(() => {
     loadPreferences();
@@ -48,6 +52,7 @@ export default function SettingsScreen() {
     const savedNotificationsEnabled = await getNotificationsEnabled();
     const savedNotificationTime = await getNotificationTime();
     const savedStreakRemindersEnabled = await getStreakRemindersEnabled();
+    const size = await getStorageSize();
     
     // Default to 'system' if no preference saved
     setAppLanguage(savedAppLang || 'system');
@@ -60,6 +65,7 @@ export default function SettingsScreen() {
     setNotificationsEnabledState(savedNotificationsEnabled);
     setNotificationTimeState(savedNotificationTime);
     setStreakRemindersEnabledState(savedStreakRemindersEnabled);
+    setStorageSize(size);
   };
 
   const handleAppLanguageChange = async (lang: string) => {
@@ -151,6 +157,148 @@ export default function SettingsScreen() {
         t('settings.notifications.testError')
       );
     }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const jsonData = await exportAllData();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `moa_backup_${timestamp}.json`;
+      const file = new File(Paths.cache, fileName);
+
+      await file.write(jsonData);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Export Moa Backup',
+          UTI: 'public.json',
+        });
+      } else {
+        Alert.alert(
+          'Export Complete',
+          `Backup saved to: ${fileName}`
+        );
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      Alert.alert('Error', 'Failed to export data. Please try again.');
+    }
+  };
+
+  const handleImportData = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const fileUri = result.assets[0].uri;
+      const file = new File(fileUri);
+      const fileContent = await file.text();
+
+      Alert.alert(
+        'Import Data',
+        'Do you want to merge with existing data or replace all data?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Merge',
+            onPress: async () => {
+              try {
+                await importAllData(fileContent, false);
+                await loadPreferences();
+                Alert.alert('Success', 'Data imported and merged successfully!');
+              } catch (error) {
+                console.error('Error importing data:', error);
+                Alert.alert('Error', 'Failed to import data. Please check the file format.');
+              }
+            },
+          },
+          {
+            text: 'Replace All',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await importAllData(fileContent, true);
+                await loadPreferences();
+                Alert.alert('Success', 'Data replaced successfully!');
+              } catch (error) {
+                console.error('Error importing data:', error);
+                Alert.alert('Error', 'Failed to import data. Please check the file format.');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error picking document:', error);
+      Alert.alert('Error', 'Failed to import data. Please try again.');
+    }
+  };
+
+  const handleReportBug = async () => {
+    try {
+      const subject = encodeURIComponent('Moa - Bug Report');
+      const body = encodeURIComponent(`App Version: ${require('../../package.json').version}\nPlatform: ${Platform.OS}\n\nDescribe the bug:\n\n\nSteps to reproduce:\n1. \n2. \n3. \n\nExpected behavior:\n\n\nActual behavior:\n\n`);
+      const url = `mailto:moafeedback@wydry.dev?subject=${subject}&body=${body}`;
+      
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          t('common.error'),
+          t('settings.feedback.emailError')
+        );
+      }
+    } catch (error) {
+      console.error('Error opening email:', error);
+      Alert.alert(
+        t('common.error'),
+        t('settings.feedback.emailError')
+      );
+    }
+  };
+
+  const handleFeatureRequest = async () => {
+    try {
+      const subject = encodeURIComponent('Moa - Feature Request');
+      const body = encodeURIComponent(`App Version: ${require('../../package.json').version}\nPlatform: ${Platform.OS}\n\nFeature Request:\n\n\nWhy would this be useful:\n\n\nHow should it work:\n\n`);
+      const url = `mailto:moafeedback@wydry.dev?subject=${subject}&body=${body}`;
+      
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          t('common.error'),
+          t('settings.feedback.emailError')
+        );
+      }
+    } catch (error) {
+      console.error('Error opening email:', error);
+      Alert.alert(
+        t('common.error'),
+        t('settings.feedback.emailError')
+      );
+    }
+  };
+
+  const formatStorageSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
   const formatTime = (hour: number, minute: number): string => {
@@ -299,6 +447,53 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </>
           )}
+
+          <Text style={styles.sectionTitle}>Data & Backup</Text>
+          
+          <View style={styles.settingColumn}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Storage Used</Text>
+              <Text style={styles.settingDescription}>Current app data size</Text>
+            </View>
+            <Text style={styles.storageValue}>{formatStorageSize(storageSize)}</Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleExportData}
+          >
+            <Text style={styles.actionButtonText}>Export All Data</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleImportData}
+          >
+            <Text style={styles.actionButtonText}>Import Data</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.sectionTitle}>{t('settings.feedback.title')}</Text>
+
+          <View style={styles.settingColumn}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>{t('settings.feedback.description')}</Text>
+              <Text style={styles.settingDescription}>{t('settings.feedback.subtitle')}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleReportBug}
+          >
+            <Text style={styles.actionButtonText}>{t('settings.feedback.reportBug')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleFeatureRequest}
+          >
+            <Text style={styles.actionButtonText}>{t('settings.feedback.featureRequest')}</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -401,6 +596,33 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.surface,
+    letterSpacing: 0.5,
+  },
+  storageValue: {
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    textAlign: 'center',
+    marginTop: SPACING.md,
+  },
+  actionButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  actionButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.primary,
     letterSpacing: 0.5,
   },
 });

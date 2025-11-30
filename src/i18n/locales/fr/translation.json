@@ -219,6 +219,14 @@
         "testSent": "Test envoyé",
         "testSentDescription": "Vérifiez vos notifications pour voir le message de test",
         "testError": "Échec de l'envoi de la notification de test. Veuillez vérifier vos autorisations de notification."
+      },
+      "feedback": {
+        "title": "Commentaires et support",
+        "description": "Aidez à améliorer Moa",
+        "subtitle": "Signalez des bugs ou suggérez de nouvelles fonctionnalités",
+        "reportBug": "Signaler un bug",
+        "featureRequest": "Demander une fonctionnalité",
+        "emailError": "Impossible d'ouvrir le client email. Veuillez vous assurer d'avoir une application email configurée."
       }
     },
     "progress": {
