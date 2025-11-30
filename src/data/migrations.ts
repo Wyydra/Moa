@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Card, Deck, StudySession } from "./model";
 
 // Current schema version
 export const CURRENT_SCHEMA_VERSION = 1;

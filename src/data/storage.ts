@@ -203,7 +203,7 @@ const updateDeckCardCount = async (deckId: string): Promise<void> => {
 
 export const clearAllData = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove([DECKS_KEY, CARDS_KEY]);
+    await AsyncStorage.multiRemove([DECKS_KEY, CARDS_KEY, STUDY_SESSIONS_KEY]);
   } catch (error) {
     console.error('Error clearing data:', error);
     throw error;
@@ -657,5 +657,146 @@ export const setStreakRemindersEnabled = async (enabled: boolean): Promise<void>
   } catch (error) {
     console.error('Error saving streak reminders enabled:', error);
     throw error;
+  }
+};
+
+// Full Data Backup/Restore Functions
+export interface FullBackup {
+  version: string;
+  exportedAt: number;
+  decks: Deck[];
+  cards: Card[];
+  studySessions: StudySession[];
+  settings: {
+    languagePreference?: string | null;
+    handwritingLanguage?: string | null;
+    ttsEnabled: boolean;
+    ttsAutoPlay: boolean;
+    ttsRate: number;
+    notificationsEnabled: boolean;
+    notificationTime: { hour: number; minute: number };
+    streakRemindersEnabled: boolean;
+  };
+}
+
+export const exportAllData = async (): Promise<string> => {
+  try {
+    const decks = await getAllDecks();
+    const cards = await getAllCards();
+    const studySessions = await getAllStudySessions();
+    const languagePreference = await getLanguagePreference();
+    const handwritingLanguage = await getHandwritingLanguage();
+    const ttsEnabled = await getTTSEnabled();
+    const ttsAutoPlay = await getTTSAutoPlay();
+    const ttsRate = await getTTSRate();
+    const notificationsEnabled = await getNotificationsEnabled();
+    const notificationTime = await getNotificationTime();
+    const streakRemindersEnabled = await getStreakRemindersEnabled();
+
+    const backup: FullBackup = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      decks,
+      cards,
+      studySessions,
+      settings: {
+        languagePreference,
+        handwritingLanguage,
+        ttsEnabled,
+        ttsAutoPlay,
+        ttsRate,
+        notificationsEnabled,
+        notificationTime,
+        streakRemindersEnabled,
+      },
+    };
+
+    return JSON.stringify(backup, null, 2);
+  } catch (error) {
+    console.error('Error exporting all data:', error);
+    throw error;
+  }
+};
+
+export const importAllData = async (jsonString: string, overwrite: boolean = false): Promise<void> => {
+  try {
+    const backup: FullBackup = JSON.parse(jsonString);
+
+    if (!backup.version || !backup.decks || !backup.cards) {
+      throw new Error('Invalid backup format');
+    }
+
+    if (overwrite) {
+      // Clear existing data before importing
+      await clearAllData();
+    }
+
+    // Import decks
+    const existingDecks = await getAllDecks();
+    const mergedDecks = overwrite ? backup.decks : [...existingDecks, ...backup.decks];
+    await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(mergedDecks));
+
+    // Import cards
+    const existingCards = await getAllCards();
+    const mergedCards = overwrite ? backup.cards : [...existingCards, ...backup.cards];
+    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(mergedCards));
+
+    // Import study sessions
+    if (backup.studySessions) {
+      const existingSessions = await getAllStudySessions();
+      const mergedSessions = overwrite ? backup.studySessions : [...existingSessions, ...backup.studySessions];
+      await AsyncStorage.setItem(STUDY_SESSIONS_KEY, JSON.stringify(mergedSessions));
+    }
+
+    // Import settings
+    if (backup.settings) {
+      if (backup.settings.languagePreference) {
+        await saveLanguagePreference(backup.settings.languagePreference);
+      }
+      if (backup.settings.handwritingLanguage) {
+        await saveHandwritingLanguage(backup.settings.handwritingLanguage);
+      }
+      await setTTSEnabled(backup.settings.ttsEnabled);
+      await setTTSAutoPlay(backup.settings.ttsAutoPlay);
+      await setTTSRate(backup.settings.ttsRate);
+      await setNotificationsEnabled(backup.settings.notificationsEnabled);
+      await setNotificationTime(backup.settings.notificationTime.hour, backup.settings.notificationTime.minute);
+      await setStreakRemindersEnabled(backup.settings.streakRemindersEnabled);
+    }
+  } catch (error) {
+    console.error('Error importing all data:', error);
+    throw error;
+  }
+};
+
+export const getStorageSize = async (): Promise<number> => {
+  try {
+    const keys = [
+      DECKS_KEY,
+      CARDS_KEY,
+      STUDY_SESSIONS_KEY,
+      LANGUAGE_PREF_KEY,
+      HANDWRITING_LANG_KEY,
+      TTS_ENABLED_KEY,
+      TTS_AUTO_PLAY_KEY,
+      TTS_RATE_KEY,
+      NOTIFICATIONS_ENABLED_KEY,
+      NOTIFICATIONS_TIME_KEY,
+      NOTIFICATIONS_STREAK_KEY,
+    ];
+
+    let totalSize = 0;
+    for (const key of keys) {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
+        // Calculate size in bytes (rough estimate)
+        totalSize += new Blob([value]).size;
+      }
+    }
+
+    return totalSize;
+  } catch (error) {
+    console.error('Error calculating storage size:', error);
+    return 0;
   }
 };
