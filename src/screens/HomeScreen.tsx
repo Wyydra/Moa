@@ -9,6 +9,7 @@ import { getAllDecks, getDueCards, getStudyStreak, getTodayReviewCount } from '.
 import { updateBadgeCount } from '../utils/notifications';
 import { Deck } from '../data/model';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
@@ -93,6 +94,14 @@ export default function HomeScreen({ navigation }: any) {
       params: { deckId } 
     });
   };
+
+  if (loading) {
+    return (
+      <View style={commonStyles.container}>
+        <LoadingSpinner fullScreen text={t('common.loading')} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView 

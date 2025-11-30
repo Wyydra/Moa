@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId, getStudyStreak } from "../data/storage";
+import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -10,6 +10,7 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/co
 import PronunciationButton from '../components/PronunciationButton';
 import * as Speech from 'expo-speech';
 import { updateBadgeCount } from '../utils/notifications';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -117,9 +118,9 @@ export default function StudyScreen({route, navigation}: any) {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
+        <LoadingSpinner fullScreen text={t('common.loading')} />
       </View>
-    )
+    );
   }
 
 if (completed) {

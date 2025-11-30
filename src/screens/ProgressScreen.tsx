@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { 
   getAllDecks, 
   getAllCards, 
@@ -102,10 +103,7 @@ export default function ProgressScreen() {
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <View style={{ paddingTop: insets.top + SPACING.md }}>
-          <Text style={[commonStyles.screenTitle, styles.title]}>{t('progress.title')}</Text>
-        </View>
-        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
+        <LoadingSpinner fullScreen text={t('common.loading')} />
       </View>
     );
   }
