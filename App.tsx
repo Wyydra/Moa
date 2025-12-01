@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +21,6 @@ import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
 import { useEffect, useState, useRef } from 'react';
 import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
-import { runMigrations } from './src/data/migrations';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
 import BrowseScreen from './src/screens/BrowseScreen';
@@ -181,21 +180,32 @@ function MainNavigator() {
 
 export default function App() {
   const { t } = useTranslation();
-  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   
   useEffect(() => {
     async function initialize() {
-      // Load fonts
-      await Font.loadAsync({
-        ...Ionicons.font,
-      });
-      setFontsLoaded(true);
-      
-      // Run migrations before initializing storage
-      await runMigrations();
-      await initializeStorage();
+      try {
+        // Load fonts
+        await Font.loadAsync({
+          ...Ionicons.font,
+        });
+        
+        // Initialize database and storage
+        const { runMigrations } = await import('./src/data/migrations');
+        await runMigrations();
+        await initializeStorage();
+        
+        setIsReady(true);
+      } catch (error) {
+        console.error('Initialization failed:', error);
+        Alert.alert(
+          'Initialization Error',
+          'Failed to initialize the app. Please restart the app.',
+          [{ text: 'OK' }]
+        );
+      }
     }
     initialize();
   }, []);
@@ -291,8 +301,16 @@ export default function App() {
     return () => subscription.remove();
   }, [t]);
 
-  if (!fontsLoaded) {
-    return null;
+  if (!isReady) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+          <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#6366F1' }}>
+            Moa
+          </Text>
+        </View>
+      </SafeAreaProvider>
+    );
   }
 
   return (
