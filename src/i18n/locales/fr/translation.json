@@ -250,5 +250,13 @@
       "allCaughtUp": "Tout est à jour ! Vous avez tout révisé !",
       "perfectDeck": "Parfait ! Toutes les cartes de ce paquet sont maîtrisées !",
       "noProgress": "Pas encore de données d'étude. Commencez à réviser pour suivre vos progrès !"
+    },
+    "strokeOrder": {
+      "perfect": "Ordre des traits parfait ! 🎉",
+      "goodJob": "Bon travail !",
+      "checkDirection": "Trait {{index}} : Vérifiez la direction. Attendu : {{direction}}.",
+      "checkPosition": "Trait {{index}} : Vérifiez la position.",
+      "wrongSequence": "Trait {{index}} : Ce trait devrait venir plus tard.",
+      "tryAgain": "Veuillez réessayer en suivant l'ordre correct des traits."
     }
   }

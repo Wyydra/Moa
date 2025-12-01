@@ -250,5 +250,13 @@
       "allCaughtUp": "All caught up! You've reviewed everything!",
       "perfectDeck": "Perfect! All cards in this deck are mastered!",
       "noProgress": "No study data yet. Start reviewing to track your progress!"
+    },
+    "strokeOrder": {
+      "perfect": "Perfect stroke order! 🎉",
+      "goodJob": "Good job!",
+      "checkDirection": "Stroke {{index}}: Check the direction. Expected {{direction}}.",
+      "checkPosition": "Stroke {{index}}: Check the position.",
+      "wrongSequence": "Stroke {{index}}: This stroke should come later.",
+      "tryAgain": "Please try again following the correct stroke order."
     }
   }
