@@ -448,30 +448,6 @@ export default function SettingsScreen() {
             </>
           )}
 
-          <Text style={styles.sectionTitle}>Data & Backup</Text>
-          
-          <View style={styles.settingColumn}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Storage Used</Text>
-              <Text style={styles.settingDescription}>Current app data size</Text>
-            </View>
-            <Text style={styles.storageValue}>{formatStorageSize(storageSize)}</Text>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleExportData}
-          >
-            <Text style={styles.actionButtonText}>Export All Data</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={handleImportData}
-          >
-            <Text style={styles.actionButtonText}>Import Data</Text>
-          </TouchableOpacity>
-
           <Text style={styles.sectionTitle}>{t('settings.feedback.title')}</Text>
 
           <View style={styles.settingColumn}>
@@ -493,6 +469,30 @@ export default function SettingsScreen() {
             onPress={handleFeatureRequest}
           >
             <Text style={styles.actionButtonText}>{t('settings.feedback.featureRequest')}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.sectionTitle}>Data & Backup</Text>
+          
+          <View style={styles.settingColumn}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Storage Used</Text>
+              <Text style={styles.settingDescription}>Current app data size</Text>
+            </View>
+            <Text style={styles.storageValue}>{formatStorageSize(storageSize)}</Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.compactButton}
+            onPress={handleExportData}
+          >
+            <Text style={styles.compactButtonText}>Export All Data</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.compactButton}
+            onPress={handleImportData}
+          >
+            <Text style={styles.compactButtonText}>Import Data</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -624,5 +624,19 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     color: COLORS.primary,
     letterSpacing: 0.5,
+  },
+  compactButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  compactButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.primary,
   },
 });
