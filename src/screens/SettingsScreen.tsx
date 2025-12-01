@@ -8,7 +8,7 @@ import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder, sendTestNotification } from '../utils/notifications';
+import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder } from '../utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -148,20 +148,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleTestNotification = async () => {
-    try {
-      await sendTestNotification();
-      Alert.alert(
-        t('settings.notifications.testSent'),
-        t('settings.notifications.testSentDescription')
-      );
-    } catch (error) {
-      Alert.alert(
-        t('common.error'),
-        t('settings.notifications.testError')
-      );
-    }
-  };
+
 
   const handleExportData = async () => {
     try {
@@ -482,13 +469,6 @@ export default function SettingsScreen() {
                   thumbColor={COLORS.surface}
                 />
               </View>
-
-              <TouchableOpacity 
-                style={styles.testButton}
-                onPress={handleTestNotification}
-              >
-                <Text style={styles.testButtonText}>{t('settings.notifications.testNotification')}</Text>
-              </TouchableOpacity>
             </>
           )}
 
