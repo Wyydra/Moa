@@ -84,6 +84,32 @@ export const saveCard = async (card: Card): Promise<void> => {
   }
 };
 
+/**
+ * Batch save multiple cards in a single transaction.
+ * Much more efficient than calling saveCard() multiple times.
+ * Use this for study sessions where multiple cards are updated.
+ */
+export const batchSaveCards = async (cards: Card[]): Promise<void> => {
+  if (cards.length === 0) return;
+  
+  try {
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    
+    // Batch update all cards in a single transaction
+    await cardRepo.batchUpdate(cards);
+    
+    // Update deck card counts for affected decks
+    const affectedDeckIds = [...new Set(cards.map(card => card.deckId))];
+    for (const deckId of affectedDeckIds) {
+      await deckRepo.updateCardCounts(deckId);
+    }
+  } catch (error) {
+    console.error('Error batch saving cards:', error);
+    throw error;
+  }
+};
+
 export const getAllCards = async (): Promise<Card[]> => {
   try {
     const cardRepo = RepositoryFactory.getCardRepository();
