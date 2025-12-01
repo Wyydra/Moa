@@ -136,8 +136,7 @@ async function createSchemaV1(database: SQLite.SQLiteDatabase): Promise<void> {
       d.created_at,
       d.updated_at,
       COUNT(c.id) as total_cards,
-      SUM(CASE WHEN c.difficulty = 5 THEN 1 ELSE 0 END) as mastered_cards,
-      SUM(CASE WHEN c.next_review IS NOT NULL AND c.next_review <= ? THEN 1 ELSE 0 END) as due_cards
+      SUM(CASE WHEN c.difficulty = 5 THEN 1 ELSE 0 END) as mastered_cards
     FROM decks d
     LEFT JOIN cards c ON d.id = c.deck_id
     GROUP BY d.id;
