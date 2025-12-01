@@ -117,8 +117,8 @@ export const scheduleDailyReminder = async (
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: '📚 Time to Study!',
-        body: 'Keep your streak going! Review your cards now.',
+        title: 'Time to Study',
+        body: 'Review your cards to keep your streak going.',
         data: { type: 'daily-reminder' },
         sound: 'default',
         priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -177,8 +177,8 @@ export const scheduleStreakReminder = async (): Promise<string | null> => {
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🔥 Don\'t Break Your Streak!',
-        body: 'You haven\'t studied yet today. Keep your streak alive!',
+        title: 'Study Reminder',
+        body: 'You haven\'t studied yet today.',
         data: { type: 'streak-reminder' },
         sound: 'default',
         priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -263,8 +263,8 @@ export const sendDueCardsNotification = async (
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '📝 Cards Due for Review',
-        body: `You have ${dueCount} card${dueCount > 1 ? 's' : ''} ready to review!`,
+        title: 'Cards Due for Review',
+        body: `${dueCount} card${dueCount > 1 ? 's' : ''} ready to review.`,
         data: { type: 'due-cards' },
         sound: 'default',
         ...(Platform.OS === 'android' && {
@@ -295,8 +295,8 @@ export const sendCongratsNotification = async (
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🎉 Great Job!',
-        body: `You've studied ${cardsStudied} cards today! Current streak: ${streakDays} days 🔥`,
+        title: 'Study Complete',
+        body: `Studied ${cardsStudied} cards today. Current streak: ${streakDays} days.`,
         data: { type: 'congrats' },
         sound: 'default',
         ...(Platform.OS === 'android' && {
@@ -350,8 +350,8 @@ export const sendTestNotification = async (): Promise<void> => {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '✅ Test Notification',
-        body: 'Notifications are working correctly!',
+        title: 'Test Notification',
+        body: 'Notifications are working correctly.',
         data: { type: 'test' },
         sound: 'default',
       },
