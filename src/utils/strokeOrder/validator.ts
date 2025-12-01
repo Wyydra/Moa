@@ -7,6 +7,7 @@ import {
   ValidationResult,
   StrokeDirection,
 } from './types';
+import i18n from '../../i18n/config';
 
 const POSITION_TOLERANCE = 0.25;
 
@@ -203,11 +204,11 @@ function comparePosition(
 
 export function getStrokeOrderFeedback(validation: ValidationResult): string {
   if (validation.isCorrect) {
-    return '완벽해요! Perfect stroke order! 🎉';
+    return i18n.t('strokeOrder.perfect');
   }
   
   if (validation.errors.length === 0) {
-    return 'Good job!';
+    return i18n.t('strokeOrder.goodJob');
   }
   
   const firstError = validation.errors[0];
@@ -216,13 +217,20 @@ export function getStrokeOrderFeedback(validation: ValidationResult): string {
     case 'count':
       return firstError.message;
     case 'direction':
-      return `Stroke ${firstError.strokeIndex + 1}: Check the direction. Expected ${firstError.expected.direction}.`;
+      return i18n.t('strokeOrder.checkDirection', {
+        index: firstError.strokeIndex + 1,
+        direction: firstError.expected.direction,
+      });
     case 'position':
-      return `Stroke ${firstError.strokeIndex + 1}: Check the position.`;
+      return i18n.t('strokeOrder.checkPosition', {
+        index: firstError.strokeIndex + 1,
+      });
     case 'sequence':
-      return `Stroke ${firstError.strokeIndex + 1}: This stroke should come later.`;
+      return i18n.t('strokeOrder.wrongSequence', {
+        index: firstError.strokeIndex + 1,
+      });
     default:
-      return 'Please try again following the correct stroke order.';
+      return i18n.t('strokeOrder.tryAgain');
   }
 }
 

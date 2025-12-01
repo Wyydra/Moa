@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Card, Deck, StudySession } from "./model";
+import { RepositoryFactory } from "./db";
+import { TIME_CONSTANTS } from "../utils/constants";
 
-const DECKS_KEY = '@moa_decks';
-const CARDS_KEY = '@moa_cards';
-const STUDY_SESSIONS_KEY = '@moa_study_sessions';
+// AsyncStorage keys for settings (simple key-value preferences)
 const LANGUAGE_PREF_KEY = '@moa_language_preference';
 const HANDWRITING_LANG_KEY = '@moa_handwriting_language';
 const TTS_ENABLED_KEY = '@moa_tts_enabled';
@@ -19,16 +19,14 @@ export const generateId = (): string => {
 
 export const saveDeck = async (deck: Deck): Promise<void> => {
   try {
-    const decks = await getAllDecks();
-    const existingIndex = decks.findIndex(d => d.id === deck.id);
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    const existing = await deckRepo.getById(deck.id);
 
-    if (existingIndex >= 0) {
-      decks[existingIndex] = deck;
+    if (existing) {
+      await deckRepo.update(deck);
     } else {
-      decks.push(deck);
+      await deckRepo.create(deck);
     }
-
-    await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(decks));
   } catch (error) {
     console.error('Error saving deck:', error);
     throw error;
@@ -37,8 +35,8 @@ export const saveDeck = async (deck: Deck): Promise<void> => {
 
 export const getAllDecks = async (): Promise<Deck[]> => {
   try {
-    const data = await AsyncStorage.getItem(DECKS_KEY);
-    return data ? JSON.parse(data): [];
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    return await deckRepo.getAll();
   } catch (error) {
     console.error('Error loading decks:', error);
     return [];
@@ -47,8 +45,8 @@ export const getAllDecks = async (): Promise<Deck[]> => {
 
 export const getDeckById = async (deckId: string): Promise<Deck | null> => {
   try {
-    const decks = await getAllDecks();
-    return decks.find(d => d.id === deckId) || null;
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    return await deckRepo.getById(deckId);
   } catch (error) {
     console.error('Error loading deck:', error);
     return null;
@@ -57,13 +55,9 @@ export const getDeckById = async (deckId: string): Promise<Deck | null> => {
 
 export const deleteDeck = async (deckId: string): Promise<void> => {
   try {
-    const decks = await getAllDecks();
-    const filtered = decks.filter(d => d.id !== deckId);
-    await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(filtered));
-
-    const cards = await getAllCards();
-    const filteredCards = cards.filter(c => c.deckId !== deckId);
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(filteredCards));
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    // CASCADE delete will automatically remove cards
+    await deckRepo.delete(deckId);
   } catch (error) {
     console.error('Error deleting deck:', error);
     throw error;
@@ -72,28 +66,64 @@ export const deleteDeck = async (deckId: string): Promise<void> => {
 
 export const saveCard = async (card: Card): Promise<void> => {
   try {
-    const cards = await getAllCards();
-    const existingIndex = cards.findIndex(c => c.id === card.id);
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    const existing = await cardRepo.getById(card.id);
 
-    if (existingIndex >= 0) {
-      cards[existingIndex] = card;
+    if (existing) {
+      await cardRepo.update(card);
     } else {
-      cards.push(card);
+      await cardRepo.create(card);
     }
 
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(cards));
-
-    await updateDeckCardCount(card.deckId);
+    // Update deck card count
+    await deckRepo.updateCardCounts(card.deckId);
   } catch (error) {
     console.error('Error saving card:', error);
     throw error;
   }
 };
 
+/**
+ * Batch save multiple cards in a single transaction.
+ * Much more efficient than calling saveCard() multiple times.
+ * Use this for study sessions where multiple cards are updated.
+ */
+export const batchSaveCards = async (cards: Card[]): Promise<void> => {
+  if (cards.length === 0) return;
+  
+  try {
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    
+    // Batch update all cards in a single transaction
+    await cardRepo.batchUpdate(cards);
+    
+    // Update deck card counts for affected decks
+    const affectedDeckIds = [...new Set(cards.map(card => card.deckId))];
+    for (const deckId of affectedDeckIds) {
+      await deckRepo.updateCardCounts(deckId);
+    }
+  } catch (error) {
+    console.error('Error batch saving cards:', error);
+    throw error;
+  }
+};
+
 export const getAllCards = async (): Promise<Card[]> => {
   try {
-    const data = await AsyncStorage.getItem(CARDS_KEY);
-    return data ? JSON.parse(data) : [];
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    const decks = await deckRepo.getAll();
+    
+    // Get cards for all decks
+    const allCards: Card[] = [];
+    for (const deck of decks) {
+      const cards = await cardRepo.getByDeck(deck.id);
+      allCards.push(...cards);
+    }
+    
+    return allCards;
   } catch (error) {
     console.error('Error loading cards:', error);
     return [];
@@ -102,8 +132,8 @@ export const getAllCards = async (): Promise<Card[]> => {
 
 export const getCardsByDeck = async (deckId: string): Promise<Card[]> => {
   try {
-    const cards = await getAllCards();
-    return cards.filter(c => c.deckId === deckId);
+    const cardRepo = RepositoryFactory.getCardRepository();
+    return await cardRepo.getByDeck(deckId);
   } catch (error) {
     console.error('Error loading cards for deck:', error);
     return [];
@@ -112,9 +142,8 @@ export const getCardsByDeck = async (deckId: string): Promise<Card[]> => {
 
 export const getDueCards = async (deckId: string): Promise<Card[]> => {
   try {
-    const cards = await getCardsByDeck(deckId);
-    const now = Date.now();
-    return cards.filter(c => c.nextReview <= now);
+    const cardRepo = RepositoryFactory.getCardRepository();
+    return await cardRepo.getDueCards(deckId);
   } catch (error) {
     console.error('Error loading due cards:', error);
     return [];
@@ -123,10 +152,8 @@ export const getDueCards = async (deckId: string): Promise<Card[]> => {
 
 export const getDueCardsByTags = async (tags: string[]): Promise<Card[]> => {
   try {
-    const deckIds = (await getDecksByTags(tags)).map(d => d.id);
-    const allCards = await getAllCards();
-    const now = Date.now();
-    return allCards.filter(c => deckIds.includes(c.deckId) && c.nextReview <= now);
+    const cardRepo = RepositoryFactory.getCardRepository();
+    return await cardRepo.getDueCardsByTags(tags);
   } catch (error) {
     console.error('Error loading due cards by tags:', error);
     return [];
@@ -135,9 +162,8 @@ export const getDueCardsByTags = async (tags: string[]): Promise<Card[]> => {
 
 export const getCardsByTags = async (tags: string[]): Promise<Card[]> => {
   try {
-    const deckIds = (await getDecksByTags(tags)).map(d => d.id);
-    const allCards = await getAllCards();
-    return allCards.filter(c => deckIds.includes(c.deckId));
+    const cardRepo = RepositoryFactory.getCardRepository();
+    return await cardRepo.getCardsByTags(tags);
   } catch (error) {
     console.error('Error loading cards by tags:', error);
     return [];
@@ -146,13 +172,16 @@ export const getCardsByTags = async (tags: string[]): Promise<Card[]> => {
 
 export const deleteCard = async (cardId: string): Promise<void> => {
   try {
-    const cards = await getAllCards();
-    const card = cards.find(c => c.id === cardId);
-    const filtered = cards.filter(c => c.id !== cardId);
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(filtered));
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    
+    // Get card to find deck before deleting
+    const card = await cardRepo.getById(cardId);
+    await cardRepo.delete(cardId);
 
+    // Update deck card count
     if (card) {
-      await updateDeckCardCount(card.deckId);
+      await deckRepo.updateCardCounts(card.deckId);
     }
   } catch (error) {
     console.error('Error deleting card:', error);
@@ -162,24 +191,25 @@ export const deleteCard = async (cardId: string): Promise<void> => {
 
 export const moveCardsToAnotherDeck = async (cardIds: string[], targetDeckId: string): Promise<void> => {
   try {
-    const cards = await getAllCards();
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    
+    // Get source deck IDs before moving
     const sourceDeckIds = new Set<string>();
-
-    // Update deckId for all selected cards
-    const updatedCards = cards.map(card => {
-      if (cardIds.includes(card.id)) {
+    for (const cardId of cardIds) {
+      const card = await cardRepo.getById(cardId);
+      if (card) {
         sourceDeckIds.add(card.deckId);
-        return { ...card, deckId: targetDeckId };
       }
-      return card;
-    });
+    }
 
-    await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(updatedCards));
+    // Move cards
+    await cardRepo.moveToAnotherDeck(cardIds, targetDeckId);
 
-    // Update card counts for both source and target decks
-    await updateDeckCardCount(targetDeckId);
+    // Update card counts for all affected decks
+    await deckRepo.updateCardCounts(targetDeckId);
     for (const sourceDeckId of sourceDeckIds) {
-      await updateDeckCardCount(sourceDeckId);
+      await deckRepo.updateCardCounts(sourceDeckId);
     }
   } catch (error) {
     console.error('Error moving cards to another deck:', error);
@@ -189,13 +219,8 @@ export const moveCardsToAnotherDeck = async (cardIds: string[], targetDeckId: st
 
 const updateDeckCardCount = async (deckId: string): Promise<void> => {
   try {
-    const cards = await getCardsByDeck(deckId);
-    const deck = await getDeckById(deckId);
-
-    if (deck) {
-      deck.cardCount = cards.length;
-      await saveDeck(deck);
-    }
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    await deckRepo.updateCardCounts(deckId);
   } catch (error) {
     console.error('Error updating deck card count:', error);
   }
@@ -203,7 +228,13 @@ const updateDeckCardCount = async (deckId: string): Promise<void> => {
 
 export const clearAllData = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove([DECKS_KEY, CARDS_KEY]);
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    const decks = await deckRepo.getAll();
+    
+    // Delete all decks (CASCADE will delete cards and sessions)
+    for (const deck of decks) {
+      await deckRepo.delete(deck.id);
+    }
   } catch (error) {
     console.error('Error clearing data:', error);
     throw error;
@@ -213,25 +244,27 @@ export const clearAllData = async (): Promise<void> => {
 export const seedTestData = async (): Promise<void> => {
   const testDecksData = require('../../test-decks.json');
   const now = Date.now();
+  const deckRepo = RepositoryFactory.getDeckRepository();
+  const cardRepo = RepositoryFactory.getCardRepository();
 
-  const decks: Deck[] = [];
-  const cards: Card[] = [];
-
-  testDecksData.decks.forEach((deckData: any, index: number) => {
+  for (let i = 0; i < testDecksData.decks.length; i++) {
+    const deckData = testDecksData.decks[i];
     const deckId = generateId();
     
-    decks.push({
+    const deck: Deck = {
       id: deckId,
       name: deckData.name,
       description: deckData.description,
       tags: deckData.tags,
       language: deckData.language,
-      createdAt: now + (index * 1000),
+      createdAt: now + (i * 1000),
       cardCount: deckData.cards.length
-    });
+    };
 
-    deckData.cards.forEach((cardData: any) => {
-      cards.push({
+    await deckRepo.create(deck);
+
+    for (const cardData of deckData.cards) {
+      const card: Card = {
         id: generateId(),
         front: cardData.front,
         back: cardData.back,
@@ -241,12 +274,11 @@ export const seedTestData = async (): Promise<void> => {
         easeFactor: 2.5,
         repetitions: 0,
         createdAt: now
-      });
-    });
-  });
-
-  await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(decks));
-  await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(cards));
+      };
+      
+      await cardRepo.create(card);
+    }
+  }
 };
 
 export const initializeStorage = async (): Promise<void> => {
@@ -391,16 +423,8 @@ export const importDeckFromJSON = async (jsonString: string): Promise<string> =>
 
 export const getAllTags = async (): Promise<string[]> => {
   try {
-    const decks = await getAllDecks();
-    const tagSet = new Set<string>();
-
-    decks.forEach(deck => {
-      if (deck.tags && deck.tags.length > 0) {
-        deck.tags.forEach(tag => tagSet.add(tag));
-      }
-    });
-
-    return Array.from(tagSet).sort();
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    return await deckRepo.getAllTags();
   } catch (error) {
     console.error('Error getting all tags:', error);
     return [];
@@ -409,10 +433,8 @@ export const getAllTags = async (): Promise<string[]> => {
 
 export const getDecksByTags = async (tags: string[]): Promise<Deck[]> => {
   try {
-    const decks = await getAllDecks();
-    return decks.filter(deck => 
-      deck.tags && tags.some(tag => deck.tags!.includes(tag))
-    );
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    return await deckRepo.getByTags(tags);
   } catch (error) {
     console.error('Error getting decks by tags:', error);
     return [];
@@ -475,9 +497,8 @@ export const setTTSRate = async (rate: number): Promise<void> => {
 // Study Session Functions
 export const saveStudySession = async (session: StudySession): Promise<void> => {
   try {
-    const sessions = await getAllStudySessions();
-    sessions.push(session);
-    await AsyncStorage.setItem(STUDY_SESSIONS_KEY, JSON.stringify(sessions));
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    await sessionRepo.create(session);
   } catch (error) {
     console.error('Error saving study session:', error);
     throw error;
@@ -486,8 +507,8 @@ export const saveStudySession = async (session: StudySession): Promise<void> => 
 
 export const getAllStudySessions = async (): Promise<StudySession[]> => {
   try {
-    const data = await AsyncStorage.getItem(STUDY_SESSIONS_KEY);
-    return data ? JSON.parse(data) : [];
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    return await sessionRepo.getAll();
   } catch (error) {
     console.error('Error loading study sessions:', error);
     return [];
@@ -496,51 +517,8 @@ export const getAllStudySessions = async (): Promise<StudySession[]> => {
 
 export const getStudyStreak = async (): Promise<number> => {
   try {
-    const sessions = await getAllStudySessions();
-    
-    if (sessions.length === 0) {
-      return 0;
-    }
-
-    // Group sessions by day
-    const daySet = new Set<string>();
-    sessions.forEach(session => {
-      const date = new Date(session.timestamp);
-      const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      daySet.add(dayKey);
-    });
-
-    const sortedDays = Array.from(daySet).sort().reverse();
-    
-    if (sortedDays.length === 0) {
-      return 0;
-    }
-
-    // Check if today has activity
-    const today = new Date();
-    const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-    
-    let streak = 0;
-    let currentDate = new Date(today);
-    
-    // Start from today or yesterday depending on whether today has activity
-    if (sortedDays[0] !== todayKey) {
-      currentDate.setDate(currentDate.getDate() - 1);
-    }
-
-    // Count consecutive days backwards
-    while (true) {
-      const checkKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
-      
-      if (daySet.has(checkKey)) {
-        streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-
-    return streak;
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    return await sessionRepo.getStreak();
   } catch (error) {
     console.error('Error calculating study streak:', error);
     return 0;
@@ -549,12 +527,8 @@ export const getStudyStreak = async (): Promise<number> => {
 
 export const getTodayReviewCount = async (): Promise<number> => {
   try {
-    const sessions = await getAllStudySessions();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTimestamp = today.getTime();
-
-    return sessions.filter(session => session.timestamp >= todayTimestamp).length;
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    return await sessionRepo.getTodayReviewCount();
   } catch (error) {
     console.error('Error counting today reviews:', error);
     return 0;
@@ -563,13 +537,8 @@ export const getTodayReviewCount = async (): Promise<number> => {
 
 export const getWeekReviewCount = async (): Promise<number> => {
   try {
-    const sessions = await getAllStudySessions();
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    weekAgo.setHours(0, 0, 0, 0);
-    const weekAgoTimestamp = weekAgo.getTime();
-
-    return sessions.filter(session => session.timestamp >= weekAgoTimestamp).length;
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    return await sessionRepo.getWeekReviewCount();
   } catch (error) {
     console.error('Error counting week reviews:', error);
     return 0;
@@ -578,18 +547,8 @@ export const getWeekReviewCount = async (): Promise<number> => {
 
 export const getOverallAccuracy = async (): Promise<number> => {
   try {
-    const sessions = await getAllStudySessions();
-    
-    if (sessions.length === 0) {
-      return 0;
-    }
-
-    // For flashcard-style responses, consider 'good' and 'easy' as correct
-    const correctCount = sessions.filter(session => 
-      session.correct || session.response === 'good' || session.response === 'easy'
-    ).length;
-
-    return Math.round((correctCount / sessions.length) * 100);
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+    return await sessionRepo.getOverallAccuracy();
   } catch (error) {
     console.error('Error calculating accuracy:', error);
     return 0;
@@ -657,5 +616,229 @@ export const setStreakRemindersEnabled = async (enabled: boolean): Promise<void>
   } catch (error) {
     console.error('Error saving streak reminders enabled:', error);
     throw error;
+  }
+};
+
+// Full Data Backup/Restore Functions
+export interface FullBackup {
+  version: string;
+  exportedAt: number;
+  decks: Deck[];
+  cards: Card[];
+  studySessions: StudySession[];
+  settings: {
+    languagePreference?: string | null;
+    handwritingLanguage?: string | null;
+    ttsEnabled: boolean;
+    ttsAutoPlay: boolean;
+    ttsRate: number;
+    notificationsEnabled: boolean;
+    notificationTime: { hour: number; minute: number };
+    streakRemindersEnabled: boolean;
+  };
+}
+
+export const exportAllData = async (): Promise<string> => {
+  try {
+    const decks = await getAllDecks();
+    const cards = await getAllCards();
+    const studySessions = await getAllStudySessions();
+    const languagePreference = await getLanguagePreference();
+    const handwritingLanguage = await getHandwritingLanguage();
+    const ttsEnabled = await getTTSEnabled();
+    const ttsAutoPlay = await getTTSAutoPlay();
+    const ttsRate = await getTTSRate();
+    const notificationsEnabled = await getNotificationsEnabled();
+    const notificationTime = await getNotificationTime();
+    const streakRemindersEnabled = await getStreakRemindersEnabled();
+
+    const backup: FullBackup = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      decks,
+      cards,
+      studySessions,
+      settings: {
+        languagePreference,
+        handwritingLanguage,
+        ttsEnabled,
+        ttsAutoPlay,
+        ttsRate,
+        notificationsEnabled,
+        notificationTime,
+        streakRemindersEnabled,
+      },
+    };
+
+    return JSON.stringify(backup, null, 2);
+  } catch (error) {
+    console.error('Error exporting all data:', error);
+    throw error;
+  }
+};
+
+export const importAllData = async (jsonString: string, overwrite: boolean = false): Promise<void> => {
+  try {
+    const backup: FullBackup = JSON.parse(jsonString);
+
+    if (!backup.version || !backup.decks || !backup.cards) {
+      throw new Error('Invalid backup format');
+    }
+
+    const deckRepo = RepositoryFactory.getDeckRepository();
+    const cardRepo = RepositoryFactory.getCardRepository();
+    const sessionRepo = RepositoryFactory.getStudySessionRepository();
+
+    if (overwrite) {
+      // Clear existing data before importing
+      await clearAllData();
+    }
+
+    // Import decks
+    for (const deck of backup.decks) {
+      if (overwrite) {
+        await deckRepo.create(deck);
+      } else {
+        const existing = await deckRepo.getById(deck.id);
+        if (!existing) {
+          await deckRepo.create(deck);
+        }
+      }
+    }
+
+    // Import cards
+    for (const card of backup.cards) {
+      if (overwrite) {
+        await cardRepo.create(card);
+      } else {
+        const existing = await cardRepo.getById(card.id);
+        if (!existing) {
+          await cardRepo.create(card);
+        }
+      }
+    }
+
+    // Import study sessions
+    if (backup.studySessions) {
+      for (const session of backup.studySessions) {
+        // Always append study sessions (no duplicates check needed)
+        await sessionRepo.create(session);
+      }
+    }
+
+    // Import settings
+    if (backup.settings) {
+      if (backup.settings.languagePreference) {
+        await saveLanguagePreference(backup.settings.languagePreference);
+      }
+      if (backup.settings.handwritingLanguage) {
+        await saveHandwritingLanguage(backup.settings.handwritingLanguage);
+      }
+      await setTTSEnabled(backup.settings.ttsEnabled);
+      await setTTSAutoPlay(backup.settings.ttsAutoPlay);
+      await setTTSRate(backup.settings.ttsRate);
+      await setNotificationsEnabled(backup.settings.notificationsEnabled);
+      await setNotificationTime(backup.settings.notificationTime.hour, backup.settings.notificationTime.minute);
+      await setStreakRemindersEnabled(backup.settings.streakRemindersEnabled);
+    }
+  } catch (error) {
+    console.error('Error importing all data:', error);
+    throw error;
+  }
+};
+
+export const getStorageSize = async (): Promise<number> => {
+  try {
+    const { getDatabaseSize } = await import('./db');
+    
+    // Get SQLite database size
+    const dbSize = await getDatabaseSize();
+    
+    // Get AsyncStorage settings size (settings are stored in AsyncStorage)
+    const keys = [
+      LANGUAGE_PREF_KEY,
+      HANDWRITING_LANG_KEY,
+      TTS_ENABLED_KEY,
+      TTS_AUTO_PLAY_KEY,
+      TTS_RATE_KEY,
+      NOTIFICATIONS_ENABLED_KEY,
+      NOTIFICATIONS_TIME_KEY,
+      NOTIFICATIONS_STREAK_KEY,
+    ];
+
+    let settingsSize = 0;
+    for (const key of keys) {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
+        // Calculate size in bytes (rough estimate)
+        settingsSize += new Blob([value]).size;
+      }
+    }
+
+    return dbSize + settingsSize;
+  } catch (error) {
+    console.error('Error calculating storage size:', error);
+    return 0;
+  }
+};
+
+/**
+ * Clean up old study sessions based on retention policy
+ * @param retentionDays Number of days to retain (default: 365)
+ * @returns Number of sessions deleted
+ */
+export const cleanupOldSessions = async (retentionDays: number = 365): Promise<number> => {
+  try {
+    const { getDatabase } = await import('./db');
+    const db = await getDatabase();
+    const cutoffDate = Date.now() - (retentionDays * TIME_CONSTANTS.MILLISECONDS_PER_DAY);
+    
+    // Count sessions to be deleted
+    const countResult = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    const oldSessionsCount = countResult?.count || 0;
+    
+    if (oldSessionsCount === 0) {
+      console.log('No old sessions to clean up');
+      return 0;
+    }
+    
+    // Delete old sessions from database
+    await db.runAsync(
+      'DELETE FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    console.log(`Cleaned up ${oldSessionsCount} old study sessions`);
+    return oldSessionsCount;
+  } catch (error) {
+    console.error('Error cleaning up old sessions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get count of study sessions older than specified days
+ * @param retentionDays Number of days threshold (default: 365)
+ * @returns Number of old sessions
+ */
+export const getOldSessionsCount = async (retentionDays: number = 365): Promise<number> => {
+  try {
+    const { getDatabase } = await import('./db');
+    const db = await getDatabase();
+    const cutoffDate = Date.now() - (retentionDays * TIME_CONSTANTS.MILLISECONDS_PER_DAY);
+    
+    const result = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    return result?.count || 0;
+  } catch (error) {
+    console.error('Error counting old sessions:', error);
+    return 0;
   }
 };

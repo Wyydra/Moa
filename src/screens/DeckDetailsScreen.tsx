@@ -854,6 +854,16 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           numColumns={viewMode === 'grid' ? 2 : 1}
           columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
           key={viewMode}
+          getItemLayout={(data, index) => (
+            viewMode === 'list'
+              ? { length: 100, offset: 100 * index, index }
+              : { length: 140, offset: 140 * index, index }
+          )}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={10}
+          windowSize={5}
         />
       )}
 

@@ -219,6 +219,14 @@
         "testSent": "Test Sent",
         "testSentDescription": "Check your notifications to see the test message",
         "testError": "Failed to send test notification. Please check your notification permissions."
+      },
+      "feedback": {
+        "title": "Feedback & Support",
+        "description": "Help improve Moa",
+        "subtitle": "Report bugs or suggest new features",
+        "reportBug": "Report a Bug",
+        "featureRequest": "Request a Feature",
+        "emailError": "Unable to open email client. Please ensure you have an email app configured."
       }
     },
     "progress": {
@@ -242,5 +250,13 @@
       "allCaughtUp": "All caught up! You've reviewed everything!",
       "perfectDeck": "Perfect! All cards in this deck are mastered!",
       "noProgress": "No study data yet. Start reviewing to track your progress!"
+    },
+    "strokeOrder": {
+      "perfect": "Perfect stroke order! 🎉",
+      "goodJob": "Good job!",
+      "checkDirection": "Stroke {{index}}: Check the direction. Expected {{direction}}.",
+      "checkPosition": "Stroke {{index}}: Check the position.",
+      "wrongSequence": "Stroke {{index}}: This stroke should come later.",
+      "tryAgain": "Please try again following the correct stroke order."
     }
   }

@@ -1,13 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Card, Deck, StudySession } from "./model";
 
 // Current schema version
+// v1 = SQLite (first release)
 export const CURRENT_SCHEMA_VERSION = 1;
 
 const SCHEMA_VERSION_KEY = '@moa_schema_version';
-const DECKS_KEY = '@moa_decks';
-const CARDS_KEY = '@moa_cards';
-const STUDY_SESSIONS_KEY = '@moa_study_sessions';
+const MIGRATION_BACKUP_KEY = '@moa_migration_backup';
 
 /**
  * Get the current schema version from storage
@@ -15,7 +13,7 @@ const STUDY_SESSIONS_KEY = '@moa_study_sessions';
 export const getSchemaVersion = async (): Promise<number> => {
   try {
     const version = await AsyncStorage.getItem(SCHEMA_VERSION_KEY);
-    return version ? parseInt(version, 10) : 0; // 0 = new install or pre-migration
+    return version ? parseInt(version, 10) : 0; // 0 = new install
   } catch (error) {
     console.error('Error getting schema version:', error);
     return 0;
@@ -28,7 +26,7 @@ export const getSchemaVersion = async (): Promise<number> => {
 const setSchemaVersion = async (version: number): Promise<void> => {
   try {
     await AsyncStorage.setItem(SCHEMA_VERSION_KEY, version.toString());
-    console.log(`✅ Schema upgraded to version ${version}`);
+    console.log(`✅ Schema version set to ${version}`);
   } catch (error) {
     console.error('Error setting schema version:', error);
     throw error;
@@ -36,81 +34,104 @@ const setSchemaVersion = async (version: number): Promise<void> => {
 };
 
 /**
- * Migration from v0 (initial) to v1
- * This handles the initial setup for existing users
+ * Initialize database schema for new installations
+ * This simply creates the SQLite database with the schema defined in connection.ts
  */
-const migrateV0ToV1 = async (): Promise<void> => {
-  console.log('🔄 Running migration v0 → v1...');
+const initializeDatabase = async (): Promise<void> => {
+  console.log('🔄 Initializing database...');
   
   try {
-    // Check if user has existing data (decks or cards)
-    const decksData = await AsyncStorage.getItem(DECKS_KEY);
-    const cardsData = await AsyncStorage.getItem(CARDS_KEY);
+    // Dynamic import to avoid circular dependencies
+    const { getDatabase } = await import('./db/connection');
     
-    if (decksData || cardsData) {
-      // User has existing data, just add schema version
-      console.log('Found existing data, preserving it');
-    } else {
-      // New user, no data to migrate
-      console.log('New installation, no data to migrate');
-    }
+    // Get database connection (will create schema automatically)
+    console.log('📦 Creating SQLite database schema...');
+    await getDatabase();
     
-    // Mark as v1
-    await setSchemaVersion(1);
+    console.log('✅ Database initialized successfully');
+    
+    // Set schema version
+    await setSchemaVersion(CURRENT_SCHEMA_VERSION);
+    
+    console.log('🎉 Database setup complete!');
   } catch (error) {
-    console.error('❌ Migration v0 → v1 failed:', error);
+    console.error('❌ Database initialization failed:', error);
     throw error;
   }
 };
 
 /**
- * Example: Migration from v1 to v2 (for future use)
- * Uncomment and modify when you need to add new fields
+ * Create a backup of current data before migration
  */
-/*
-const migrateV1ToV2 = async (): Promise<void> => {
-  console.log('🔄 Running migration v1 → v2...');
-  
+const createMigrationBackup = async (): Promise<void> => {
   try {
-    // Example: Add a new optional field to all decks
-    const decksData = await AsyncStorage.getItem(DECKS_KEY);
-    if (decksData) {
-      const decks: Deck[] = JSON.parse(decksData);
-      
-      // Add new field with default value
-      const updatedDecks = decks.map(deck => ({
-        ...deck,
-        // newField: defaultValue, // Add your new field here
-      }));
-      
-      await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(updatedDecks));
-      console.log(`✅ Migrated ${updatedDecks.length} decks`);
-    }
+    console.log('💾 Creating migration backup...');
     
-    // Example: Add new field to cards
-    const cardsData = await AsyncStorage.getItem(CARDS_KEY);
-    if (cardsData) {
-      const cards: Card[] = JSON.parse(cardsData);
-      
-      const updatedCards = cards.map(card => ({
-        ...card,
-        // newField: defaultValue, // Add your new field here
-      }));
-      
-      await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(updatedCards));
-      console.log(`✅ Migrated ${updatedCards.length} cards`);
-    }
+    // Dynamic import to avoid circular dependencies
+    const { exportAllData } = await import('./storage');
+    const backupData = await exportAllData();
     
-    await setSchemaVersion(2);
+    // Store backup with timestamp
+    const backupWithMetadata = JSON.stringify({
+      data: backupData,
+      timestamp: Date.now(),
+      version: await getSchemaVersion(),
+    });
+    
+    await AsyncStorage.setItem(MIGRATION_BACKUP_KEY, backupWithMetadata);
+    console.log('✅ Migration backup created');
   } catch (error) {
-    console.error('❌ Migration v1 → v2 failed:', error);
-    throw error;
+    console.error('⚠️ Warning: Failed to create migration backup:', error);
+    // Don't throw - backup failure shouldn't block migration
   }
 };
-*/
 
 /**
- * Run all pending migrations
+ * Restore from migration backup if migration fails
+ */
+const restoreFromBackup = async (): Promise<void> => {
+  try {
+    console.log('🔄 Attempting to restore from backup...');
+    
+    const backupJson = await AsyncStorage.getItem(MIGRATION_BACKUP_KEY);
+    if (!backupJson) {
+      console.log('⚠️ No backup found to restore');
+      return;
+    }
+    
+    const backup = JSON.parse(backupJson);
+    const { data, version } = backup;
+    
+    // Dynamic import to avoid circular dependencies
+    const { importAllData } = await import('./storage');
+    await importAllData(data, true);
+    
+    // Restore schema version
+    await setSchemaVersion(version);
+    
+    console.log('✅ Data restored from backup');
+  } catch (error) {
+    console.error('❌ Failed to restore from backup:', error);
+    throw new Error('Migration failed and backup restoration also failed. Please contact support.');
+  }
+};
+
+/**
+ * Clear migration backup after successful migration
+ */
+const clearMigrationBackup = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(MIGRATION_BACKUP_KEY);
+    console.log('🗑️ Migration backup cleared');
+  } catch (error) {
+    console.error('⚠️ Warning: Failed to clear migration backup:', error);
+    // Don't throw - cleanup failure is not critical
+  }
+};
+
+/**
+ * Run all pending migrations with backup and recovery
+ * For first release, this just initializes the database
  */
 export const runMigrations = async (): Promise<void> => {
   try {
@@ -120,80 +141,47 @@ export const runMigrations = async (): Promise<void> => {
     console.log(`📊 Target schema version: ${CURRENT_SCHEMA_VERSION}`);
     
     if (currentVersion >= CURRENT_SCHEMA_VERSION) {
-      console.log('✅ Schema is up to date, no migrations needed');
+      console.log('✅ Database is up to date');
+      // Clear any old backups
+      await clearMigrationBackup();
       return;
     }
     
-    console.log(`🚀 Starting migrations from v${currentVersion} to v${CURRENT_SCHEMA_VERSION}...`);
-    
-    // Run migrations in order
-    if (currentVersion < 1) {
-      await migrateV0ToV1();
+    // Create backup before migration (skip for new installations)
+    if (currentVersion > 0) {
+      await createMigrationBackup();
     }
     
-    // Add future migrations here:
-    // if (currentVersion < 2) {
-    //   await migrateV1ToV2();
-    // }
-    // if (currentVersion < 3) {
-    //   await migrateV2ToV3();
-    // }
-    
-    console.log('✅ All migrations completed successfully');
-  } catch (error) {
-    console.error('❌ Migration failed:', error);
-    // Don't throw - let app continue with existing data
-    // Log the error but don't crash the app
-  }
-};
-
-/**
- * Backup all data (for debugging or manual recovery)
- */
-export const backupAllData = async (): Promise<string> => {
-  try {
-    const decks = await AsyncStorage.getItem(DECKS_KEY);
-    const cards = await AsyncStorage.getItem(CARDS_KEY);
-    const sessions = await AsyncStorage.getItem(STUDY_SESSIONS_KEY);
-    const schemaVersion = await getSchemaVersion();
-    
-    const backup = {
-      version: schemaVersion,
-      timestamp: Date.now(),
-      data: {
-        decks: decks ? JSON.parse(decks) : [],
-        cards: cards ? JSON.parse(cards) : [],
-        sessions: sessions ? JSON.parse(sessions) : [],
+    try {
+      if (currentVersion === 0) {
+        // New installation
+        console.log('🚀 New installation detected, initializing database...');
+        await initializeDatabase();
       }
-    };
-    
-    return JSON.stringify(backup, null, 2);
+      
+      // Future migrations will go here:
+      // if (currentVersion < 2) {
+      //   await migrateV1ToV2();
+      // }
+      
+      // Clear backup after successful migration
+      await clearMigrationBackup();
+      
+      console.log('✅ Database ready');
+    } catch (migrationError) {
+      console.error('❌ Migration failed:', migrationError);
+      
+      // Attempt to restore from backup
+      if (currentVersion > 0) {
+        console.log('🔄 Attempting recovery...');
+        await restoreFromBackup();
+        throw new Error('Migration failed but data was restored from backup. Please restart the app.');
+      }
+      
+      throw migrationError;
+    }
   } catch (error) {
-    console.error('Error creating backup:', error);
-    throw error;
-  }
-};
-
-/**
- * Restore data from backup (for debugging)
- */
-export const restoreFromBackup = async (backupJson: string): Promise<void> => {
-  try {
-    const backup = JSON.parse(backupJson);
-    
-    if (backup.data.decks) {
-      await AsyncStorage.setItem(DECKS_KEY, JSON.stringify(backup.data.decks));
-    }
-    if (backup.data.cards) {
-      await AsyncStorage.setItem(CARDS_KEY, JSON.stringify(backup.data.cards));
-    }
-    if (backup.data.sessions) {
-      await AsyncStorage.setItem(STUDY_SESSIONS_KEY, JSON.stringify(backup.data.sessions));
-    }
-    
-    console.log('✅ Data restored from backup');
-  } catch (error) {
-    console.error('Error restoring backup:', error);
+    console.error('❌ Database initialization failed:', error);
     throw error;
   }
 };

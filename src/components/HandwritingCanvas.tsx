@@ -31,7 +31,7 @@ interface HandwritingCanvasProps {
   onValidationComplete?: (validation: ValidationResult) => void;
 }
 
-export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
+const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   onRecognitionResult,
   width = 300,
   height = 400,
@@ -121,7 +121,7 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     }
   };
 
-  const handleTouchStart = (event: GestureResponderEvent) => {
+  const handleTouchStart = useCallback((event: GestureResponderEvent) => {
     const { locationX, locationY } = event.nativeEvent;
     const adjustedX = locationX + offsetX;
     const newStroke: Stroke = {
@@ -132,9 +132,9 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     const path = Skia.Path.Make();
     path.moveTo(locationX, locationY);
     setCurrentPath(path);
-  };
+  }, [offsetX]);
 
-  const handleTouchMove = (event: GestureResponderEvent) => {
+  const handleTouchMove = useCallback((event: GestureResponderEvent) => {
     if (!currentStroke || !currentPath) return;
     
     const { locationX, locationY } = event.nativeEvent;
@@ -147,9 +147,9 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     
     currentPath.lineTo(locationX, locationY);
     setCurrentPath(currentPath.copy());
-  };
+  }, [currentStroke, currentPath, offsetX]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (currentStroke && currentPath) {
       const updatedStrokes = [...strokes, currentStroke];
       const updatedPaths = [...paths, currentPath];
@@ -285,7 +285,7 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
         }
       }, 1500);
     }
-  };
+  }, [currentStroke, currentPath, strokes, paths, practiceMode, targetCharacter, width, height, onValidationComplete, modelReady, strokeOrderCheckEnabled, onRecognitionResult]);
 
 
 
@@ -306,13 +306,13 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     setOffsetX(0);
   }, []);
 
-  const scrollLeft = () => {
+  const scrollLeft = useCallback(() => {
     setOffsetX(prev => Math.max(0, prev - width * 0.4));
-  };
+  }, [width]);
 
-  const scrollRight = () => {
+  const scrollRight = useCallback(() => {
     setOffsetX(prev => prev + width * 0.4);
-  };
+  }, [width]);
 
   return (
     <View style={styles.container}>
@@ -429,6 +429,25 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     </View>
   );
 };
+
+// Custom comparison function for React.memo
+const arePropsEqual = (
+  prevProps: HandwritingCanvasProps,
+  nextProps: HandwritingCanvasProps
+): boolean => {
+  return (
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.strokeWidth === nextProps.strokeWidth &&
+    prevProps.practiceMode === nextProps.practiceMode &&
+    prevProps.targetCharacter === nextProps.targetCharacter &&
+    prevProps.showGuides === nextProps.showGuides &&
+    prevProps.onRecognitionResult === nextProps.onRecognitionResult &&
+    prevProps.onValidationComplete === nextProps.onValidationComplete
+  );
+};
+
+export const HandwritingCanvas = React.memo(HandwritingCanvasComponent, arePropsEqual);
 
 const styles = StyleSheet.create({
   container: {

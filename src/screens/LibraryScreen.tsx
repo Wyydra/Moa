@@ -292,27 +292,42 @@ export default function LibraryScreen({navigation}: any) {
           </TouchableOpacity>
         </>
       ) : (
-        <>
-          <FlatList
-            data={decks}
-            renderItem={renderDeck}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-          />
-          <TouchableOpacity
-            style={styles.importFab}
-            onPress={handleImportDeck}
-          >
-            <Ionicons name="download-outline" size={24} color="white"/>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={handleCreateDeck}
-          >
-            <Ionicons name="add" size={32} color="white"/>
-          </TouchableOpacity>
-        </>
+        <FlatList
+          data={decks}
+          renderItem={renderDeck}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          getItemLayout={(data, index) => ({
+            length: 90,
+            offset: 90 * index,
+            index,
+          })}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={10}
+          windowSize={5}
+        />
       )}
+
+      <TouchableOpacity
+        style={styles.importFab}
+        onPress={handleImportDeck}
+        accessibilityLabel={t('library.importDeck') || 'Import deck'}
+        accessibilityHint="Import a deck from a .moa file"
+        accessibilityRole="button"
+      >
+        <Ionicons name="download-outline" size={24} color="white"/>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreateDeck}
+        accessibilityLabel={t('library.createDeck') || 'Create deck'}
+        accessibilityHint="Create a new flashcard deck"
+        accessibilityRole="button"
+      >
+        <Ionicons name="add" size={32} color="white"/>
+      </TouchableOpacity>
 
       <Modal
         animationType="fade"

@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
@@ -20,7 +21,6 @@ import StudyScreen from './src/screens/StudyScreen';
 import WriteScreen from './src/screens/WriteScreen';
 import { useEffect, useState, useRef } from 'react';
 import { initializeStorage, getNotificationsEnabled, getNotificationTime, getStreakRemindersEnabled } from './src/data/storage';
-import { runMigrations } from './src/data/migrations';
 import TestScreen from './src/screens/TestScreen';
 import MatchScreen from './src/screens/MatchScreen';
 import BrowseScreen from './src/screens/BrowseScreen';
@@ -180,21 +180,45 @@ function MainNavigator() {
 
 export default function App() {
   const { t } = useTranslation();
-  const [fontsLoaded, setFontsLoaded] = useState(false);
-  const notificationListener = useRef<Notifications.Subscription | null>(null);
-  const responseListener = useRef<Notifications.Subscription | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
   
   useEffect(() => {
     async function initialize() {
-      // Load fonts
-      await Font.loadAsync({
-        ...Ionicons.font,
-      });
-      setFontsLoaded(true);
-      
-      // Run migrations before initializing storage
-      await runMigrations();
-      await initializeStorage();
+      try {
+        // Load fonts
+        await Font.loadAsync({
+          ...Ionicons.font,
+        });
+        
+        // Initialize database and storage
+        const { runMigrations } = await import('./src/data/migrations');
+        await runMigrations();
+        await initializeStorage();
+        
+        setIsReady(true);
+      } catch (error) {
+        console.error('Initialization failed:', error);
+        
+        // Provide specific error messages for different failure scenarios
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const isRecoveryError = errorMessage.includes('Migration failed but data was restored');
+        const isBackupFailure = errorMessage.includes('backup restoration also failed');
+        
+        let title = 'Initialization Error';
+        let message = 'Failed to initialize the app. Please restart the app.';
+        
+        if (isRecoveryError) {
+          title = 'Database Update Required';
+          message = 'A database update was attempted but failed. Your data has been restored. Please restart the app to try again.';
+        } else if (isBackupFailure) {
+          title = 'Critical Error';
+          message = 'Database migration failed and recovery was unsuccessful. Please contact support with your error logs.';
+        }
+        
+        Alert.alert(title, message, [{ text: 'OK' }]);
+      }
     }
     initialize();
   }, []);
@@ -290,16 +314,26 @@ export default function App() {
     return () => subscription.remove();
   }, [t]);
 
-  if (!fontsLoaded) {
-    return null;
+  if (!isReady) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+          <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#6366F1' }}>
+            Moa
+          </Text>
+        </View>
+      </SafeAreaProvider>
+    );
   }
 
   return (
-  <SafeAreaProvider>
-    <NavigationContainer>
-      <MainNavigator />
-      <StatusBar style='auto'/>
-    </NavigationContainer>
-  </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <MainNavigator />
+          <StatusBar style='auto'/>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

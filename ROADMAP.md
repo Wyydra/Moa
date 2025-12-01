@@ -13,6 +13,7 @@
 - Reverse cards option across all study modes
 - Handwriting recognition with Google ML Kit
 - Import/export via JSON files and QR codes
+- **SQLite database with automatic migration** (v2.0 schema) ✨ NEW!
 - Bilingual support (English/French)
 
 **What's needed to release:**
@@ -43,7 +44,9 @@
 ### Foundation
 - [x] React Native + Expo setup with navigation
 - [x] Data models (Card, Deck, SRS types)
-- [x] AsyncStorage persistence layer
+- [x] ~~AsyncStorage persistence layer~~ → **SQLite database (v2.0)** ✅
+- [x] Repository pattern with indexes and transactions
+- [x] Automatic migration from AsyncStorage → SQLite
 - [x] SM-2 spaced repetition algorithm
 - [x] TypeScript strict mode
 - [x] i18n support (English, French)

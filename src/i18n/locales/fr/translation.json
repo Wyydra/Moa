@@ -219,6 +219,14 @@
         "testSent": "Test envoyé",
         "testSentDescription": "Vérifiez vos notifications pour voir le message de test",
         "testError": "Échec de l'envoi de la notification de test. Veuillez vérifier vos autorisations de notification."
+      },
+      "feedback": {
+        "title": "Commentaires et support",
+        "description": "Aidez à améliorer Moa",
+        "subtitle": "Signalez des bugs ou suggérez de nouvelles fonctionnalités",
+        "reportBug": "Signaler un bug",
+        "featureRequest": "Demander une fonctionnalité",
+        "emailError": "Impossible d'ouvrir le client email. Veuillez vous assurer d'avoir une application email configurée."
       }
     },
     "progress": {
@@ -242,5 +250,13 @@
       "allCaughtUp": "Tout est à jour ! Vous avez tout révisé !",
       "perfectDeck": "Parfait ! Toutes les cartes de ce paquet sont maîtrisées !",
       "noProgress": "Pas encore de données d'étude. Commencez à réviser pour suivre vos progrès !"
+    },
+    "strokeOrder": {
+      "perfect": "Ordre des traits parfait ! 🎉",
+      "goodJob": "Bon travail !",
+      "checkDirection": "Trait {{index}} : Vérifiez la direction. Attendu : {{direction}}.",
+      "checkPosition": "Trait {{index}} : Vérifiez la position.",
+      "wrongSequence": "Trait {{index}} : Ce trait devrait venir plus tard.",
+      "tryAgain": "Veuillez réessayer en suivant l'ordre correct des traits."
     }
   }

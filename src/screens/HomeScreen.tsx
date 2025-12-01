@@ -9,6 +9,7 @@ import { getAllDecks, getDueCards, getStudyStreak, getTodayReviewCount } from '.
 import { updateBadgeCount } from '../utils/notifications';
 import { Deck } from '../data/model';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
@@ -94,6 +95,14 @@ export default function HomeScreen({ navigation }: any) {
     });
   };
 
+  if (loading) {
+    return (
+      <View style={commonStyles.container}>
+        <LoadingSpinner fullScreen text={t('common.loading')} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView 
       style={commonStyles.container} 
@@ -138,6 +147,8 @@ export default function HomeScreen({ navigation }: any) {
       <TouchableOpacity
         onPress={() => navigation.navigate('Progress')}
         activeOpacity={0.8}
+        accessibilityLabel={t('progress.title')}
+        accessibilityHint={t('home.viewProgressHint') || 'View your study progress and statistics'}
       >
         <Animated.View
           style={[
@@ -169,7 +180,11 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t('home.topPriority')}</Text>
             {topDecks.length < totalDue / 10 && (
-              <TouchableOpacity onPress={() => navigation.navigate('Library')}>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('Library')}
+                accessibilityLabel={t('home.viewAll')}
+                accessibilityHint="View all decks in library"
+              >
                 <Text style={styles.viewAllText}>{t('home.viewAll')}</Text>
               </TouchableOpacity>
             )}
@@ -179,6 +194,8 @@ export default function HomeScreen({ navigation }: any) {
               key={deck.id}
               style={styles.deckCard}
               onPress={() => handleDeckPress(deck.id)}
+              accessibilityLabel={`${deck.name} deck`}
+              accessibilityHint={`${dueCount} cards due for review`}
             >
               <View style={styles.deckInfo}>
                 <Text style={styles.deckName}>{deck.name}</Text>
@@ -205,6 +222,8 @@ export default function HomeScreen({ navigation }: any) {
           <TouchableOpacity
             style={[commonStyles.button, styles.libraryButton]}
             onPress={() => navigation.navigate('Library')}
+            accessibilityLabel={t('home.browseLibrary')}
+            accessibilityHint="Browse your deck library"
           >
             <Ionicons name="library-outline" size={22} color={COLORS.textInverse} />
             <Text style={commonStyles.buttonText}>{t('home.browseLibrary')}</Text>

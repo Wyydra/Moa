@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getDueCards, getDueCardsByTags, saveCard, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId, getStudyStreak } from "../data/storage";
+import { getDueCards, getDueCardsByTags, batchSaveCards, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -10,11 +10,13 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/co
 import PronunciationButton from '../components/PronunciationButton';
 import * as Speech from 'expo-speech';
 import { updateBadgeCount } from '../utils/notifications';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
+  const [updatedCards, setUpdatedCards] = useState<Card[]>([]); // Accumulate updates for batch save
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,8 +35,14 @@ export default function StudyScreen({route, navigation}: any) {
   useEffect(() => {
     return () => {
       Speech.stop();
+      // Save any pending updates when component unmounts
+      if (updatedCards.length > 0) {
+        batchSaveCards(updatedCards).catch(error => 
+          console.error('Error saving cards on unmount:', error)
+        );
+      }
     };
-  }, []);
+  }, [updatedCards]);
 
   const loadDueCards = async () => {
     let dueCards: Card[];
@@ -76,7 +84,9 @@ export default function StudyScreen({route, navigation}: any) {
   const handleResponse = async (response: StudyResponse) => {
     const currentCard = cards[currentIndex];
     const updatedCard = calculateNextReview(currentCard, response);
-    await saveCard(updatedCard);
+    
+    // Accumulate updated cards instead of saving immediately
+    setUpdatedCards(prev => [...prev, updatedCard]);
 
     // Track study session
     const responseMap: Record<StudyResponse, 'again' | 'hard' | 'good' | 'easy'> = {
@@ -100,6 +110,10 @@ export default function StudyScreen({route, navigation}: any) {
     await Speech.stop();
 
     if (currentIndex + 1 >= cards.length) {
+      // Save all updated cards in batch when session completes
+      const allUpdatedCards = [...updatedCards, updatedCard];
+      await batchSaveCards(allUpdatedCards);
+      setUpdatedCards([]); // Clear after saving
       setCompleted(true);
       // Update badge count after completing study session
       await updateBadgeCount();
@@ -111,15 +125,21 @@ export default function StudyScreen({route, navigation}: any) {
 
   const handleBack = async () => {
     await Speech.stop();
+    
+    // Save any pending card updates before exiting
+    if (updatedCards.length > 0) {
+      await batchSaveCards(updatedCards);
+    }
+    
     navigation.goBack();
   };
 
   if (loading) {
     return (
       <View style={commonStyles.container}>
-        <Text style={commonStyles.emptyText}>{t('common.loading')}</Text>
+        <LoadingSpinner fullScreen text={t('common.loading')} />
       </View>
-    )
+    );
   }
 
 if (completed) {
@@ -184,7 +204,12 @@ if (completed) {
         </View>
 
         {!showBack ? (
-          <TouchableOpacity style={[commonStyles.button, styles.showButton]} onPress={handleFlip}>
+          <TouchableOpacity 
+            style={[commonStyles.button, styles.showButton]} 
+            onPress={handleFlip}
+            accessibilityLabel={t('flashcard.showAnswer')}
+            accessibilityHint="Reveal the answer to this flashcard"
+          >
             <Text style={commonStyles.buttonText}>{t('flashcard.showAnswer')}</Text>
           </TouchableOpacity>
         ) : (
@@ -192,6 +217,8 @@ if (completed) {
             <TouchableOpacity
               style={[styles.responseButton, styles.againButton]}
               onPress={() => handleResponse(StudyResponse.Again)}
+              accessibilityLabel={t('flashcard.again')}
+              accessibilityHint="Review this card again in less than 1 minute"
             >
               <Text style={styles.responseButtonText}>{t('flashcard.again')}</Text>
               <Text style={styles.responseTime}>{'<1m'}</Text>
@@ -200,6 +227,8 @@ if (completed) {
             <TouchableOpacity
               style={[styles.responseButton, styles.hardButton]}
               onPress={() => handleResponse(StudyResponse.Hard)}
+              accessibilityLabel={t('flashcard.hard')}
+              accessibilityHint={`Review this card again in ${currentCard.repetitions === 0 ? 'less than 1 hour' : 'less than 10 minutes'}`}
             >
               <Text style={styles.responseButtonText}>{t('flashcard.hard')}</Text>
               <Text style={styles.responseTime}>
@@ -210,6 +239,8 @@ if (completed) {
              <TouchableOpacity
               style={[styles.responseButton, styles.goodButton]}
               onPress={() => handleResponse(StudyResponse.Good)}
+              accessibilityLabel={t('flashcard.good')}
+              accessibilityHint={`Review this card again in ${currentCard.repetitions === 0 ? '1 day' : '6 days'}`}
             >
               <Text style={styles.responseButtonText}>{t('flashcard.good')}</Text>
               <Text style={styles.responseTime}>
@@ -220,6 +251,8 @@ if (completed) {
             <TouchableOpacity
               style={[styles.responseButton, styles.easyButton]}
               onPress={() => handleResponse(StudyResponse.Easy)}
+              accessibilityLabel={t('flashcard.easy')}
+              accessibilityHint="Review this card again in 4 days"
             >
               <Text style={styles.responseButtonText}>{t('flashcard.easy')}</Text>
               <Text style={styles.responseTime}>4d</Text>
