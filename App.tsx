@@ -200,11 +200,24 @@ export default function App() {
         setIsReady(true);
       } catch (error) {
         console.error('Initialization failed:', error);
-        Alert.alert(
-          'Initialization Error',
-          'Failed to initialize the app. Please restart the app.',
-          [{ text: 'OK' }]
-        );
+        
+        // Provide specific error messages for different failure scenarios
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const isRecoveryError = errorMessage.includes('Migration failed but data was restored');
+        const isBackupFailure = errorMessage.includes('backup restoration also failed');
+        
+        let title = 'Initialization Error';
+        let message = 'Failed to initialize the app. Please restart the app.';
+        
+        if (isRecoveryError) {
+          title = 'Database Update Required';
+          message = 'A database update was attempted but failed. Your data has been restored. Please restart the app to try again.';
+        } else if (isBackupFailure) {
+          title = 'Critical Error';
+          message = 'Database migration failed and recovery was unsuccessful. Please contact support with your error logs.';
+        }
+        
+        Alert.alert(title, message, [{ text: 'OK' }]);
       }
     }
     initialize();
