@@ -135,3 +135,13 @@ export const SHADOWS = {
     elevation: 6,
   }),
 };
+
+// Time conversion constants for date/time calculations
+export const TIME_CONSTANTS = {
+  MILLISECONDS_PER_DAY: 24 * 60 * 60 * 1000,
+  MINUTES_PER_DAY: 24 * 60,
+  HOURS_PER_DAY: 24,
+  SECONDS_PER_MINUTE: 60,
+  SECONDS_PER_HOUR: 60 * 60,
+  SECONDS_PER_DAY: 24 * 60 * 60,
+};

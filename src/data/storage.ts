@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Card, Deck, StudySession } from "./model";
 import { RepositoryFactory } from "./db";
+import { TIME_CONSTANTS } from "../utils/constants";
 
 // AsyncStorage keys for settings (simple key-value preferences)
 const LANGUAGE_PREF_KEY = '@moa_language_preference';
@@ -764,7 +765,7 @@ export const cleanupOldSessions = async (retentionDays: number = 365): Promise<n
   try {
     const { getDatabase } = await import('./db');
     const db = await getDatabase();
-    const cutoffDate = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = Date.now() - (retentionDays * TIME_CONSTANTS.MILLISECONDS_PER_DAY);
     
     // Count sessions to be deleted
     const countResult = await db.getFirstAsync<{ count: number }>(
@@ -802,7 +803,7 @@ export const getOldSessionsCount = async (retentionDays: number = 365): Promise<
   try {
     const { getDatabase } = await import('./db');
     const db = await getDatabase();
-    const cutoffDate = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = Date.now() - (retentionDays * TIME_CONSTANTS.MILLISECONDS_PER_DAY);
     
     const result = await db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM study_sessions WHERE created_at < ?',
