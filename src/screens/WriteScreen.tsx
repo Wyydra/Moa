@@ -213,8 +213,6 @@ export default function WriteScreen({route, navigation}: any) {
               ]}
               value={userAnswer}
               onChangeText={setUserAnswer}
-              placeholder="Type your answer..."
-              placeholderTextColor={COLORS.textLight}
               editable={!showResult}
               autoCapitalize="none"
               autoCorrect={false}

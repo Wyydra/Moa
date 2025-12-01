@@ -87,7 +87,6 @@ export default function AddCardScreen({ route, navigation }: any) {
           style={styles.tagInput}
           value={tagInput}
           onChangeText={setTagInput}
-          placeholder={t('card.tagsPlaceholder')}
           onSubmitEditing={handleAddTag}
           returnKeyType="done"
         />

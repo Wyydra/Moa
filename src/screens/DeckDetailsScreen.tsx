@@ -1134,7 +1134,6 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                     style={styles.tagInput}
                     value={tagInput}
                     onChangeText={setTagInput}
-                    placeholder={t('card.tagsPlaceholder')}
                     onSubmitEditing={handleAddTagToList}
                     returnKeyType="done"
                   />

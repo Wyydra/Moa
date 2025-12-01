@@ -133,7 +133,6 @@ export default function EditCardScreen({ route, navigation }: any) {
           style={styles.tagInput}
           value={tagInput}
           onChangeText={setTagInput}
-          placeholder={t('card.tagsPlaceholder')}
           onSubmitEditing={handleAddTag}
           returnKeyType="done"
         />

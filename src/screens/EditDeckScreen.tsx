@@ -114,7 +114,6 @@ export default function EditDeckScreen({ route, navigation}: any) {
         style={[commonStyles.input, styles.descriptionInput]}
         value={description}
         onChangeText={setDescription}
-        placeholder={t('deck.descriptionPlaceholder')}
         multiline
         numberOfLines={3}
       />
@@ -196,7 +195,6 @@ export default function EditDeckScreen({ route, navigation}: any) {
           style={[commonStyles.input, styles.tagInput]}
           value={tagInput}
           onChangeText={setTagInput}
-          placeholder={t('deck.tagsPlaceholder')}
           onSubmitEditing={handleAddTag}
           returnKeyType="done"
         />
