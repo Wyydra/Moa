@@ -50,6 +50,3 @@ devenv.local.yaml
 
 # pre-commit
 .pre-commit-config.yaml
-
-# Audit reports
-AUDIT_REPORT.md
