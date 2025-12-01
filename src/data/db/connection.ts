@@ -7,7 +7,7 @@ import { Card, Deck } from '../model';
  */
 
 const DATABASE_NAME = 'moa.db';
-const CURRENT_SCHEMA_VERSION = 2;
+const CURRENT_SCHEMA_VERSION = 1;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -56,9 +56,9 @@ async function initializeSchema(database: SQLite.SQLiteDatabase): Promise<void> 
 }
 
 /**
- * Create all tables, indexes, and views for schema v2
+ * Create all tables, indexes, and views for schema v1
  */
-async function createSchemaV2(database: SQLite.SQLiteDatabase): Promise<void> {
+async function createSchemaV1(database: SQLite.SQLiteDatabase): Promise<void> {
   await database.execAsync(`
     -- Decks table
     CREATE TABLE IF NOT EXISTS decks (
@@ -169,16 +169,16 @@ async function migrateSchema(
 ): Promise<void> {
   console.log(`Migrating schema from v${fromVersion} to v${toVersion}`);
 
-  if (fromVersion === 0 && toVersion === 2) {
-    // Fresh install - create schema v2
-    await createSchemaV2(database);
-    console.log('Schema v2 created successfully');
-  } else if (fromVersion === 1 && toVersion === 2) {
-    // Migration from AsyncStorage (v1) to SQLite (v2) happens in migrations.ts
-    // This just creates the schema
-    await createSchemaV2(database);
-    console.log('Schema v2 created for migration from v1');
+  if (fromVersion === 0 && toVersion === 1) {
+    // Fresh install - create schema v1
+    await createSchemaV1(database);
+    console.log('Schema v1 created successfully');
   }
+  
+  // Future migrations will go here:
+  // if (fromVersion === 1 && toVersion === 2) {
+  //   await migrateV1ToV2(database);
+  // }
 }
 
 /**
