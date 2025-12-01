@@ -292,27 +292,26 @@ export default function LibraryScreen({navigation}: any) {
           </TouchableOpacity>
         </>
       ) : (
-        <>
-          <FlatList
-            data={decks}
-            renderItem={renderDeck}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-          />
-          <TouchableOpacity
-            style={styles.importFab}
-            onPress={handleImportDeck}
-          >
-            <Ionicons name="download-outline" size={24} color="white"/>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={handleCreateDeck}
-          >
-            <Ionicons name="add" size={32} color="white"/>
-          </TouchableOpacity>
-        </>
+        <FlatList
+          data={decks}
+          renderItem={renderDeck}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+        />
       )}
+
+      <TouchableOpacity
+        style={styles.importFab}
+        onPress={handleImportDeck}
+      >
+        <Ionicons name="download-outline" size={24} color="white"/>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreateDeck}
+      >
+        <Ionicons name="add" size={32} color="white"/>
+      </TouchableOpacity>
 
       <Modal
         animationType="fade"
