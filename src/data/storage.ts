@@ -754,3 +754,64 @@ export const getStorageSize = async (): Promise<number> => {
     return 0;
   }
 };
+
+/**
+ * Clean up old study sessions based on retention policy
+ * @param retentionDays Number of days to retain (default: 365)
+ * @returns Number of sessions deleted
+ */
+export const cleanupOldSessions = async (retentionDays: number = 365): Promise<number> => {
+  try {
+    const { getDatabase } = await import('./db');
+    const db = await getDatabase();
+    const cutoffDate = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+    
+    // Count sessions to be deleted
+    const countResult = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    const oldSessionsCount = countResult?.count || 0;
+    
+    if (oldSessionsCount === 0) {
+      console.log('No old sessions to clean up');
+      return 0;
+    }
+    
+    // Delete old sessions from database
+    await db.runAsync(
+      'DELETE FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    console.log(`Cleaned up ${oldSessionsCount} old study sessions`);
+    return oldSessionsCount;
+  } catch (error) {
+    console.error('Error cleaning up old sessions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get count of study sessions older than specified days
+ * @param retentionDays Number of days threshold (default: 365)
+ * @returns Number of old sessions
+ */
+export const getOldSessionsCount = async (retentionDays: number = 365): Promise<number> => {
+  try {
+    const { getDatabase } = await import('./db');
+    const db = await getDatabase();
+    const cutoffDate = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+    
+    const result = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM study_sessions WHERE created_at < ?',
+      [cutoffDate]
+    );
+    
+    return result?.count || 0;
+  } catch (error) {
+    console.error('Error counting old sessions:', error);
+    return 0;
+  }
+};

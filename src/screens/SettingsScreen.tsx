@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Platform,
 import { useTranslation } from 'react-i18next';
 import Slider from '@react-native-community/slider';
 import { getLocales } from 'expo-localization';
-import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled, exportAllData, importAllData, getStorageSize } from '../data/storage';
+import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled, exportAllData, importAllData, getStorageSize, cleanupOldSessions, getOldSessionsCount } from '../data/storage';
 import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
@@ -38,6 +38,8 @@ export default function SettingsScreen() {
   const [streakRemindersEnabled, setStreakRemindersEnabledState] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [storageSize, setStorageSize] = useState(0);
+  const [oldSessionsCount, setOldSessionsCount] = useState(0);
+  const [retentionDays] = useState(365);
 
   useEffect(() => {
     loadPreferences();
@@ -53,6 +55,7 @@ export default function SettingsScreen() {
     const savedNotificationTime = await getNotificationTime();
     const savedStreakRemindersEnabled = await getStreakRemindersEnabled();
     const size = await getStorageSize();
+    const oldSessions = await getOldSessionsCount(retentionDays);
     
     // Default to 'system' if no preference saved
     setAppLanguage(savedAppLang || 'system');
@@ -66,6 +69,7 @@ export default function SettingsScreen() {
     setNotificationTimeState(savedNotificationTime);
     setStreakRemindersEnabledState(savedStreakRemindersEnabled);
     setStorageSize(size);
+    setOldSessionsCount(oldSessions);
   };
 
   const handleAppLanguageChange = async (lang: string) => {
@@ -308,6 +312,46 @@ export default function SettingsScreen() {
     return `${displayHour}:${displayMinute} ${period}`;
   };
 
+  const handleCleanupOldData = async () => {
+    if (oldSessionsCount === 0) {
+      Alert.alert('No Data to Clean', 'There are no old study sessions to remove.');
+      return;
+    }
+
+    Alert.alert(
+      'Clean Up Old Data',
+      `This will permanently delete ${oldSessionsCount} study session${oldSessionsCount !== 1 ? 's' : ''} older than ${retentionDays} days. This action cannot be undone.\n\nYour decks and cards will not be affected.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const deletedCount = await cleanupOldSessions(retentionDays);
+              const newSize = await getStorageSize();
+              const newOldSessionsCount = await getOldSessionsCount(retentionDays);
+              
+              setStorageSize(newSize);
+              setOldSessionsCount(newOldSessionsCount);
+              
+              Alert.alert(
+                'Cleanup Complete',
+                `Successfully deleted ${deletedCount} old study session${deletedCount !== 1 ? 's' : ''}.`
+              );
+            } catch (error) {
+              console.error('Error cleaning up data:', error);
+              Alert.alert('Error', 'Failed to clean up old data. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={commonStyles.container}>
       <ScrollView 
@@ -481,6 +525,23 @@ export default function SettingsScreen() {
             <Text style={styles.storageValue}>{formatStorageSize(storageSize)}</Text>
           </View>
 
+          <View style={styles.settingColumn}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Old Study Sessions</Text>
+              <Text style={styles.settingDescription}>Sessions older than {retentionDays} days</Text>
+            </View>
+            <Text style={styles.storageValue}>{oldSessionsCount}</Text>
+          </View>
+
+          {oldSessionsCount > 0 && (
+            <TouchableOpacity 
+              style={styles.cleanupButton}
+              onPress={handleCleanupOldData}
+            >
+              <Text style={styles.cleanupButtonText}>Clean Up Old Data</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity 
             style={styles.compactButton}
             onPress={handleExportData}
@@ -638,5 +699,19 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.primary,
+  },
+  cleanupButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.danger,
+  },
+  cleanupButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.danger,
   },
 });
