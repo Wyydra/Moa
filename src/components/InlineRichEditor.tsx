@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -14,28 +14,53 @@ interface InlineRichEditorProps {
   placeholder: string;
   label: string;
   autoFocus?: boolean;
+  delayMount?: number; // Delay in ms before mounting the editor
 }
 
-export default function InlineRichEditor({
+function InlineRichEditor({
   value,
   onChange,
   placeholder,
   label,
   autoFocus = false,
+  delayMount = 0,
 }: InlineRichEditorProps) {
   const richText = useRef<RichEditor>(null);
+  const [shouldRender, setShouldRender] = React.useState(delayMount === 0);
 
   const handleContentChange = (html: string) => {
     onChange(html);
   };
 
+  // Delayed mount for sequential loading
   useEffect(() => {
-    if (autoFocus && richText.current) {
+    if (delayMount > 0) {
+      const timer = setTimeout(() => {
+        setShouldRender(true);
+      }, delayMount);
+      return () => clearTimeout(timer);
+    }
+  }, [delayMount]);
+
+  useEffect(() => {
+    if (autoFocus && richText.current && shouldRender) {
       setTimeout(() => {
         richText.current?.focusContentEditor();
-      }, 300);
+      }, 400);
     }
-  }, [autoFocus]);
+  }, [autoFocus, shouldRender]);
+
+  if (!shouldRender) {
+    // Show placeholder while loading
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={[styles.editorWrapper, styles.loadingWrapper]}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -111,6 +136,8 @@ export default function InlineRichEditor({
   );
 }
 
+export default memo(InlineRichEditor);
+
 const styles = StyleSheet.create({
   container: {
     marginBottom: SPACING.md,
@@ -170,5 +197,14 @@ const styles = StyleSheet.create({
   editor: {
     minHeight: 150,
     backgroundColor: COLORS.surface,
+  },
+  loadingWrapper: {
+    minHeight: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: COLORS.textLight,
+    fontSize: 14,
   },
 });
