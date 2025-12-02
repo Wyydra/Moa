@@ -1,10 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Linking, View, Text } from 'react-native';
+import { Alert, Linking, View, Text, LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import ErrorBoundary from './src/components/ErrorBoundary';
+
+// Ignore VirtualizedList warning from react-native-pell-rich-editor's internal WebView
+LogBox.ignoreLogs([
+  'VirtualizedLists should never be nested inside plain ScrollViews',
+]);
 
 import HomeScreen from './src/screens/HomeScreen';
 import AddCardScreen from './src/screens/AddCardScreen';
