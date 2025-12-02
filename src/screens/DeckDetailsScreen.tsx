@@ -533,6 +533,10 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
     }
   };
 
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '').trim();
+  };
+
   const renderCardListItem = ({ item }: { item: Card }) => {
     const status = getCardStatus(item);
     const statusColor = getStatusColor(status);
@@ -562,9 +566,9 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           )}
           <View style={styles.cardTextContainer}>
             <View style={styles.cardMainRow}>
-              <Text style={styles.cardFront} numberOfLines={1}>{item.front}</Text>
+              <Text style={styles.cardFront} numberOfLines={1}>{stripHtmlTags(item.front)}</Text>
               <Ionicons name="arrow-forward" size={14} color={COLORS.textLight} style={styles.arrowIcon} />
-              <Text style={styles.cardBack} numberOfLines={1}>{item.back}</Text>
+              <Text style={styles.cardBack} numberOfLines={1}>{stripHtmlTags(item.back)}</Text>
             </View>
             {item.tags && item.tags.length > 0 && (
               <View style={styles.cardTagsRow}>

@@ -8,6 +8,7 @@ import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import PronunciationButton from '../components/PronunciationButton';
+import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 import { updateBadgeCount } from '../utils/notifications';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -182,12 +183,13 @@ if (completed) {
       <View style={styles.cardContainer}>
         <View style={[commonStyles.card, styles.flashcard]}>
           <Text style={styles.cardLabel}>{showBack ? t('flashcard.answer') : t('flashcard.question')}</Text>
-          <Text style={styles.cardText}>
-            {showBack 
+          <CardContentRenderer
+            content={showBack 
               ? (reversed ? currentCard.front : currentCard.back)
               : (reversed ? currentCard.back : currentCard.front)
             }
-          </Text>
+            textStyle={styles.cardText}
+          />
           {ttsEnabled && (
             <View style={styles.pronunciationContainer}>
               <PronunciationButton 

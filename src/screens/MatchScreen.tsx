@@ -6,6 +6,7 @@ import { StudySession } from "../data/model";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
+import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 import { detectLanguage } from '../utils/languageDetection';
 
@@ -303,12 +304,11 @@ export default function MatchScreen({ route, navigation }: any) {
                 onPress={() => handleTilePress(tile)}
                 disabled={tile.matched}
               >
-                <Text
-                  style={styles.tileText}
+                <CardContentRenderer
+                  content={tile.text}
+                  textStyle={styles.tileText}
                   numberOfLines={3}
-                >
-                  {tile.text}
-                </Text>
+                />
               </TouchableOpacity>
             </Animated.View>
           );
