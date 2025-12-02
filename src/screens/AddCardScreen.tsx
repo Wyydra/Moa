@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { commonStyles } from '../styles/commonStyles';
 import { Ionicons } from "@expo/vector-icons";
@@ -7,6 +7,7 @@ import { COLORS, SPACING } from '../utils/constants';
 import { generateId, saveCard } from "../data/storage";
 import { Card } from "../data/model";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import InlineRichEditor from '../components/InlineRichEditor';
 
 
 export default function AddCardScreen({ route, navigation }: any) {
@@ -19,14 +20,17 @@ export default function AddCardScreen({ route, navigation }: any) {
   const [tagInput, setTagInput] = useState('');
 
   const handleSave = async () => {
-    if (!front.trim() || !back.trim()) {
+    const frontText = stripHtmlTags(front);
+    const backText = stripHtmlTags(back);
+    
+    if (!frontText || !backText) {
       return;
     }
 
     const newCard: Card = {
       id: generateId(),
-      front: front.trim(),
-      back: back.trim(),
+      front: front,
+      back: back,
       deckId,
       nextReview: Date.now(),
       interval: 1,
@@ -56,69 +60,87 @@ export default function AddCardScreen({ route, navigation }: any) {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '').trim();
+  };
+
   return (
-    <View style={commonStyles.container}>
-      <View style={[styles.header, { marginTop: insets.top }]}>
-        <View style={styles.spacer} />
-        <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
-        </TouchableOpacity>
-      </View>
-
-      <Text style={commonStyles.label}>{t('card.front')}</Text>
-      <TextInput
-        style={commonStyles.input}
-        value={front}
-        onChangeText={setFront}
-        autoFocus
-      />
-
-      <Text style={commonStyles.label}>{t('card.back')}</Text>
-      <TextInput
-        style={commonStyles.input}
-        value={back}
-        onChangeText={setBack}
-      />
-
-      <Text style={commonStyles.label}>{t('card.tags')}</Text>
-      <View style={styles.tagInputContainer}>
-        <TextInput
-          style={styles.tagInput}
-          value={tagInput}
-          onChangeText={setTagInput}
-          onSubmitEditing={handleAddTag}
-          returnKeyType="done"
-        />
-        <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
-          <Ionicons name="add-circle" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {tags.map((tag, index) => (
-            <View key={index} style={styles.tagChip}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={[commonStyles.button, styles.saveButton]}
-        onPress={handleSave}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView 
+        style={commonStyles.container}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={commonStyles.buttonText}>{t('card.saveCard')}</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={[styles.header, { marginTop: insets.top }]}>
+          <View style={styles.spacer} />
+          <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <Ionicons name="close" size={28} color={COLORS.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Inline Rich Editor for Front */}
+        <InlineRichEditor
+          value={front}
+          onChange={setFront}
+          label={t('card.front')}
+          placeholder={t('card.enterText')}
+          autoFocus={true}
+        />
+
+        {/* Inline Rich Editor for Back */}
+        <InlineRichEditor
+          value={back}
+          onChange={setBack}
+          label={t('card.back')}
+          placeholder={t('card.enterText')}
+        />
+
+        <Text style={commonStyles.label}>{t('card.tags')}</Text>
+        <View style={styles.tagInputContainer}>
+          <TextInput
+            style={styles.tagInput}
+            value={tagInput}
+            onChangeText={setTagInput}
+            onSubmitEditing={handleAddTag}
+            returnKeyType="done"
+          />
+          <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
+            <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tagChip}>
+                <Text style={styles.tagText}>{tag}</Text>
+                <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
+                  <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[commonStyles.button, styles.saveButton]}
+          onPress={handleSave}
+        >
+          <Text style={commonStyles.buttonText}>{t('card.saveCard')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: SPACING.xl,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
