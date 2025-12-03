@@ -7,7 +7,8 @@ import { COLORS, SPACING } from '../utils/constants';
 import { generateId, saveCard } from "../data/storage";
 import { Card } from "../data/model";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import InlineRichEditor from '../components/InlineRichEditor';
+import MarkdownEditor from '../components/MarkdownEditor';
+import { stripMarkdown } from '../utils/markdown';
 
 
 export default function AddCardScreen({ route, navigation }: any) {
@@ -20,8 +21,8 @@ export default function AddCardScreen({ route, navigation }: any) {
   const [tagInput, setTagInput] = useState('');
 
   const handleSave = async () => {
-    const frontText = stripHtmlTags(front);
-    const backText = stripHtmlTags(back);
+    const frontText = stripMarkdown(front);
+    const backText = stripMarkdown(back);
     
     if (!frontText || !backText) {
       return;
@@ -60,20 +61,14 @@ export default function AddCardScreen({ route, navigation }: any) {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  const stripHtmlTags = (html: string): string => {
-    return html.replace(/<[^>]*>/g, '').trim();
-  };
+
 
   return (
     <KeyboardAvoidingView 
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView 
-        style={commonStyles.container}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={[commonStyles.container, styles.container]}>
         <View style={[styles.header, { marginTop: insets.top }]}>
           <View style={styles.spacer} />
           <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
@@ -82,64 +77,73 @@ export default function AddCardScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Inline Rich Editor for Front */}
-        <InlineRichEditor
-          value={front}
-          onChange={setFront}
-          label={t('card.front')}
-          placeholder={t('card.enterText')}
-          autoFocus={true}
-        />
-
-        {/* Inline Rich Editor for Back */}
-        <InlineRichEditor
-          value={back}
-          onChange={setBack}
-          label={t('card.back')}
-          placeholder={t('card.enterText')}
-        />
-
-        <Text style={commonStyles.label}>{t('card.tags')}</Text>
-        <View style={styles.tagInputContainer}>
-          <TextInput
-            style={styles.tagInput}
-            value={tagInput}
-            onChangeText={setTagInput}
-            onSubmitEditing={handleAddTag}
-            returnKeyType="done"
-          />
-          <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
-            <Ionicons name="add-circle" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-
-        {tags.length > 0 && (
-          <View style={styles.tagsContainer}>
-            {tags.map((tag, index) => (
-              <View key={index} style={styles.tagChip}>
-                <Text style={styles.tagText}>{tag}</Text>
-                <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                  <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[commonStyles.button, styles.saveButton]}
-          onPress={handleSave}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={commonStyles.buttonText}>{t('card.saveCard')}</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Markdown Editor for Front */}
+          <MarkdownEditor
+            value={front}
+            onChange={setFront}
+            label={t('card.front')}
+            placeholder={t('card.enterText')}
+            autoFocus={true}
+          />
+
+          {/* Markdown Editor for Back */}
+          <MarkdownEditor
+            value={back}
+            onChange={setBack}
+            label={t('card.back')}
+            placeholder={t('card.enterText')}
+          />
+
+          {/* Tags section */}
+          <View style={styles.tagsSection}>
+            <Text style={commonStyles.label}>{t('card.tags')}</Text>
+            <View style={styles.tagInputContainer}>
+              <TextInput
+                style={styles.tagInput}
+                value={tagInput}
+                onChangeText={setTagInput}
+                onSubmitEditing={handleAddTag}
+                returnKeyType="done"
+              />
+              <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
+                <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {tags.length > 0 && (
+              <View style={styles.tagsContainer}>
+                {tags.map((tag, index) => (
+                  <View key={index} style={styles.tagChip}>
+                    <Text style={styles.tagText}>{tag}</Text>
+                    <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
+                      <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={[commonStyles.button, styles.saveButton]}
+            onPress={handleSave}
+          >
+            <Text style={commonStyles.buttonText}>{t('card.saveCard')}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: SPACING.xl,
+  container: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -152,6 +156,15 @@ const styles = StyleSheet.create({
     width: 28,
   },
   closeButton: {
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: SPACING.xl,
+  },
+  tagsSection: {
+    marginTop: SPACING.md,
   },
   tagInputContainer: {
     flexDirection: 'row',
@@ -194,6 +207,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButton: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.md,
   },
 });
