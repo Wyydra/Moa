@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native-pell-rich-editor/src/editor.js b/node_modules/react-native-pell-rich-editor/src/editor.js
+index 6559109..c839f29 100644
+--- a/node_modules/react-native-pell-rich-editor/src/editor.js
++++ b/node_modules/react-native-pell-rich-editor/src/editor.js
+@@ -553,7 +553,11 @@ function createHTML(options = {}) {
+ 
+                 saveSelection();
+                 handleChange(_ref);
+-                settings.onChange();
++                // Fix for IME composition (Korean, Japanese, Chinese): 
++                // Don't trigger onChange during composition to prevent character splitting
++                if (!compositionStatus) {
++                    settings.onChange();
++                }
+                 ${inputListener} && postAction({type: "ON_INPUT", data: {inputType: _ref.inputType, data: _ref.data}});
+             };
+             appendChild(settings.element, content);
+@@ -688,6 +692,8 @@ function createHTML(options = {}) {
+                 if(${useCharacter}){
+                     compositionStatus = 0;
+                     paragraphStatus && formatParagraph(true);
++                    // Trigger onChange after composition ends to capture the final composed text
++                    settings.onChange();
+                 }
+             })
+ 
