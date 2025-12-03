@@ -226,7 +226,8 @@
         "reportBug": "Report a Bug",
         "featureRequest": "Request a Feature",
         "emailError": "Unable to open email client. Please ensure you have an email app configured."
-      }
+      },
+      "version": "Version"
     },
     "progress": {
       "title": "Progress",

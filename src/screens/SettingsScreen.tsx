@@ -535,6 +535,12 @@ export default function SettingsScreen() {
           >
             <Text style={styles.compactButtonText}>Import Data</Text>
           </TouchableOpacity>
+
+          <View style={styles.versionContainer}>
+            <Text style={styles.versionText}>
+              {t('settings.version')} {require('../../package.json').version}
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -693,5 +699,18 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.danger,
+  },
+  versionContainer: {
+    alignItems: 'center',
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.xl,
+    paddingTop: SPACING.lg,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  versionText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.textLight,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
 });

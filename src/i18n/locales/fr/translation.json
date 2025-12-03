@@ -226,7 +226,8 @@
         "reportBug": "Signaler un bug",
         "featureRequest": "Demander une fonctionnalité",
         "emailError": "Impossible d'ouvrir le client email. Veuillez vous assurer d'avoir une application email configurée."
-      }
+      },
+      "version": "Version"
     },
     "progress": {
       "title": "Progrès",
