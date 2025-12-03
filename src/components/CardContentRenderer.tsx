@@ -1,7 +1,7 @@
 import React from 'react';
-import { Text, useWindowDimensions, ScrollView, View, StyleSheet, Dimensions } from 'react-native';
-import RenderHTML from 'react-native-render-html';
+import { Text, ScrollView, View, StyleSheet, Dimensions } from 'react-native';
 import { COLORS } from '../utils/constants';
+import { markdownToHtml, isMarkdown, stripMarkdown } from '../utils/markdown';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -22,24 +22,28 @@ export default function CardContentRenderer({
   maxHeight,
   maxHeightPercent = 0.35, // Default: 35% of screen height
 }: CardContentRendererProps) {
-  const { width } = useWindowDimensions();
-  
   // Calculate max height: use explicit maxHeight if provided, otherwise use percentage
   const calculatedMaxHeight = maxHeight ?? (SCREEN_HEIGHT * maxHeightPercent);
+
+  // Convert Markdown to HTML if needed
+  let displayContent = content;
+  if (isMarkdown(content)) {
+    displayContent = stripMarkdown(content);
+  }
 
   // Check if content contains HTML tags
   const containsHTML = /<[^>]*>/g.test(content);
 
-  if (!containsHTML) {
+  if (!containsHTML && !isMarkdown(content)) {
     // Plain text - render as Text component
     return (
       <Text style={[textStyle, style]} numberOfLines={numberOfLines}>
-        {content}
+        {displayContent}
       </Text>
     );
   }
 
-  // HTML content - render with RenderHTML in a ScrollView with max height
+  // Markdown or HTML content - render in a ScrollView with max height
   const [contentHeight, setContentHeight] = React.useState(0);
   const [scrollViewHeight, setScrollViewHeight] = React.useState(0);
   const [scrollY, setScrollY] = React.useState(0);
@@ -65,29 +69,9 @@ export default function CardContentRenderer({
         scrollEventThrottle={16}
       >
         <View onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}>
-          <RenderHTML
-            contentWidth={width - 80}
-            source={{ html: content }}
-            tagsStyles={{
-              body: {
-                color: textStyle?.color || COLORS.text,
-                fontSize: textStyle?.fontSize || 18,
-                fontWeight: textStyle?.fontWeight || 'normal',
-                textAlign: textStyle?.textAlign || 'center',
-                margin: 0,
-                padding: 0,
-              },
-              p: { margin: 0, marginBottom: 8 },
-              h1: { margin: 0, marginBottom: 8, fontSize: 24 },
-              h2: { margin: 0, marginBottom: 8, fontSize: 20 },
-              ul: { margin: 0, marginBottom: 8 },
-              ol: { margin: 0, marginBottom: 8 },
-              li: { marginBottom: 4 },
-            }}
-            baseStyle={{
-              ...textStyle,
-            }}
-          />
+          <Text style={[styles.contentText, textStyle]}>
+            {displayContent}
+          </Text>
         </View>
       </ScrollView>
       {isScrollable && (
@@ -115,6 +99,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  contentText: {
+    color: COLORS.text,
+    fontSize: 18,
+    textAlign: 'center',
   },
   scrollbarTrack: {
     position: 'absolute',
