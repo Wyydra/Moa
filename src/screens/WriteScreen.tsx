@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { HandwritingCanvas } from '../components/HandwritingCanvas';
 import PronunciationButton from '../components/PronunciationButton';
+import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 
 export default function WriteScreen({route, navigation}: any) {
@@ -174,7 +175,10 @@ export default function WriteScreen({route, navigation}: any) {
       <View style={styles.cardContainer}>
         <View style={[commonStyles.card, styles.questionCard]}>
           <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
-          <Text style={styles.cardText}>{reversed ? currentCard.back : currentCard.front}</Text>
+          <CardContentRenderer
+            content={reversed ? currentCard.back : currentCard.front}
+            textStyle={styles.cardText}
+          />
           {ttsEnabled && (
             <View style={styles.ttsContainer}>
               <PronunciationButton
@@ -213,8 +217,6 @@ export default function WriteScreen({route, navigation}: any) {
               ]}
               value={userAnswer}
               onChangeText={setUserAnswer}
-              placeholder="Type your answer..."
-              placeholderTextColor={COLORS.textLight}
               editable={!showResult}
               autoCapitalize="none"
               autoCorrect={false}

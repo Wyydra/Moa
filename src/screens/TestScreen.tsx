@@ -7,6 +7,7 @@ import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 import PronunciationButton from '../components/PronunciationButton';
+import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 
 interface Question {
@@ -231,7 +232,10 @@ export default function TestScreen({route, navigation}: any) {
           ]}
         >
           <Text style={styles.cardLabel}>{t('modes.test.question')}</Text>
-          <Text style={styles.cardText}>{reversed ? currentQuestion.card.back : currentQuestion.card.front}</Text>
+          <CardContentRenderer
+            content={reversed ? currentQuestion.card.back : currentQuestion.card.front}
+            textStyle={styles.cardText}
+          />
           {ttsEnabled && (
             <View style={styles.ttsContainer}>
               <PronunciationButton
