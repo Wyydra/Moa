@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing, Dimensions, useColorScheme } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
 import { StrokeOrderFeedback } from './StrokeOrderFeedback';
 import { getHandwritingLanguage } from '../../data/storage';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../utils/constants';
 import type { Stroke } from './types';
 
 const { HandwritingModule } = NativeModules;
@@ -12,6 +13,12 @@ const SLIDE_DURATION = 300;
 const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
 const CANVAS_WIDTH_PERCENT = 0.85; // 85% of screen width
+
+// Canvas background colors for light/dark themes
+const CANVAS_BG = {
+  light: '#F5F5F5',  // Light gray for light theme
+  dark: '#0F0F0F',   // Deep black for dark theme
+};
 
 interface HandwritingCanvasProps {
   onRecognitionResult?: (result: string[]) => void;
@@ -30,6 +37,10 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   strokeWidth = 3,
   disableNavigation = false,
 }) => {
+  // Detect color scheme for adaptive canvas background
+  const colorScheme = useColorScheme();
+  const canvasBackgroundColor = colorScheme === 'dark' ? CANVAS_BG.dark : CANVAS_BG.light;
+  
   // Calculate width as percentage of screen if not provided
   const screenWidth = Dimensions.get('window').width;
   const width = propWidth || Math.floor(screenWidth * CANVAS_WIDTH_PERCENT);
@@ -309,7 +320,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   return (
     <View style={styles.container}>
       <View 
-        style={[styles.canvasContainer, { width, height, overflow: 'hidden' }]}
+        style={[styles.canvasContainer, { width, height, overflow: 'hidden', backgroundColor: canvasBackgroundColor }]}
         onStartShouldSetResponder={() => true}
         onMoveShouldSetResponder={() => true}
         onResponderGrant={handleTouchStart}
@@ -326,54 +337,60 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
             strokeWidth={strokeWidth}
             strokes={strokes}
             showDebugCenters={false}
+            strokeColor={colorScheme === 'dark' ? COLORS.primaryLight : COLORS.primary}
           />
         </Animated.View>
       </View>
       
       <View style={styles.controlsContainer}>
-        <View style={styles.navigationRow}>
-          {!disableNavigation && (
-            <>
-              <TouchableOpacity 
-                style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
-                onPress={scrollLeft}
-                disabled={offsetXDisplay === 0 || isSliding}
-              >
-                <Text style={styles.arrowText}>←</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
-                onPress={scrollRight}
-                disabled={isSliding}
-              >
-                <Text style={styles.arrowText}>→</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          <TouchableOpacity 
-            style={[styles.arrowButton, (strokes.length === 0 || isSliding) && styles.disabledArrow]} 
-            onPress={undoLastStroke}
-            disabled={strokes.length === 0 || isSliding}
-          >
-            <Text style={styles.arrowText}>⌫</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.clearButton, styles.clearButtonSeparated]} 
-            onPress={clearCanvas}
-          >
-            <Text style={styles.clearButtonText}>Clear</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.infoRow}>
-        {!modelReady && (
+        {!modelReady ? (
           <View style={styles.statusContainer}>
             <Text style={styles.statusText}>{downloadStatus}</Text>
           </View>
-        )}
-        {modelReady && strokes.length > 0 && (
-          <Text style={styles.strokeCounter}>{strokes.length} stroke{strokes.length !== 1 ? 's' : ''}</Text>
+        ) : (
+          <View style={styles.navigationRow}>
+            {!disableNavigation && (
+              <>
+                <TouchableOpacity 
+                  style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
+                  onPress={scrollLeft}
+                  disabled={offsetXDisplay === 0 || isSliding}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.arrowText}>←</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
+                  onPress={scrollRight}
+                  disabled={isSliding}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.arrowText}>→</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <TouchableOpacity 
+              style={[styles.arrowButton, (strokes.length === 0 || isSliding) && styles.disabledArrow]} 
+              onPress={undoLastStroke}
+              disabled={strokes.length === 0 || isSliding}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.arrowText}>⌫</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.clearButton, styles.clearButtonSeparated]} 
+              onPress={clearCanvas}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+            
+            {strokes.length > 0 && (
+              <View style={styles.strokeCounterContainer}>
+                <Text style={styles.strokeCounter}>{strokes.length}</Text>
+              </View>
+            )}
+          </View>
         )}
       </View>
     </View>
@@ -399,76 +416,87 @@ export const HandwritingCanvas = React.memo(HandwritingCanvasComponent, areProps
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
+    gap: SPACING.md,
   },
   controlsContainer: {
     width: '100%',
     alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
   },
   navigationRow: {
     flexDirection: 'row',
-    marginTop: 8,
-    gap: 12,
+    marginTop: SPACING.md,
+    gap: SPACING.sm,
+    alignItems: 'center',
   },
   arrowButton: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#4A90E2',
-    borderRadius: 6,
+    width: 44,
+    height: 44,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
+    ...SHADOWS.sm,
   },
   disabledArrow: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: COLORS.border,
+    opacity: 0.5,
   },
   arrowText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   canvasContainer: {
-    backgroundColor: '#1A1A1A',
-    borderWidth: 2,
-    borderColor: '#CCCCCC',
-    borderRadius: 8,
+    // backgroundColor is set dynamically based on color scheme
+    borderWidth: 0,
+    borderRadius: BORDER_RADIUS.lg,
+    ...SHADOWS.lg,
+    overflow: 'hidden',
   },
   statusContainer: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FFF3CD',
-    borderRadius: 6,
+    marginTop: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.warning + '20', // 20% opacity
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: '#FFE08A',
+    borderColor: COLORS.warning + '40', // 40% opacity
   },
   statusText: {
-    color: '#856404',
-    fontSize: 14,
-    fontWeight: '500',
+    color: COLORS.warning,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
     textAlign: 'center',
   },
-  infoRow: {
-    marginTop: 12,
-    minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+  strokeCounterContainer: {
+    marginLeft: 'auto',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    backgroundColor: COLORS.surfaceAlt,
+    borderRadius: BORDER_RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   strokeCounter: {
-    fontSize: 14,
-    color: '#6C757D',
-    fontWeight: '500',
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    color: COLORS.textMedium,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   clearButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 6,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.sm + 2,
+    backgroundColor: COLORS.danger,
+    borderRadius: BORDER_RADIUS.md,
+    ...SHADOWS.sm,
   },
   clearButtonSeparated: {
-    marginLeft: 24,
+    marginLeft: SPACING.xl,
   },
   clearButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    letterSpacing: 0.3,
   },
 });

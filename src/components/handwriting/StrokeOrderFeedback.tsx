@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Canvas, Path, SkPath, Circle } from '@shopify/react-native-skia';
 import { ValidationResult } from '../../utils/strokeOrder/types';
+import { COLORS } from '../../utils/constants';
 import type { Stroke } from './types';
 
 interface StrokeOrderFeedbackProps {
@@ -14,6 +15,7 @@ interface StrokeOrderFeedbackProps {
   strokes?: Stroke[];
   showDebugCenters?: boolean;
   virtualWidth?: number;
+  strokeColor?: string;
 }
 
 export const StrokeOrderFeedback: React.FC<StrokeOrderFeedbackProps> = ({
@@ -26,23 +28,24 @@ export const StrokeOrderFeedback: React.FC<StrokeOrderFeedbackProps> = ({
   strokes = [],
   showDebugCenters = false,
   virtualWidth,
+  strokeColor = COLORS.primary,
 }) => {
   const getStrokeColor = (index: number): string => {
     if (!validation) {
-      return '#FFD700';
+      return strokeColor;
     }
     
     const error = validation.errors.find(e => e.strokeIndex === index);
     
     if (error) {
-      return '#FF4444';
+      return COLORS.danger;
     }
     
     if (index < validation.correctStrokes) {
-      return '#4CAF50';
+      return COLORS.success;
     }
     
-    return '#FFD700';
+    return strokeColor;
   };
 
   const canvasWidth = virtualWidth || width;
