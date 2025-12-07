@@ -134,7 +134,17 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   }, [offsetXAnim]);
 
   const handleTouchStart = useCallback((event: GestureResponderEvent) => {
-    if (isSliding) return;
+    // If sliding, cancel the animation and allow new stroke
+    if (isSliding) {
+      offsetXAnim.stopAnimation((value) => {
+        offsetXRef.current = value;
+        setOffsetXDisplay(value);
+      });
+      setIsSliding(false);
+    }
+    
+    // Clear any pending auto-slide timer
+    clearTimers();
     
     const { locationX, locationY } = event.nativeEvent;
     const currentOffset = offsetXRef.current;
@@ -153,10 +163,10 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const path = Skia.Path.Make();
     path.moveTo(locationX, locationY);
     setCurrentPath(path);
-  }, [isSliding]);
+  }, [isSliding, offsetXAnim, clearTimers]);
 
   const handleTouchMove = useCallback((event: GestureResponderEvent) => {
-    if (isSliding || !currentStroke || !currentPath) return;
+    if (!currentStroke || !currentPath) return;
     
     const { locationX, locationY } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
@@ -173,7 +183,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   }, [currentStroke, currentPath, isSliding]);
 
   const handleTouchEnd = useCallback(() => {
-    if (isSliding || !currentStroke || !currentPath) return;
+    if (!currentStroke || !currentPath) return;
     
     const updatedStrokes = [...strokes, currentStroke];
     const updatedPaths = [...paths, currentPath];
