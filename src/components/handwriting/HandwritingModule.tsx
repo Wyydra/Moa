@@ -162,8 +162,6 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
               width={canvasWidth}
               height={canvasHeight}
               strokeWidth={strokeWidth}
-              disableStrokeOrderCheck={true}
-              disablePracticeMode={true}
               disableNavigation={false}
             />
 

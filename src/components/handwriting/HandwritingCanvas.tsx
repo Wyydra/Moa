@@ -1,15 +1,16 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
-import { validateStrokeOrder, validateJamoSequence } from '../../utils/strokeOrder/validator';
-import { ValidationResult } from '../../utils/strokeOrder/types';
-import { StrokeOrderFeedback, FeedbackMessage } from './StrokeOrderFeedback';
-import { StrokeGuide, StrokeAnimation, AnimationControls } from './StrokeAnimation';
-import { isCharacterSupported, decomposeHangul } from '../../utils/strokeOrder/database';
+import { StrokeOrderFeedback } from './StrokeOrderFeedback';
 import { getHandwritingLanguage } from '../../data/storage';
-import type { Point, Stroke } from './types';
+import type { Stroke } from './types';
 
 const { HandwritingModule } = NativeModules;
+
+const SLIDE_OFFSET_RATIO = 0.15;
+const SLIDE_DURATION = 300;
+const INACTIVITY_DELAY = 1500;
+const RECOGNITION_DELAY = 1500;
 
 interface HandwritingCanvasProps {
   onRecognitionResult?: (result: string[]) => void;
@@ -17,12 +18,6 @@ interface HandwritingCanvasProps {
   width?: number;
   height?: number;
   strokeWidth?: number;
-  practiceMode?: boolean;
-  targetCharacter?: string;
-  showGuides?: boolean;
-  onValidationComplete?: (validation: ValidationResult) => void;
-  disableStrokeOrderCheck?: boolean;
-  disablePracticeMode?: boolean;
   disableNavigation?: boolean;
 }
 
@@ -32,12 +27,6 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   width = 300,
   height = 400,
   strokeWidth = 3,
-  practiceMode = false,
-  targetCharacter = '',
-  showGuides = false,
-  onValidationComplete,
-  disableStrokeOrderCheck = false,
-  disablePracticeMode = false,
   disableNavigation = false,
 }) => {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -48,15 +37,12 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const [downloadStatus, setDownloadStatus] = useState<string>('Checking model...');
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [offsetX, setOffsetX] = useState(0);
+  
+  // Use ref to track current offset synchronously (no async state updates)
+  const offsetXRef = useRef(0);
   const offsetXAnim = useRef(new Animated.Value(0)).current;
   const [isSliding, setIsSliding] = useState(false);
-  const [validation, setValidation] = useState<ValidationResult | null>(null);
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
-  const [strokeOrderCheckEnabled, setStrokeOrderCheckEnabled] = useState(false);
-  const [detectedCharacter, setDetectedCharacter] = useState<string>('');
-  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [offsetXDisplay, setOffsetXDisplay] = useState(0); // For UI only
 
   useEffect(() => {
     initializeHandwritingModel();
@@ -122,258 +108,134 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     }
   };
 
+  const clearTimers = useCallback(() => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (recognitionTimerRef.current) clearTimeout(recognitionTimerRef.current);
+  }, []);
+
+  const animateSlide = useCallback((newOffset: number) => {
+    console.log('🎬 AnimateSlide:', {
+      from: offsetXRef.current.toFixed(1),
+      to: newOffset.toFixed(1)
+    });
+    
+    offsetXRef.current = newOffset; // Update ref immediately (synchronous)
+    setOffsetXDisplay(newOffset); // Update display for UI
+    setIsSliding(true);
+    Animated.timing(offsetXAnim, {
+      toValue: newOffset,
+      duration: SLIDE_DURATION,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start(() => {
+      console.log('✅ Animation complete, offsetX now:', offsetXRef.current.toFixed(1));
+      setIsSliding(false);
+    });
+  }, [offsetXAnim]);
+
   const handleTouchStart = useCallback((event: GestureResponderEvent) => {
-    if (isSliding) return; // Block touch during slide animation
+    if (isSliding) return;
     
     const { locationX, locationY } = event.nativeEvent;
-    const adjustedX = locationX + offsetX;
-    const newStroke: Stroke = {
-      points: [{ x: adjustedX, y: locationY, t: Date.now() }],
-    };
-    setCurrentStroke(newStroke);
+    const currentOffset = offsetXRef.current;
+    const globalX = locationX + currentOffset;
     
+    console.log('🖊️ TouchStart:', {
+      locationX: locationX.toFixed(1),
+      currentOffset: currentOffset.toFixed(1),
+      globalX: globalX.toFixed(1)
+    });
+    
+    // Store GLOBAL coordinates for recognition
+    setCurrentStroke({ points: [{ x: globalX, y: locationY, t: Date.now() }] });
+    
+    // But use LOCAL coordinates for path drawing (viewport-relative)
     const path = Skia.Path.Make();
-    path.moveTo(adjustedX, locationY); // Use adjustedX instead of locationX
+    path.moveTo(locationX, locationY);
     setCurrentPath(path);
-  }, [offsetX, isSliding]);
+  }, [isSliding]);
 
   const handleTouchMove = useCallback((event: GestureResponderEvent) => {
-    if (isSliding) return; // Block touch during slide animation
-    if (!currentStroke || !currentPath) return;
+    if (isSliding || !currentStroke || !currentPath) return;
     
     const { locationX, locationY } = event.nativeEvent;
-    const adjustedX = locationX + offsetX;
-    const updatedStroke = {
-      ...currentStroke,
-      points: [...currentStroke.points, { x: adjustedX, y: locationY, t: Date.now() }],
-    };
-    setCurrentStroke(updatedStroke);
+    const globalX = locationX + offsetXRef.current;
     
-    currentPath.lineTo(adjustedX, locationY); // Use adjustedX instead of locationX
+    // Store GLOBAL coordinates for recognition
+    setCurrentStroke({
+      ...currentStroke,
+      points: [...currentStroke.points, { x: globalX, y: locationY, t: Date.now() }],
+    });
+    
+    // But use LOCAL coordinates for path drawing (viewport-relative)
+    currentPath.lineTo(locationX, locationY);
     setCurrentPath(currentPath.copy());
-  }, [currentStroke, currentPath, offsetX, isSliding]);
+  }, [currentStroke, currentPath, isSliding]);
 
   const handleTouchEnd = useCallback(() => {
-    if (isSliding) return; // Block touch during slide animation
-    if (currentStroke && currentPath) {
-      const updatedStrokes = [...strokes, currentStroke];
-      const updatedPaths = [...paths, currentPath];
-      setStrokes(updatedStrokes);
-      setPaths(updatedPaths);
-      setCurrentStroke(null);
-      setCurrentPath(null);
+    if (isSliding || !currentStroke || !currentPath) return;
+    
+    const updatedStrokes = [...strokes, currentStroke];
+    const updatedPaths = [...paths, currentPath];
+    setStrokes(updatedStrokes);
+    setPaths(updatedPaths);
+    setCurrentStroke(null);
+    setCurrentPath(null);
+    
+    clearTimers();
+    
+    // Auto-slide after inactivity
+    inactivityTimerRef.current = setTimeout(() => {
+      const newOffset = offsetXRef.current + width * SLIDE_OFFSET_RATIO;
+      animateSlide(newOffset);
+    }, INACTIVITY_DELAY);
+    
+    // Recognize handwriting
+    recognitionTimerRef.current = setTimeout(async () => {
+      if (!modelReady || updatedStrokes.length === 0) return;
       
-      if (practiceMode && targetCharacter && isCharacterSupported(targetCharacter)) {
-        const validationResult = validateStrokeOrder(
-          updatedStrokes,
-          targetCharacter,
-          width,
-          height
-        );
-        setValidation(validationResult);
-        onValidationComplete?.(validationResult);
-      }
-      
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
-      if (recognitionTimerRef.current) {
-        clearTimeout(recognitionTimerRef.current);
-      }
-      
-      if (!practiceMode) {
-        inactivityTimerRef.current = setTimeout(() => {
-          const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
-          setOffsetX(newOffset); // Update state BEFORE animation
-          setIsSliding(true);
-          
-          Animated.timing(offsetXAnim, {
-            toValue: newOffset,
-            duration: 300,
-            useNativeDriver: true,
-            easing: Easing.out(Easing.ease),
-          }).start(() => {
-            setIsSliding(false); // Just unblock after animation
-          });
-        }, 1500);
-      }
-      
-      recognitionTimerRef.current = setTimeout(async () => {
-        if (!modelReady || updatedStrokes.length === 0) return;
-        
-        try {
-          const result = await HandwritingModule.recognize(updatedStrokes);
-          if (result && result.length > 0) {
-            if (strokeOrderCheckEnabled) {
-              const firstRecognized = result[0];
-              const decomposed = decomposeHangul(firstRecognized);
-              const supportedJamo = decomposed.filter((jamo: string) => isCharacterSupported(jamo));
-              
-              if (supportedJamo.length > 0) {
-                setDetectedCharacter(firstRecognized);
-                
-                const { validations, groups } = validateJamoSequence(
-                  updatedStrokes,
-                  supportedJamo,
-                  width,
-                  height
-                );
-                
-                const allCorrect = validations.every((v: ValidationResult) => v.isCorrect);
-                const firstError = validations.find((v: ValidationResult) => !v.isCorrect);
-                
-                if (allCorrect && validations.length > 0) {
-                  const combinedValidation: ValidationResult = {
-                    isCorrect: true,
-                    correctStrokes: validations.reduce((sum: number, v: ValidationResult) => sum + v.correctStrokes, 0),
-                    totalStrokes: validations.reduce((sum: number, v: ValidationResult) => sum + v.totalStrokes, 0),
-                    errors: [],
-                  };
-                  setValidation(combinedValidation);
-                } else if (firstError) {
-                  setValidation(firstError);
-                } else {
-                  setValidation(null);
-                }
-                
-                const strokesInfo = updatedStrokes.map((stroke, idx) => {
-                  const centerX = stroke.points.reduce((sum, p) => sum + p.x, 0) / stroke.points.length;
-                  const centerY = stroke.points.reduce((sum, p) => sum + p.y, 0) / stroke.points.length;
-                  return `S${idx + 1}: (${centerX.toFixed(0)}, ${centerY.toFixed(0)})`;
-                }).join(', ');
-                
-                const jamoInfo = supportedJamo.map((jamo: string, idx: number) => {
-                  const validation = validations[idx];
-                  const status = validation?.isCorrect ? '✓' : '✗';
-                  const group = groups[idx] || [];
-                  return `${jamo}[${group.length}]${status}`;
-                }).join(' ');
-                
-                const errorDetails: string[] = [];
-                validations.forEach((validation: ValidationResult, idx: number) => {
-                  if (!validation.isCorrect && validation.errors.length > 0) {
-                    validation.errors.forEach(error => {
-                      const jamo = supportedJamo[idx];
-                      errorDetails.push(`  ${jamo} stroke ${error.strokeIndex + 1}: ${error.errorType} (${error.message})`);
-                    });
-                  }
-                });
-                
-                const debugLines = [
-                  `Recognized: ${result.slice(0, 3).join(', ')}`,
-                  `Decomposed: ${decomposed.join(' + ')} → ${supportedJamo.join(' + ')}`,
-                  `Sequential grouping: ${supportedJamo.map((j, i) => `${j}:${groups[i]?.length || 0}`).join(', ')}`,
-                  `Strokes[${updatedStrokes.length}]: ${strokesInfo}`,
-                  `Validation: ${jamoInfo}`,
-                ];
-                
-                if (allCorrect) {
-                  debugLines.push('All correct!');
-                } else if (errorDetails.length > 0) {
-                  debugLines.push('Errors:');
-                  debugLines.push(...errorDetails);
-                }
-                
-                const debugText = debugLines.join('\n');
-                
-                setDebugInfo(debugText);
-                
-                if (allCorrect && validations.length > 0) {
-                  onRecognitionResult?.([firstRecognized]);
-                  setTimeout(() => {
-                    setStrokes([]);
-                    setPaths([]);
-                    setValidation(null);
-                    setDetectedCharacter('');
-                    setDebugInfo('');
-                    
-                    const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
-                    setOffsetX(newOffset); // Update state BEFORE animation
-                    setIsSliding(true);
-                    
-                    Animated.timing(offsetXAnim, {
-                      toValue: newOffset,
-                      duration: 300,
-                      useNativeDriver: true,
-                      easing: Easing.out(Easing.ease),
-                    }).start(() => {
-                      setIsSliding(false); // Just unblock after animation
-                    });
-                  }, 800);
-                }
-              } else {
-                onRecognitionResult?.(result);
-              }
-            } else {
-              onRecognitionResult?.(result);
-            }
-          }
-        } catch (error) {
-          console.error('Recognition error:', error);
+      try {
+        const result = await HandwritingModule.recognize(updatedStrokes);
+        if (result && result.length > 0) {
+          onRecognitionResult?.(result);
         }
-      }, 1500);
-    }
-  }, [currentStroke, currentPath, strokes, paths, practiceMode, targetCharacter, width, height, onValidationComplete, modelReady, strokeOrderCheckEnabled, onRecognitionResult]);
-
-
+      } catch (error) {
+        console.error('Recognition error:', error);
+      }
+    }, RECOGNITION_DELAY);
+  }, [isSliding, currentStroke, currentPath, strokes, paths, clearTimers, animateSlide, width, modelReady, onRecognitionResult]);
 
   const clearCanvas = useCallback(() => {
-    // Stop any ongoing slide animation
     offsetXAnim.stopAnimation();
     offsetXAnim.setValue(0);
-    setOffsetX(0);
+    offsetXRef.current = 0;
+    setOffsetXDisplay(0);
     setIsSliding(false);
-    
     setStrokes([]);
     setCurrentStroke(null);
     setPaths([]);
     setCurrentPath(null);
-    setValidation(null);
-    setDetectedCharacter('');
-    setDebugInfo('');
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    if (recognitionTimerRef.current) {
-      clearTimeout(recognitionTimerRef.current);
-    }
+    clearTimers();
     onClear?.();
-  }, [onClear, offsetXAnim]);
+  }, [onClear, offsetXAnim, clearTimers]);
 
   const scrollLeft = useCallback(() => {
-    if (isSliding) return; // Don't allow manual scroll during animation
-    const newOffset = Math.max(0, offsetX - width * 0.15); // Changed from 0.4 to 0.15
-    setOffsetX(newOffset); // Update state BEFORE animation
-    setIsSliding(true);
-    
-    Animated.timing(offsetXAnim, {
-      toValue: newOffset,
-      duration: 300,
-      useNativeDriver: true,
-      easing: Easing.out(Easing.ease),
-    }).start(() => {
-      setIsSliding(false); // Just unblock after animation
-    });
-  }, [width, offsetX, offsetXAnim, isSliding]);
+    if (isSliding) return;
+    const newOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
+    animateSlide(newOffset);
+  }, [width, isSliding, animateSlide]);
 
   const scrollRight = useCallback(() => {
-    if (isSliding) return; // Don't allow manual scroll during animation
-    const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
-    setOffsetX(newOffset); // Update state BEFORE animation
-    setIsSliding(true);
-    
-    Animated.timing(offsetXAnim, {
-      toValue: newOffset,
-      duration: 300,
-      useNativeDriver: true,
-      easing: Easing.out(Easing.ease),
-    }).start(() => {
-      setIsSliding(false); // Just unblock after animation
-    });
-  }, [width, offsetX, offsetXAnim, isSliding]);
+    if (isSliding) return;
+    const newOffset = offsetXRef.current + width * SLIDE_OFFSET_RATIO;
+    animateSlide(newOffset);
+  }, [width, isSliding, animateSlide]);
 
-  // Calculate virtual canvas width: viewport width + current offset + extra buffer
-  const canvasVirtualWidth = practiceMode ? width : width + Math.max(offsetX, 0) + width;
+  console.log('🎨 Canvas render:', {
+    offsetXDisplay: offsetXDisplay.toFixed(1),
+    pathsCount: paths.length,
+    isSliding
+  });
 
   return (
     <View style={styles.container}>
@@ -385,60 +247,28 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
         onResponderMove={handleTouchMove}
         onResponderRelease={handleTouchEnd}
       >
-        <Animated.View style={{ transform: [{ translateX: practiceMode ? 0 : Animated.multiply(offsetXAnim, -1) }] }}>
-          {showGuides && targetCharacter && (
-            <StrokeGuide
-              character={targetCharacter}
-              width={width}
-              height={height}
-            />
-          )}
-          {showAnimation && targetCharacter && (
-            <StrokeAnimation
-              character={targetCharacter}
-              width={width}
-              height={height}
-              isPlaying={isAnimationPlaying}
-              onComplete={() => setIsAnimationPlaying(false)}
-            />
-          )}
-          {!showAnimation && (
-            <StrokeOrderFeedback
-              validation={(practiceMode || strokeOrderCheckEnabled) ? validation : null}
-              paths={paths}
-              currentPath={currentPath}
-              width={width}
-              height={height}
-              strokeWidth={strokeWidth}
-              strokes={strokes}
-              showDebugCenters={strokeOrderCheckEnabled}
-              virtualWidth={canvasVirtualWidth}
-            />
-          )}
+        <Animated.View style={{ transform: [{ translateX: Animated.multiply(offsetXAnim, -1) }] }}>
+          <StrokeOrderFeedback
+            validation={null}
+            paths={paths}
+            currentPath={currentPath}
+            width={width}
+            height={height}
+            strokeWidth={strokeWidth}
+            strokes={strokes}
+            showDebugCenters={false}
+          />
         </Animated.View>
       </View>
-      {practiceMode && targetCharacter && (
-        <AnimationControls
-          onPlay={() => {
-            setShowAnimation(true);
-            setIsAnimationPlaying(true);
-          }}
-          onPause={() => setIsAnimationPlaying(false)}
-          onReset={() => {
-            setShowAnimation(false);
-            setIsAnimationPlaying(false);
-          }}
-          isPlaying={isAnimationPlaying}
-        />
-      )}
+      
       <View style={styles.controlsContainer}>
         <View style={styles.navigationRow}>
-          {!practiceMode && !disableNavigation && (
+          {!disableNavigation && (
             <>
               <TouchableOpacity 
-                style={[styles.arrowButton, (offsetX === 0 || isSliding) && styles.disabledArrow]} 
+                style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
                 onPress={scrollLeft}
-                disabled={offsetX === 0 || isSliding}
+                disabled={offsetXDisplay === 0 || isSliding}
               >
                 <Text style={styles.arrowText}>←</Text>
               </TouchableOpacity>
@@ -455,35 +285,8 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
             <Text style={styles.clearButtonText}>Clear</Text>
           </TouchableOpacity>
         </View>
-        {!disableStrokeOrderCheck && (
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Stroke Order Check</Text>
-            <TouchableOpacity
-              style={[styles.toggle, strokeOrderCheckEnabled && styles.toggleActive]}
-              onPress={() => {
-                setStrokeOrderCheckEnabled(!strokeOrderCheckEnabled);
-                setValidation(null);
-                setDetectedCharacter('');
-              }}
-            >
-              <View style={[styles.toggleThumb, strokeOrderCheckEnabled && styles.toggleThumbActive]} />
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
-      {(practiceMode || strokeOrderCheckEnabled) && validation && (
-        <View style={styles.validationContainer}>
-          {strokeOrderCheckEnabled && detectedCharacter && (
-            <Text style={styles.detectedText}>Detected: {detectedCharacter}</Text>
-          )}
-          <FeedbackMessage validation={validation} />
-        </View>
-      )}
-      {strokeOrderCheckEnabled && debugInfo && (
-        <View style={styles.debugContainer}>
-          <Text style={styles.debugText}>{debugInfo}</Text>
-        </View>
-      )}
+      
       <View style={styles.infoRow}>
         {!modelReady && (
           <View style={styles.statusContainer}>
@@ -498,7 +301,6 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   );
 };
 
-// Custom comparison function for React.memo
 const arePropsEqual = (
   prevProps: HandwritingCanvasProps,
   nextProps: HandwritingCanvasProps
@@ -507,14 +309,8 @@ const arePropsEqual = (
     prevProps.width === nextProps.width &&
     prevProps.height === nextProps.height &&
     prevProps.strokeWidth === nextProps.strokeWidth &&
-    prevProps.practiceMode === nextProps.practiceMode &&
-    prevProps.targetCharacter === nextProps.targetCharacter &&
-    prevProps.showGuides === nextProps.showGuides &&
     prevProps.onRecognitionResult === nextProps.onRecognitionResult &&
     prevProps.onClear === nextProps.onClear &&
-    prevProps.onValidationComplete === nextProps.onValidationComplete &&
-    prevProps.disableStrokeOrderCheck === nextProps.disableStrokeOrderCheck &&
-    prevProps.disablePracticeMode === nextProps.disablePracticeMode &&
     prevProps.disableNavigation === nextProps.disableNavigation
   );
 };
@@ -528,39 +324,6 @@ const styles = StyleSheet.create({
   controlsContainer: {
     width: '100%',
     alignItems: 'center',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    gap: 12,
-  },
-  toggleLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2C3E50',
-  },
-  toggle: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#CCCCCC',
-    padding: 2,
-    justifyContent: 'center',
-  },
-  toggleActive: {
-    backgroundColor: '#4CAF50',
-  },
-  toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    alignSelf: 'flex-start',
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
   },
   navigationRow: {
     flexDirection: 'row',
@@ -625,31 +388,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
-  },
-  validationContainer: {
-    marginTop: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  detectedText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4A90E2',
-    marginBottom: 8,
-  },
-  debugContainer: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#E3F2FD',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#90CAF9',
-    width: '100%',
-  },
-  debugText: {
-    fontSize: 12,
-    color: '#1565C0',
-    fontFamily: 'monospace',
   },
 });
