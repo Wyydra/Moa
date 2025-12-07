@@ -13,6 +13,7 @@ const SLIDE_DURATION = 300;
 const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
 const CANVAS_WIDTH_PERCENT = 0.85; // 85% of screen width
+const NEXT_COLUMN_SPACING = 40; // Spacing after last stroke before centering next writing zone
 
 // Canvas background colors for light/dark themes
 const CANVAS_BG = {
@@ -23,6 +24,7 @@ const CANVAS_BG = {
 interface HandwritingCanvasProps {
   onRecognitionResult?: (result: string[]) => void;
   onClear?: () => void;
+  onDone?: () => void;
   width?: number;
   height?: number;
   strokeWidth?: number;
@@ -32,6 +34,7 @@ interface HandwritingCanvasProps {
 const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   onRecognitionResult,
   onClear,
+  onDone,
   width: propWidth,
   height = 400,
   strokeWidth = 3,
@@ -197,11 +200,25 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     
     clearTimers();
     
-    // Auto-slide after inactivity
-    inactivityTimerRef.current = setTimeout(() => {
-      const newOffset = offsetXRef.current + width * SLIDE_OFFSET_RATIO;
-      animateSlide(newOffset);
-    }, INACTIVITY_DELAY);
+    // Calculate the center position of the last stroke
+    const lastStrokeCenterX = currentStroke.points.reduce((sum, p) => sum + p.x, 0) / currentStroke.points.length;
+    const viewportCenter = offsetXRef.current + width / 2;
+    
+    // If the last stroke is at or past the center, slide to position it on the left
+    if (lastStrokeCenterX >= viewportCenter) {
+      inactivityTimerRef.current = setTimeout(() => {
+        // Position the last stroke at 1/3 from the left (leaving 2/3 space on the right)
+        // Formula: lastStrokeCenterX should be at (offset + width/3)
+        // So: newOffset + width/3 = lastStrokeCenterX
+        // Therefore: newOffset = lastStrokeCenterX - width/3
+        const newOffset = lastStrokeCenterX - width / 3;
+        
+        // Make sure we don't go backwards
+        if (newOffset > offsetXRef.current) {
+          animateSlide(newOffset);
+        }
+      }, INACTIVITY_DELAY);
+    }
     
     // Recognize handwriting
     recognitionTimerRef.current = setTimeout(async () => {
@@ -349,47 +366,62 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
           </View>
         ) : (
           <View style={styles.navigationRow}>
-            {!disableNavigation && (
-              <>
-                <TouchableOpacity 
-                  style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
-                  onPress={scrollLeft}
-                  disabled={offsetXDisplay === 0 || isSliding}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.arrowText}>←</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
-                  onPress={scrollRight}
-                  disabled={isSliding}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.arrowText}>→</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            <TouchableOpacity 
-              style={[styles.arrowButton, (strokes.length === 0 || isSliding) && styles.disabledArrow]} 
-              onPress={undoLastStroke}
-              disabled={strokes.length === 0 || isSliding}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.arrowText}>⌫</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.clearButton, styles.clearButtonSeparated]} 
-              onPress={clearCanvas}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-            
             {strokes.length > 0 && (
               <View style={styles.strokeCounterContainer}>
                 <Text style={styles.strokeCounter}>{strokes.length}</Text>
               </View>
             )}
+            
+            <View style={styles.navigationButtonsGroup}>
+              {!disableNavigation && (
+                <>
+                  <TouchableOpacity 
+                    style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
+                    onPress={scrollLeft}
+                    disabled={offsetXDisplay === 0 || isSliding}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.arrowText}>←</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
+                    onPress={scrollRight}
+                    disabled={isSliding}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.arrowText}>→</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              <TouchableOpacity 
+                style={[styles.arrowButton, (strokes.length === 0 || isSliding) && styles.disabledArrow]} 
+                onPress={undoLastStroke}
+                disabled={strokes.length === 0 || isSliding}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.arrowText}>⌫</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.rightButtonsGroup}>
+              <TouchableOpacity 
+                style={styles.clearButton} 
+                onPress={clearCanvas}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.clearButtonText}>Clear</Text>
+              </TouchableOpacity>
+              
+              {onDone && (
+                <TouchableOpacity 
+                  style={styles.doneButton} 
+                  onPress={onDone}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -407,6 +439,7 @@ const arePropsEqual = (
     prevProps.strokeWidth === nextProps.strokeWidth &&
     prevProps.onRecognitionResult === nextProps.onRecognitionResult &&
     prevProps.onClear === nextProps.onClear &&
+    prevProps.onDone === nextProps.onDone &&
     prevProps.disableNavigation === nextProps.disableNavigation
   );
 };
@@ -426,6 +459,13 @@ const styles = StyleSheet.create({
   navigationRow: {
     flexDirection: 'row',
     marginTop: SPACING.md,
+    gap: SPACING.sm,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  navigationButtonsGroup: {
+    flexDirection: 'row',
     gap: SPACING.sm,
     alignItems: 'center',
   },
@@ -470,7 +510,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   strokeCounterContainer: {
-    marginLeft: 'auto',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     backgroundColor: COLORS.surfaceAlt,
@@ -483,17 +522,35 @@ const styles = StyleSheet.create({
     color: COLORS.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
+  rightButtonsGroup: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    alignItems: 'center',
+  },
   clearButton: {
-    paddingHorizontal: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm + 2,
     backgroundColor: COLORS.danger,
     borderRadius: BORDER_RADIUS.md,
     ...SHADOWS.sm,
   },
   clearButtonSeparated: {
-    marginLeft: SPACING.xl,
+    // No margin needed - justifyContent: 'space-between' handles spacing
   },
   clearButtonText: {
+    color: COLORS.textInverse,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    letterSpacing: 0.3,
+  },
+  doneButton: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm + 2,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.md,
+    ...SHADOWS.sm,
+  },
+  doneButtonText: {
     color: COLORS.textInverse,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,

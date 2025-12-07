@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, StyleProp, ViewStyle, TextStyle, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { HandwritingCanvas } from './HandwritingCanvas';
@@ -142,16 +143,21 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
         onRequestClose={closeModal}
       >
         <View style={commonStyles.modalOverlay}>
-          <View style={[commonStyles.modalContent, styles.modalContent]}>
-            {/* Header */}
-            <View style={commonStyles.modalHeader}>
-              <Text style={commonStyles.modalTitle}>
-                {t('modes.write.writeByHand')}
-              </Text>
-              <TouchableOpacity onPress={closeModal}>
-                <Text style={commonStyles.modalCloseButton}>✕</Text>
-              </TouchableOpacity>
-            </View>
+          <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+            <View style={[commonStyles.modalContent, styles.modalContent]}>
+              {/* Header with close button in top-right corner */}
+              <View style={styles.headerContainer}>
+                <Text style={commonStyles.modalTitle}>
+                  {t('modes.write.writeByHand')}
+                </Text>
+                <TouchableOpacity 
+                  onPress={closeModal}
+                  style={styles.closeButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={commonStyles.modalCloseButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
 
             {/* Text display area */}
             <View style={styles.textDisplay}>
@@ -167,6 +173,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
             <HandwritingCanvas
               onRecognitionResult={handleRecognitionResult}
               onClear={handleCanvasClear}
+              onDone={closeModal}
               width={finalCanvasWidth}
               height={finalCanvasHeight}
               strokeWidth={strokeWidth}
@@ -187,17 +194,8 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
                 </TouchableOpacity>
               </View>
             )}
-
-            {/* Done button */}
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={closeModal}
-            >
-              <Text style={styles.doneButtonText}>
-                {t('common.done')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </SafeAreaView>
         </View>
       </Modal>
     </>
@@ -231,10 +229,33 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   
+  // Safe area
+  safeArea: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  
   // Modal content
   modalContent: {
     paddingTop: SPACING.lg,
+    paddingBottom: SPACING.lg, // Override commonStyles paddingBottom: 40
     alignItems: 'center',
+  },
+  
+  // Header
+  headerContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.lg,
+  },
+  
+  // Close button (absolute position in top-right)
+  closeButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
   
   // Text display area
@@ -287,22 +308,5 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: 4,
-  },
-  
-  // Done button
-  doneButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.xl,
-    borderRadius: BORDER_RADIUS.md,
-    marginTop: SPACING.md,
-    width: '100%',
-    alignItems: 'center',
-    ...SHADOWS.md,
-  },
-  doneButtonText: {
-    color: COLORS.textInverse,
-    fontSize: TYPOGRAPHY.fontSize.lg,
-    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
 });
