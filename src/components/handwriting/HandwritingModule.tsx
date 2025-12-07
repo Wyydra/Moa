@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, StyleProp, ViewStyle, TextStyle, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { HandwritingCanvas } from './HandwritingCanvas';
@@ -44,12 +44,20 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
   showButton = true,
   visible: externalVisible,
   onClose,
-  canvasWidth = 300,
-  canvasHeight = 300,
+  canvasWidth, // Will be calculated if not provided
+  canvasHeight, // Will be calculated if not provided
   strokeWidth = 3,
   showDeleteButton = true,
   disabled = false,
 }) => {
+  // Calculate canvas dimensions as percentage of screen if not provided
+  const screenWidth = Dimensions.get('window').width;
+  const screenHeight = Dimensions.get('window').height;
+  const defaultCanvasWidth = Math.floor(screenWidth * 0.85);
+  const defaultCanvasHeight = Math.floor(screenHeight * 0.4);
+  
+  const finalCanvasWidth = canvasWidth || defaultCanvasWidth;
+  const finalCanvasHeight = canvasHeight || defaultCanvasHeight;
   const { t } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentText, setCurrentText] = useState(initialText);
@@ -159,8 +167,8 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
             <HandwritingCanvas
               onRecognitionResult={handleRecognitionResult}
               onClear={handleCanvasClear}
-              width={canvasWidth}
-              height={canvasHeight}
+              width={finalCanvasWidth}
+              height={finalCanvasHeight}
               strokeWidth={strokeWidth}
               disableNavigation={false}
             />
