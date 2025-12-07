@@ -2,11 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
 import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
-import { HandwritingCanvas } from '../components/HandwritingCanvas';
+import { HandwritingModule } from '../components/handwriting';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
@@ -22,7 +22,6 @@ export default function WriteScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [showHandwriting, setShowHandwriting] = useState(false);
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsRate, setTTSRate] = useState(1.0);
   const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
@@ -120,12 +119,7 @@ export default function WriteScreen({route, navigation}: any) {
     navigation.goBack();
   };
 
-  const handleHandwritingRecognition = (results: string[]) => {
-    if (results.length > 0) {
-      setUserAnswer(results[0]);
-      setShowHandwriting(false);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -194,16 +188,12 @@ export default function WriteScreen({route, navigation}: any) {
         <View style={styles.answerSection}>
           <View style={styles.answerHeader}>
             <Text style={styles.answerLabel}>{t('modes.write.yourAnswer')}</Text>
-            <TouchableOpacity
-              onPress={() => setShowHandwriting(true)}
-              style={styles.handwritingButton}
+            <HandwritingModule
+              initialText={userAnswer}
+              onTextChange={setUserAnswer}
+              mode="append"
               disabled={showResult}
-            >
-              <Ionicons name="brush-outline" size={20} color={showResult ? COLORS.textLight : COLORS.primary} />
-              <Text style={[styles.handwritingButtonText, showResult && styles.handwritingButtonDisabled]}>
-                {t('modes.write.writeByHand')}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
           <Animated.View
             style={{
@@ -289,29 +279,6 @@ export default function WriteScreen({route, navigation}: any) {
           </TouchableOpacity>
         )}
       </View>
-
-      <Modal
-        visible={showHandwriting}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowHandwriting(false)}
-      >
-        <View style={commonStyles.modalOverlay}>
-          <View style={commonStyles.modalContent}>
-            <View style={commonStyles.modalHeader}>
-              <Text style={commonStyles.modalTitle}>{t('modes.write.writeByHand')}</Text>
-              <TouchableOpacity onPress={() => setShowHandwriting(false)}>
-                <Text style={commonStyles.modalCloseButton}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <HandwritingCanvas
-              onRecognitionResult={handleHandwritingRecognition}
-              width={300}
-              height={300}
-            />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -382,19 +349,6 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-  handwritingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  handwritingButtonText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  handwritingButtonDisabled: {
-    color: COLORS.textLight,
   },
   input: {
     backgroundColor: COLORS.surface,

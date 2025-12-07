@@ -1,4 +1,4 @@
-import { Point, Stroke } from '../../components/HandwritingCanvas';
+import { Point, Stroke } from '../../components/handwriting/types';
 import { StrokeDirection, StrokeFeatures, StrokePosition } from './types';
 
 const ANGLE_THRESHOLD = 30;

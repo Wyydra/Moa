@@ -149,6 +149,7 @@
       "description": "Type out the answers",
       "yourAnswer": "Your Answer",
       "writeByHand": "Write by hand",
+      "startWriting": "Start writing...",
       "submit": "Submit Answer",
       "correct": "Correct!",
       "incorrect": "Incorrect",

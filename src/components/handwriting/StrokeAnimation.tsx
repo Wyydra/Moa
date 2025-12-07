@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Canvas, Path, Skia, SkPath } from '@shopify/react-native-skia';
-import { getCharacterStrokes } from '../utils/strokeOrder/database';
+import { getCharacterStrokes } from '../../utils/strokeOrder/database';
 
 interface StrokeAnimationProps {
   character: string;

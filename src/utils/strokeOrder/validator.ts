@@ -1,4 +1,4 @@
-import { Stroke } from '../../components/HandwritingCanvas';
+import { Stroke } from '../../components/handwriting/types';
 import { analyzeStroke } from './analyzer';
 import { getCharacterStrokes } from './database';
 import {

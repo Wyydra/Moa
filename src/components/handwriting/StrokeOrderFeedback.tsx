@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Canvas, Path, SkPath, Circle } from '@shopify/react-native-skia';
-import { ValidationResult } from '../utils/strokeOrder/types';
-import { Stroke } from './HandwritingCanvas';
+import { ValidationResult } from '../../utils/strokeOrder/types';
+import type { Stroke } from './types';
 
 interface StrokeOrderFeedbackProps {
   validation: ValidationResult | null;
@@ -13,6 +13,7 @@ interface StrokeOrderFeedbackProps {
   strokeWidth?: number;
   strokes?: Stroke[];
   showDebugCenters?: boolean;
+  virtualWidth?: number;
 }
 
 export const StrokeOrderFeedback: React.FC<StrokeOrderFeedbackProps> = ({
@@ -24,6 +25,7 @@ export const StrokeOrderFeedback: React.FC<StrokeOrderFeedbackProps> = ({
   strokeWidth = 3,
   strokes = [],
   showDebugCenters = false,
+  virtualWidth,
 }) => {
   const getStrokeColor = (index: number): string => {
     if (!validation) {
@@ -43,8 +45,10 @@ export const StrokeOrderFeedback: React.FC<StrokeOrderFeedbackProps> = ({
     return '#FFD700';
   };
 
+  const canvasWidth = virtualWidth || width;
+
   return (
-    <Canvas style={{ width, height }}>
+    <Canvas style={{ width: canvasWidth, height }}>
       {paths.map((path, index) => (
         <Path
           key={`stroke-${index}`}

@@ -1,27 +1,19 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
-import { validateStrokeOrder, validateJamoSequence } from '../utils/strokeOrder/validator';
-import { ValidationResult } from '../utils/strokeOrder/types';
+import { validateStrokeOrder, validateJamoSequence } from '../../utils/strokeOrder/validator';
+import { ValidationResult } from '../../utils/strokeOrder/types';
 import { StrokeOrderFeedback, FeedbackMessage } from './StrokeOrderFeedback';
 import { StrokeGuide, StrokeAnimation, AnimationControls } from './StrokeAnimation';
-import { isCharacterSupported, decomposeHangul } from '../utils/strokeOrder/database';
-import { getHandwritingLanguage } from '../data/storage';
+import { isCharacterSupported, decomposeHangul } from '../../utils/strokeOrder/database';
+import { getHandwritingLanguage } from '../../data/storage';
+import type { Point, Stroke } from './types';
 
 const { HandwritingModule } = NativeModules;
 
-export interface Point {
-  x: number;
-  y: number;
-  t: number;
-}
-
-export interface Stroke {
-  points: Point[];
-}
-
 interface HandwritingCanvasProps {
   onRecognitionResult?: (result: string[]) => void;
+  onClear?: () => void;
   width?: number;
   height?: number;
   strokeWidth?: number;
@@ -29,10 +21,14 @@ interface HandwritingCanvasProps {
   targetCharacter?: string;
   showGuides?: boolean;
   onValidationComplete?: (validation: ValidationResult) => void;
+  disableStrokeOrderCheck?: boolean;
+  disablePracticeMode?: boolean;
+  disableNavigation?: boolean;
 }
 
 const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   onRecognitionResult,
+  onClear,
   width = 300,
   height = 400,
   strokeWidth = 3,
@@ -40,6 +36,9 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   targetCharacter = '',
   showGuides = false,
   onValidationComplete,
+  disableStrokeOrderCheck = false,
+  disablePracticeMode = false,
+  disableNavigation = false,
 }) => {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
@@ -50,6 +49,8 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [offsetX, setOffsetX] = useState(0);
+  const offsetXAnim = useRef(new Animated.Value(0)).current;
+  const [isSliding, setIsSliding] = useState(false);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
@@ -122,6 +123,8 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   };
 
   const handleTouchStart = useCallback((event: GestureResponderEvent) => {
+    if (isSliding) return; // Block touch during slide animation
+    
     const { locationX, locationY } = event.nativeEvent;
     const adjustedX = locationX + offsetX;
     const newStroke: Stroke = {
@@ -130,11 +133,12 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     setCurrentStroke(newStroke);
     
     const path = Skia.Path.Make();
-    path.moveTo(locationX, locationY);
+    path.moveTo(adjustedX, locationY); // Use adjustedX instead of locationX
     setCurrentPath(path);
-  }, [offsetX]);
+  }, [offsetX, isSliding]);
 
   const handleTouchMove = useCallback((event: GestureResponderEvent) => {
+    if (isSliding) return; // Block touch during slide animation
     if (!currentStroke || !currentPath) return;
     
     const { locationX, locationY } = event.nativeEvent;
@@ -145,11 +149,12 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     };
     setCurrentStroke(updatedStroke);
     
-    currentPath.lineTo(locationX, locationY);
+    currentPath.lineTo(adjustedX, locationY); // Use adjustedX instead of locationX
     setCurrentPath(currentPath.copy());
-  }, [currentStroke, currentPath, offsetX]);
+  }, [currentStroke, currentPath, offsetX, isSliding]);
 
   const handleTouchEnd = useCallback(() => {
+    if (isSliding) return; // Block touch during slide animation
     if (currentStroke && currentPath) {
       const updatedStrokes = [...strokes, currentStroke];
       const updatedPaths = [...paths, currentPath];
@@ -178,7 +183,18 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
       
       if (!practiceMode) {
         inactivityTimerRef.current = setTimeout(() => {
-          setOffsetX(prev => prev + width * 0.4);
+          const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
+          setOffsetX(newOffset); // Update state BEFORE animation
+          setIsSliding(true);
+          
+          Animated.timing(offsetXAnim, {
+            toValue: newOffset,
+            duration: 300,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }).start(() => {
+            setIsSliding(false); // Just unblock after animation
+          });
         }, 1500);
       }
       
@@ -270,7 +286,19 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
                     setValidation(null);
                     setDetectedCharacter('');
                     setDebugInfo('');
-                    setOffsetX(prev => prev + width * 0.4);
+                    
+                    const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
+                    setOffsetX(newOffset); // Update state BEFORE animation
+                    setIsSliding(true);
+                    
+                    Animated.timing(offsetXAnim, {
+                      toValue: newOffset,
+                      duration: 300,
+                      useNativeDriver: true,
+                      easing: Easing.out(Easing.ease),
+                    }).start(() => {
+                      setIsSliding(false); // Just unblock after animation
+                    });
                   }, 800);
                 }
               } else {
@@ -290,6 +318,12 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
 
 
   const clearCanvas = useCallback(() => {
+    // Stop any ongoing slide animation
+    offsetXAnim.stopAnimation();
+    offsetXAnim.setValue(0);
+    setOffsetX(0);
+    setIsSliding(false);
+    
     setStrokes([]);
     setCurrentStroke(null);
     setPaths([]);
@@ -303,16 +337,43 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     if (recognitionTimerRef.current) {
       clearTimeout(recognitionTimerRef.current);
     }
-    setOffsetX(0);
-  }, []);
+    onClear?.();
+  }, [onClear, offsetXAnim]);
 
   const scrollLeft = useCallback(() => {
-    setOffsetX(prev => Math.max(0, prev - width * 0.4));
-  }, [width]);
+    if (isSliding) return; // Don't allow manual scroll during animation
+    const newOffset = Math.max(0, offsetX - width * 0.15); // Changed from 0.4 to 0.15
+    setOffsetX(newOffset); // Update state BEFORE animation
+    setIsSliding(true);
+    
+    Animated.timing(offsetXAnim, {
+      toValue: newOffset,
+      duration: 300,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start(() => {
+      setIsSliding(false); // Just unblock after animation
+    });
+  }, [width, offsetX, offsetXAnim, isSliding]);
 
   const scrollRight = useCallback(() => {
-    setOffsetX(prev => prev + width * 0.4);
-  }, [width]);
+    if (isSliding) return; // Don't allow manual scroll during animation
+    const newOffset = offsetX + width * 0.15; // Changed from 0.4 to 0.15
+    setOffsetX(newOffset); // Update state BEFORE animation
+    setIsSliding(true);
+    
+    Animated.timing(offsetXAnim, {
+      toValue: newOffset,
+      duration: 300,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start(() => {
+      setIsSliding(false); // Just unblock after animation
+    });
+  }, [width, offsetX, offsetXAnim, isSliding]);
+
+  // Calculate virtual canvas width: viewport width + current offset + extra buffer
+  const canvasVirtualWidth = practiceMode ? width : width + Math.max(offsetX, 0) + width;
 
   return (
     <View style={styles.container}>
@@ -324,7 +385,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
         onResponderMove={handleTouchMove}
         onResponderRelease={handleTouchEnd}
       >
-        <View style={{ transform: [{ translateX: practiceMode ? 0 : -offsetX }] }}>
+        <Animated.View style={{ transform: [{ translateX: practiceMode ? 0 : Animated.multiply(offsetXAnim, -1) }] }}>
           {showGuides && targetCharacter && (
             <StrokeGuide
               character={targetCharacter}
@@ -351,9 +412,10 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
               strokeWidth={strokeWidth}
               strokes={strokes}
               showDebugCenters={strokeOrderCheckEnabled}
+              virtualWidth={canvasVirtualWidth}
             />
           )}
-        </View>
+        </Animated.View>
       </View>
       {practiceMode && targetCharacter && (
         <AnimationControls
@@ -371,16 +433,20 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
       )}
       <View style={styles.controlsContainer}>
         <View style={styles.navigationRow}>
-          {!practiceMode && (
+          {!practiceMode && !disableNavigation && (
             <>
               <TouchableOpacity 
-                style={[styles.arrowButton, offsetX === 0 && styles.disabledArrow]} 
+                style={[styles.arrowButton, (offsetX === 0 || isSliding) && styles.disabledArrow]} 
                 onPress={scrollLeft}
-                disabled={offsetX === 0}
+                disabled={offsetX === 0 || isSliding}
               >
                 <Text style={styles.arrowText}>←</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.arrowButton} onPress={scrollRight}>
+              <TouchableOpacity 
+                style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
+                onPress={scrollRight}
+                disabled={isSliding}
+              >
                 <Text style={styles.arrowText}>→</Text>
               </TouchableOpacity>
             </>
@@ -389,19 +455,21 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
             <Text style={styles.clearButtonText}>Clear</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Stroke Order Check</Text>
-          <TouchableOpacity
-            style={[styles.toggle, strokeOrderCheckEnabled && styles.toggleActive]}
-            onPress={() => {
-              setStrokeOrderCheckEnabled(!strokeOrderCheckEnabled);
-              setValidation(null);
-              setDetectedCharacter('');
-            }}
-          >
-            <View style={[styles.toggleThumb, strokeOrderCheckEnabled && styles.toggleThumbActive]} />
-          </TouchableOpacity>
-        </View>
+        {!disableStrokeOrderCheck && (
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Stroke Order Check</Text>
+            <TouchableOpacity
+              style={[styles.toggle, strokeOrderCheckEnabled && styles.toggleActive]}
+              onPress={() => {
+                setStrokeOrderCheckEnabled(!strokeOrderCheckEnabled);
+                setValidation(null);
+                setDetectedCharacter('');
+              }}
+            >
+              <View style={[styles.toggleThumb, strokeOrderCheckEnabled && styles.toggleThumbActive]} />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       {(practiceMode || strokeOrderCheckEnabled) && validation && (
         <View style={styles.validationContainer}>
@@ -443,7 +511,11 @@ const arePropsEqual = (
     prevProps.targetCharacter === nextProps.targetCharacter &&
     prevProps.showGuides === nextProps.showGuides &&
     prevProps.onRecognitionResult === nextProps.onRecognitionResult &&
-    prevProps.onValidationComplete === nextProps.onValidationComplete
+    prevProps.onClear === nextProps.onClear &&
+    prevProps.onValidationComplete === nextProps.onValidationComplete &&
+    prevProps.disableStrokeOrderCheck === nextProps.disableStrokeOrderCheck &&
+    prevProps.disablePracticeMode === nextProps.disablePracticeMode &&
+    prevProps.disableNavigation === nextProps.disableNavigation
   );
 };
 
