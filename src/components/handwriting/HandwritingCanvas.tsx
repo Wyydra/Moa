@@ -216,17 +216,36 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   }, [isSliding, currentStroke, currentPath, strokes, paths, clearTimers, animateSlide, width, modelReady, onRecognitionResult]);
 
   const clearCanvas = useCallback(() => {
-    offsetXAnim.stopAnimation();
-    offsetXAnim.setValue(0);
-    offsetXRef.current = 0;
-    setOffsetXDisplay(0);
-    setIsSliding(false);
+    clearTimers();
+    
+    // Clear strokes immediately (user doesn't see them slide)
     setStrokes([]);
     setCurrentStroke(null);
     setPaths([]);
     setCurrentPath(null);
-    clearTimers();
     onClear?.();
+    
+    // Then slide back to origin if needed (smooth canvas reset)
+    if (offsetXRef.current > 0) {
+      setIsSliding(true);
+      Animated.timing(offsetXAnim, {
+        toValue: 0,
+        duration: SLIDE_DURATION,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }).start(() => {
+        offsetXRef.current = 0;
+        setOffsetXDisplay(0);
+        setIsSliding(false);
+      });
+    } else {
+      // Already at origin, just reset offset state
+      offsetXAnim.stopAnimation();
+      offsetXAnim.setValue(0);
+      offsetXRef.current = 0;
+      setOffsetXDisplay(0);
+      setIsSliding(false);
+    }
   }, [onClear, offsetXAnim, clearTimers]);
 
   const scrollLeft = useCallback(() => {
