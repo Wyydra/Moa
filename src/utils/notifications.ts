@@ -16,6 +16,10 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   studyGoalReminders: true,
 };
 
+// Mutex locks to prevent concurrent scheduling
+let isDailyReminderScheduling = false;
+let isStreakReminderScheduling = false;
+
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -99,7 +103,15 @@ export const scheduleDailyReminder = async (
   hour: number,
   minute: number
 ): Promise<string | null> => {
+  // Mutex lock - prevent concurrent scheduling
+  if (isDailyReminderScheduling) {
+    console.log('[Notifications] Daily reminder scheduling already in progress, skipping');
+    return null;
+  }
+
   try {
+    isDailyReminderScheduling = true;
+
     // Cancel existing daily reminder
     await cancelDailyReminder();
 
@@ -129,11 +141,13 @@ export const scheduleDailyReminder = async (
       trigger,
     });
 
-    console.log(`Daily reminder scheduled at ${hour}:${minute}, ID: ${id}`);
+    console.log(`[Notifications] Daily reminder scheduled at ${hour}:${minute}`);
     return id;
   } catch (error) {
-    console.error('Error scheduling daily reminder:', error);
+    console.error('[Notifications] Error scheduling daily reminder:', error);
     return null;
+  } finally {
+    isDailyReminderScheduling = false;
   }
 };
 
@@ -147,13 +161,30 @@ export const cancelDailyReminder = async (): Promise<void> => {
       (notif) => notif.content.data?.type === 'daily-reminder'
     );
 
+    if (dailyReminders.length === 0) {
+      return;
+    }
+
+    console.log(`[Notifications] Cancelling ${dailyReminders.length} daily reminder(s)`);
+
     for (const notif of dailyReminders) {
       await Notifications.cancelScheduledNotificationAsync(notif.identifier);
     }
 
-    console.log(`Cancelled ${dailyReminders.length} daily reminders`);
+    // Double-check cancellation
+    const remaining = await Notifications.getAllScheduledNotificationsAsync();
+    const stillThere = remaining.filter(
+      (notif) => notif.content.data?.type === 'daily-reminder'
+    );
+
+    if (stillThere.length > 0) {
+      console.warn('[Notifications] Retrying cancellation for remaining notifications');
+      for (const notif of stillThere) {
+        await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+      }
+    }
   } catch (error) {
-    console.error('Error cancelling daily reminder:', error);
+    console.error('[Notifications] Error cancelling daily reminder:', error);
   }
 };
 
@@ -162,7 +193,18 @@ export const cancelDailyReminder = async (): Promise<void> => {
  * Triggers if user hasn't studied today
  */
 export const scheduleStreakReminder = async (): Promise<string | null> => {
+  // Mutex lock - prevent concurrent scheduling
+  if (isStreakReminderScheduling) {
+    console.log('[Notifications] Streak reminder scheduling already in progress, skipping');
+    return null;
+  }
+
   try {
+    isStreakReminderScheduling = true;
+
+    // Cancel existing streak reminder
+    await cancelStreakReminder();
+
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
       return null;
@@ -189,11 +231,13 @@ export const scheduleStreakReminder = async (): Promise<string | null> => {
       trigger,
     });
 
-    console.log(`Streak reminder scheduled, ID: ${id}`);
+    console.log('[Notifications] Streak reminder scheduled');
     return id;
   } catch (error) {
-    console.error('Error scheduling streak reminder:', error);
+    console.error('[Notifications] Error scheduling streak reminder:', error);
     return null;
+  } finally {
+    isStreakReminderScheduling = false;
   }
 };
 
@@ -207,13 +251,30 @@ export const cancelStreakReminder = async (): Promise<void> => {
       (notif) => notif.content.data?.type === 'streak-reminder'
     );
 
+    if (streakReminders.length === 0) {
+      return;
+    }
+
+    console.log(`[Notifications] Cancelling ${streakReminders.length} streak reminder(s)`);
+
     for (const notif of streakReminders) {
       await Notifications.cancelScheduledNotificationAsync(notif.identifier);
     }
 
-    console.log(`Cancelled ${streakReminders.length} streak reminders`);
+    // Double-check cancellation
+    const remaining = await Notifications.getAllScheduledNotificationsAsync();
+    const stillThere = remaining.filter(
+      (notif) => notif.content.data?.type === 'streak-reminder'
+    );
+
+    if (stillThere.length > 0) {
+      console.warn('[Notifications] Retrying cancellation for remaining notifications');
+      for (const notif of stillThere) {
+        await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+      }
+    }
   } catch (error) {
-    console.error('Error cancelling streak reminder:', error);
+    console.error('[Notifications] Error cancelling streak reminder:', error);
   }
 };
 
@@ -313,14 +374,48 @@ export const sendCongratsNotification = async (
 };
 
 /**
+ * Reset all notifications - cancel everything and start fresh
+ * Use this to guarantee a clean state before scheduling
+ */
+export const resetAllNotifications = async (): Promise<void> => {
+  try {
+    const before = await Notifications.getAllScheduledNotificationsAsync();
+    
+    if (before.length === 0) {
+      console.log('[Notifications] No notifications to reset');
+      return;
+    }
+
+    console.log(`[Notifications] Resetting ${before.length} notification(s)`);
+    
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    // Verify cancellation
+    const after = await Notifications.getAllScheduledNotificationsAsync();
+    
+    if (after.length > 0) {
+      console.warn('[Notifications] Force cancelling remaining notifications');
+      for (const notif of after) {
+        await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+      }
+    }
+
+    console.log('[Notifications] All notifications reset');
+  } catch (error) {
+    console.error('[Notifications] Error resetting notifications:', error);
+    throw error;
+  }
+};
+
+/**
  * Cancel all scheduled notifications
  */
 export const cancelAllNotifications = async (): Promise<void> => {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    console.log('All scheduled notifications cancelled');
+    console.log('[Notifications] All scheduled notifications cancelled');
   } catch (error) {
-    console.error('Error cancelling all notifications:', error);
+    console.error('[Notifications] Error cancelling all notifications:', error);
   }
 };
 

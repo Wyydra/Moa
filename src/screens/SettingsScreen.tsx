@@ -9,6 +9,7 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder } from '../utils/notifications';
+import { getNotificationStats, logScheduledNotifications } from '../utils/notificationDebug';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -536,6 +537,26 @@ export default function SettingsScreen() {
             <Text style={styles.compactButtonText}>Import Data</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity 
+            style={styles.debugButton}
+            onPress={async () => {
+              const stats = await getNotificationStats();
+              Alert.alert(
+                'Notification Status',
+                `Total: ${stats.total}\nDaily Reminders: ${stats.daily}\nStreak Reminders: ${stats.streak}\nOther: ${stats.other}`,
+                [
+                  { 
+                    text: 'View Details', 
+                    onPress: () => logScheduledNotifications() 
+                  },
+                  { text: 'OK' }
+                ]
+              );
+            }}
+          >
+            <Text style={styles.debugButtonText}>View Notification Status</Text>
+          </TouchableOpacity>
+
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>
               {t('settings.version')} {require('../../package.json').version}
@@ -699,6 +720,20 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.danger,
+  },
+  debugButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.textLight,
+  },
+  debugButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.textMedium,
   },
   versionContainer: {
     alignItems: 'center',

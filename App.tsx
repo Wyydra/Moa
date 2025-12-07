@@ -27,7 +27,7 @@ import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import * as Font from 'expo-font';
-import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount } from './src/utils/notifications';
+import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount, resetAllNotifications } from './src/utils/notifications';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -182,6 +182,7 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const notificationsInitialized = useRef(false);
   
   useEffect(() => {
     async function initialize() {
@@ -225,7 +226,16 @@ export default function App() {
   // Initialize notifications
   useEffect(() => {
     const initializeNotifications = async () => {
+      // Guard - prevent duplicate initialization
+      if (notificationsInitialized.current) {
+        console.log('[App] Notifications already initialized, skipping');
+        return;
+      }
+
       try {
+        console.log('[App] Initializing notifications');
+        notificationsInitialized.current = true;
+
         // Update badge count on app start
         await updateBadgeCount();
 
@@ -236,6 +246,9 @@ export default function App() {
 
         // Schedule notifications if enabled
         if (notificationsEnabled) {
+          // Always reset notifications to ensure clean state
+          await resetAllNotifications();
+          
           await scheduleDailyReminder(notificationTime.hour, notificationTime.minute);
           
           if (streakRemindersEnabled) {
@@ -245,22 +258,24 @@ export default function App() {
 
         // Setup notification listeners
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-          console.log('Notification received:', notification);
+          console.log('[App] Notification received:', notification.request.content.title);
         });
 
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-          console.log('Notification tapped:', response);
+          console.log('[App] Notification tapped:', response.notification.request.content.title);
           // Handle notification tap - could navigate to specific screen
           const notificationType = response.notification.request.content.data?.type;
           
           if (notificationType === 'daily-reminder' || notificationType === 'streak-reminder') {
             // Navigate to Home screen to start studying
             // This would require access to navigation ref
-            console.log('User wants to study from notification');
+            console.log('[App] User wants to study from notification');
           }
         });
       } catch (error) {
-        console.error('Error initializing notifications:', error);
+        console.error('[App] Error initializing notifications:', error);
+        // Reset flag on error to allow retry
+        notificationsInitialized.current = false;
       }
     };
 
