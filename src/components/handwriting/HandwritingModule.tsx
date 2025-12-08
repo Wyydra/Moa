@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { HandwritingCanvas } from './HandwritingCanvas';
 import { commonStyles } from '../../styles/commonStyles';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../utils/constants';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../utils/constants';
 
 interface HandwritingModuleProps {
   // Text management
@@ -51,14 +51,9 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
   showDeleteButton = true,
   disabled = false,
 }) => {
-  // Calculate canvas dimensions as percentage of screen if not provided
-  const screenWidth = Dimensions.get('window').width;
-  const screenHeight = Dimensions.get('window').height;
-  const defaultCanvasWidth = Math.floor(screenWidth * 0.85);
-  const defaultCanvasHeight = Math.floor(screenHeight * 0.4);
-  
-  const finalCanvasWidth = canvasWidth || defaultCanvasWidth;
-  const finalCanvasHeight = canvasHeight || defaultCanvasHeight;
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const finalCanvasWidth = canvasWidth || Math.floor(screenWidth * 0.85);
+  const finalCanvasHeight = canvasHeight || Math.floor(screenHeight * 0.4);
   const { t } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentText, setCurrentText] = useState(initialText);
@@ -85,34 +80,23 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
     onClose?.();
   };
 
-  const handleCanvasClear = () => {
-    // When canvas is cleared, reset recognition
+  const resetToSnapshot = () => {
     setCurrentText(initialTextSnapshot);
     setRecognitionHistory([]);
     onTextChange(initialTextSnapshot);
   };
 
   const handleRecognitionResult = (results: string[]) => {
-    if (results.length > 0) {
-      const fullRecognition = results[0]; // This is the FULL recognition of all strokes
-      
-      // For append mode: initialSnapshot + full recognition
-      // For replace mode: just the recognition
-      const updatedText = mode === 'append' 
-        ? initialTextSnapshot + fullRecognition
-        : fullRecognition;
-      
-      setCurrentText(updatedText);
-      setRecognitionHistory([fullRecognition]); // Store only current full recognition
-      onTextChange(updatedText);
-    }
-  };
-
-  const handleDeleteLastCharacter = () => {
-    // Delete ALL handwritten text, return to initial snapshot
-    setCurrentText(initialTextSnapshot);
-    setRecognitionHistory([]);
-    onTextChange(initialTextSnapshot);
+    if (results.length === 0) return;
+    
+    const fullRecognition = results[0];
+    const updatedText = mode === 'append' 
+      ? initialTextSnapshot + fullRecognition
+      : fullRecognition;
+    
+    setCurrentText(updatedText);
+    setRecognitionHistory([fullRecognition]);
+    onTextChange(updatedText);
   };
 
   return (
@@ -172,7 +156,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
             {/* Handwriting Canvas */}
             <HandwritingCanvas
               onRecognitionResult={handleRecognitionResult}
-              onClear={handleCanvasClear}
+              onClear={resetToSnapshot}
               onDone={closeModal}
               width={finalCanvasWidth}
               height={finalCanvasHeight}
@@ -185,7 +169,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
               <View style={styles.actionsRow}>
                 <TouchableOpacity
                   style={styles.deleteButton}
-                  onPress={handleDeleteLastCharacter}
+                  onPress={resetToSnapshot}
                 >
                   <Ionicons name="backspace-outline" size={20} color={COLORS.danger} />
                   <Text style={styles.deleteButtonText}>

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing, Dimensions, useColorScheme } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
-import { StrokeOrderFeedback } from './StrokeOrderFeedback';
+import { SkiaCanvas } from './SkiaCanvas';
 import { getHandwritingLanguage } from '../../data/storage';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../utils/constants';
 import type { Stroke } from './types';
@@ -12,13 +12,17 @@ const SLIDE_OFFSET_RATIO = 0.15;
 const SLIDE_DURATION = 300;
 const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
-const CANVAS_WIDTH_PERCENT = 0.85; // 85% of screen width
-const NEXT_COLUMN_SPACING = 40; // Spacing after last stroke before centering next writing zone
+const CANVAS_WIDTH_PERCENT = 0.85;
+const EMPTY_SPACE_TARGET = 0.6; // 60% empty space rule
 
-// Canvas background colors for light/dark themes
 const CANVAS_BG = {
-  light: '#F5F5F5',  // Light gray for light theme
-  dark: '#0F0F0F',   // Deep black for dark theme
+  light: '#F5F5F5',
+  dark: '#0F0F0F',
+};
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  ko: 'Korean',
+  ja: 'Japanese',
 };
 
 interface HandwritingCanvasProps {
@@ -40,45 +44,36 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   strokeWidth = 3,
   disableNavigation = false,
 }) => {
-  // Detect color scheme for adaptive canvas background
   const colorScheme = useColorScheme();
-  const canvasBackgroundColor = colorScheme === 'dark' ? CANVAS_BG.dark : CANVAS_BG.light;
+  const width = propWidth || Math.floor(Dimensions.get('window').width * CANVAS_WIDTH_PERCENT);
   
-  // Calculate width as percentage of screen if not provided
-  const screenWidth = Dimensions.get('window').width;
-  const width = propWidth || Math.floor(screenWidth * CANVAS_WIDTH_PERCENT);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
   const [paths, setPaths] = useState<SkPath[]>([]);
   const [currentPath, setCurrentPath] = useState<SkPath | null>(null);
   const [modelReady, setModelReady] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState<string>('Checking model...');
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const recognitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [downloadStatus, setDownloadStatus] = useState('Checking model...');
+  const [isSliding, setIsSliding] = useState(false);
+  const [offsetXDisplay, setOffsetXDisplay] = useState(0);
   
-  // Use ref to track current offset synchronously (no async state updates)
   const offsetXRef = useRef(0);
   const offsetXAnim = useRef(new Animated.Value(0)).current;
-  const [isSliding, setIsSliding] = useState(false);
-  const [offsetXDisplay, setOffsetXDisplay] = useState(0); // For UI only
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const recognitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     initializeHandwritingModel();
   }, []);
 
-  const getLanguageName = (code: string): string => {
-    const names: Record<string, string> = {
-      'ko': 'Korean',
-      'ja': 'Japanese',
-    };
-    return names[code] || code;
-  };
+  const clearTimers = useCallback(() => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (recognitionTimerRef.current) clearTimeout(recognitionTimerRef.current);
+  }, []);
 
   const initializeHandwritingModel = async () => {
     try {
-      const savedLanguage = await getHandwritingLanguage();
-      const languageCode = savedLanguage || 'ko';
-      const languageName = getLanguageName(languageCode);
+      const languageCode = (await getHandwritingLanguage()) || 'ko';
+      const languageName = LANGUAGE_NAMES[languageCode] || languageCode;
       
       setDownloadStatus(`Checking for ${languageName} model...`);
       const isDownloaded = await HandwritingModule.isModelDownloaded(languageCode);
@@ -126,27 +121,52 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     }
   };
 
-  const clearTimers = useCallback(() => {
-    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-    if (recognitionTimerRef.current) clearTimeout(recognitionTimerRef.current);
-  }, []);
-
   const animateSlide = useCallback((newOffset: number) => {
-    offsetXRef.current = newOffset; // Update ref immediately (synchronous)
-    setOffsetXDisplay(newOffset); // Update display for UI
+    offsetXRef.current = newOffset;
+    setOffsetXDisplay(newOffset);
     setIsSliding(true);
+    
     Animated.timing(offsetXAnim, {
       toValue: newOffset,
       duration: SLIDE_DURATION,
       useNativeDriver: true,
       easing: Easing.out(Easing.ease),
-    }).start(() => {
-      setIsSliding(false);
-    });
+    }).start(() => setIsSliding(false));
   }, [offsetXAnim]);
 
+  const getRightmostX = useCallback((strokeList: Stroke[]) => {
+    const allPoints = strokeList.flatMap(stroke => stroke.points.map(p => p.x));
+    return allPoints.length > 0 ? Math.max(...allPoints) : 0;
+  }, []);
+
+  const getEmptySpaceRatio = useCallback((strokeList: Stroke[]) => {
+    const rightmostX = getRightmostX(strokeList);
+    const viewportRightEdge = offsetXRef.current + width;
+    const emptySpace = viewportRightEdge - rightmostX;
+    return emptySpace / width;
+  }, [getRightmostX, width]);
+
+  const calculateTargetOffset = useCallback((strokeList: Stroke[]) => {
+    const rightmostX = getRightmostX(strokeList);
+    return rightmostX - width * (1 - EMPTY_SPACE_TARGET);
+  }, [getRightmostX, width]);
+
+  const triggerRecognition = useCallback((strokeList: Stroke[]) => {
+    if (!modelReady || strokeList.length === 0) return;
+    
+    recognitionTimerRef.current = setTimeout(async () => {
+      try {
+        const result = await HandwritingModule.recognize(strokeList);
+        if (result?.length > 0) {
+          onRecognitionResult?.(result);
+        }
+      } catch (error) {
+        console.error('Recognition error:', error);
+      }
+    }, RECOGNITION_DELAY);
+  }, [modelReady, onRecognitionResult]);
+
   const handleTouchStart = useCallback((event: GestureResponderEvent) => {
-    // If sliding, cancel the animation and allow new stroke
     if (isSliding) {
       offsetXAnim.stopAnimation((value) => {
         offsetXRef.current = value;
@@ -155,17 +175,13 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
       setIsSliding(false);
     }
     
-    // Clear any pending auto-slide timer
     clearTimers();
     
     const { locationX, locationY } = event.nativeEvent;
-    const currentOffset = offsetXRef.current;
-    const globalX = locationX + currentOffset;
+    const globalX = locationX + offsetXRef.current;
     
-    // Store GLOBAL coordinates for recognition
     setCurrentStroke({ points: [{ x: globalX, y: locationY, t: Date.now() }] });
     
-    // But use LOCAL coordinates for path drawing (viewport-relative)
     const path = Skia.Path.Make();
     path.moveTo(locationX, locationY);
     setCurrentPath(path);
@@ -177,75 +193,49 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const { locationX, locationY } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
     
-    // Store GLOBAL coordinates for recognition
     setCurrentStroke({
       ...currentStroke,
       points: [...currentStroke.points, { x: globalX, y: locationY, t: Date.now() }],
     });
     
-    // But use LOCAL coordinates for path drawing (viewport-relative)
     currentPath.lineTo(locationX, locationY);
     setCurrentPath(currentPath.copy());
-  }, [currentStroke, currentPath, isSliding]);
+  }, [currentStroke, currentPath]);
 
   const handleTouchEnd = useCallback(() => {
     if (!currentStroke || !currentPath) return;
     
     const updatedStrokes = [...strokes, currentStroke];
     const updatedPaths = [...paths, currentPath];
+    
     setStrokes(updatedStrokes);
     setPaths(updatedPaths);
     setCurrentStroke(null);
     setCurrentPath(null);
-    
     clearTimers();
     
-    // Calculate the center position of the last stroke
-    const lastStrokeCenterX = currentStroke.points.reduce((sum, p) => sum + p.x, 0) / currentStroke.points.length;
-    const viewportCenter = offsetXRef.current + width / 2;
-    
-    // If the last stroke is at or past the center, slide to position it on the left
-    if (lastStrokeCenterX >= viewportCenter) {
+    // Auto-slide if we have less than 60% empty space
+    const emptyRatio = getEmptySpaceRatio(updatedStrokes);
+    if (emptyRatio < EMPTY_SPACE_TARGET && emptyRatio >= 0) {
       inactivityTimerRef.current = setTimeout(() => {
-        // Position the last stroke at 1/3 from the left (leaving 2/3 space on the right)
-        // Formula: lastStrokeCenterX should be at (offset + width/3)
-        // So: newOffset + width/3 = lastStrokeCenterX
-        // Therefore: newOffset = lastStrokeCenterX - width/3
-        const newOffset = lastStrokeCenterX - width / 3;
-        
-        // Make sure we don't go backwards
-        if (newOffset > offsetXRef.current) {
+        const newOffset = calculateTargetOffset(updatedStrokes);
+        if (newOffset > offsetXRef.current + 5 && !isNaN(newOffset)) {
           animateSlide(newOffset);
         }
       }, INACTIVITY_DELAY);
     }
     
-    // Recognize handwriting
-    recognitionTimerRef.current = setTimeout(async () => {
-      if (!modelReady || updatedStrokes.length === 0) return;
-      
-      try {
-        const result = await HandwritingModule.recognize(updatedStrokes);
-        if (result && result.length > 0) {
-          onRecognitionResult?.(result);
-        }
-      } catch (error) {
-        console.error('Recognition error:', error);
-      }
-    }, RECOGNITION_DELAY);
-  }, [isSliding, currentStroke, currentPath, strokes, paths, clearTimers, animateSlide, width, modelReady, onRecognitionResult]);
+    triggerRecognition(updatedStrokes);
+  }, [currentStroke, currentPath, strokes, paths, clearTimers, getEmptySpaceRatio, calculateTargetOffset, animateSlide, triggerRecognition]);
 
   const clearCanvas = useCallback(() => {
     clearTimers();
-    
-    // Clear strokes immediately (user doesn't see them slide)
     setStrokes([]);
     setCurrentStroke(null);
     setPaths([]);
     setCurrentPath(null);
     onClear?.();
     
-    // Then slide back to origin if needed (smooth canvas reset)
     if (offsetXRef.current > 0) {
       setIsSliding(true);
       Animated.timing(offsetXAnim, {
@@ -259,53 +249,35 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
         setIsSliding(false);
       });
     } else {
-      // Already at origin, just reset offset state
-      offsetXAnim.stopAnimation();
       offsetXAnim.setValue(0);
       offsetXRef.current = 0;
       setOffsetXDisplay(0);
-      setIsSliding(false);
     }
   }, [onClear, offsetXAnim, clearTimers]);
-
+  
   const undoLastStroke = useCallback(() => {
     if (strokes.length === 0 || isSliding) return;
     
     clearTimers();
     
-    // Get the last stroke before removing it
     const lastStroke = strokes[strokes.length - 1];
-    
-    // Remove last stroke and path
     const newStrokes = strokes.slice(0, -1);
     const newPaths = paths.slice(0, -1);
+    
     setStrokes(newStrokes);
     setPaths(newPaths);
     
-    // Calculate if last stroke was before viewport center
+    // Slide back if last stroke was before viewport center
     const strokeCenterX = lastStroke.points.reduce((sum, p) => sum + p.x, 0) / lastStroke.points.length;
     const viewportCenter = offsetXRef.current + width / 2;
     
-    // If last stroke was BEFORE viewport center, slide back
     if (strokeCenterX < viewportCenter && offsetXRef.current > 0) {
       const newOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
       animateSlide(newOffset);
     }
     
-    // Re-trigger recognition if strokes remain
-    if (newStrokes.length > 0 && modelReady) {
-      recognitionTimerRef.current = setTimeout(async () => {
-        try {
-          const result = await HandwritingModule.recognize(newStrokes);
-          if (result && result.length > 0) {
-            onRecognitionResult?.(result);
-          }
-        } catch (error) {
-          console.error('Recognition error:', error);
-        }
-      }, RECOGNITION_DELAY);
-    }
-  }, [strokes, paths, isSliding, clearTimers, width, animateSlide, modelReady, onRecognitionResult]);
+    triggerRecognition(newStrokes);
+  }, [strokes, paths, isSliding, clearTimers, width, animateSlide, triggerRecognition]);
 
   const scrollLeft = useCallback(() => {
     if (isSliding) return;
@@ -315,29 +287,32 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
 
   const scrollRight = useCallback(() => {
     if (isSliding || strokes.length === 0) return;
+    if (getEmptySpaceRatio(strokes) >= EMPTY_SPACE_TARGET) return;
     
-    // Get the last (most recent) stroke
-    const lastStroke = strokes[strokes.length - 1];
-    
-    // Calculate center of last stroke
-    const lastStrokeCenterX = lastStroke.points.reduce((sum, p) => sum + p.x, 0) / lastStroke.points.length;
-    
-    // Calculate viewport boundaries
-    const viewportLeft = offsetXRef.current;
-    const viewportCenter = offsetXRef.current + width / 2;
-    
-    // Don't scroll right if last stroke is already in the LEFT QUARTER of viewport
-    // This allows one more scroll to center the stroke for comfortable drawing
-    if (lastStrokeCenterX < viewportLeft + width * 0.25) return;
-    
-    const newOffset = offsetXRef.current + width * SLIDE_OFFSET_RATIO;
-    animateSlide(newOffset);
-  }, [width, isSliding, animateSlide, strokes]);
+    const newOffset = calculateTargetOffset(strokes);
+    if (newOffset > offsetXRef.current + 5) {
+      animateSlide(newOffset);
+    }
+  }, [isSliding, strokes, getEmptySpaceRatio, calculateTargetOffset, animateSlide]);
+  
+  const shouldDisableScrollRight = () => {
+    if (strokes.length === 0) return true;
+    try {
+      const emptyRatio = getEmptySpaceRatio(strokes);
+      const potentialOffset = calculateTargetOffset(strokes);
+      return emptyRatio >= EMPTY_SPACE_TARGET || potentialOffset <= offsetXDisplay;
+    } catch {
+      return true;
+    }
+  };
+
+  const canvasBackgroundColor = colorScheme === 'dark' ? CANVAS_BG.dark : CANVAS_BG.light;
+  const strokeColor = colorScheme === 'dark' ? COLORS.primaryLight : COLORS.primary;
 
   return (
     <View style={styles.container}>
       <View 
-        style={[styles.canvasContainer, { width, height, overflow: 'hidden', backgroundColor: canvasBackgroundColor }]}
+        style={[styles.canvasContainer, { width, height, backgroundColor: canvasBackgroundColor }]}
         onStartShouldSetResponder={() => true}
         onMoveShouldSetResponder={() => true}
         onResponderGrant={handleTouchStart}
@@ -345,16 +320,13 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
         onResponderRelease={handleTouchEnd}
       >
         <Animated.View style={{ transform: [{ translateX: Animated.multiply(offsetXAnim, -1) }] }}>
-          <StrokeOrderFeedback
-            validation={null}
+          <SkiaCanvas
             paths={paths}
             currentPath={currentPath}
             width={width}
             height={height}
             strokeWidth={strokeWidth}
-            strokes={strokes}
-            showDebugCenters={false}
-            strokeColor={colorScheme === 'dark' ? COLORS.primaryLight : COLORS.primary}
+            strokeColor={strokeColor}
           />
         </Animated.View>
       </View>
@@ -384,9 +356,9 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
                     <Text style={styles.arrowText}>←</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={[styles.arrowButton, isSliding && styles.disabledArrow]} 
+                    style={[styles.arrowButton, (isSliding || shouldDisableScrollRight()) && styles.disabledArrow]} 
                     onPress={scrollRight}
-                    disabled={isSliding}
+                    disabled={isSliding || shouldDisableScrollRight()}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.arrowText}>→</Text>
@@ -429,20 +401,15 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   );
 };
 
-const arePropsEqual = (
-  prevProps: HandwritingCanvasProps,
-  nextProps: HandwritingCanvasProps
-): boolean => {
-  return (
-    prevProps.width === nextProps.width &&
-    prevProps.height === nextProps.height &&
-    prevProps.strokeWidth === nextProps.strokeWidth &&
-    prevProps.onRecognitionResult === nextProps.onRecognitionResult &&
-    prevProps.onClear === nextProps.onClear &&
-    prevProps.onDone === nextProps.onDone &&
-    prevProps.disableNavigation === nextProps.disableNavigation
-  );
-};
+const arePropsEqual = (prev: HandwritingCanvasProps, next: HandwritingCanvasProps) => (
+  prev.width === next.width &&
+  prev.height === next.height &&
+  prev.strokeWidth === next.strokeWidth &&
+  prev.onRecognitionResult === next.onRecognitionResult &&
+  prev.onClear === next.onClear &&
+  prev.onDone === next.onDone &&
+  prev.disableNavigation === next.disableNavigation
+);
 
 export const HandwritingCanvas = React.memo(HandwritingCanvasComponent, arePropsEqual);
 
@@ -488,20 +455,18 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   canvasContainer: {
-    // backgroundColor is set dynamically based on color scheme
-    borderWidth: 0,
     borderRadius: BORDER_RADIUS.lg,
-    ...SHADOWS.lg,
     overflow: 'hidden',
+    ...SHADOWS.lg,
   },
   statusContainer: {
     marginTop: SPACING.md,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: COLORS.warning + '20', // 20% opacity
+    backgroundColor: COLORS.warning + '20',
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.warning + '40', // 40% opacity
+    borderColor: COLORS.warning + '40',
   },
   statusText: {
     color: COLORS.warning,
@@ -533,9 +498,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.danger,
     borderRadius: BORDER_RADIUS.md,
     ...SHADOWS.sm,
-  },
-  clearButtonSeparated: {
-    // No margin needed - justifyContent: 'space-between' handles spacing
   },
   clearButtonText: {
     color: COLORS.textInverse,
