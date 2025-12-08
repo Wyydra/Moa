@@ -8,7 +8,7 @@ import type { Stroke } from './types';
 
 const { HandwritingModule } = NativeModules;
 
-const SLIDE_OFFSET_RATIO = 0.15;
+const SLIDE_OFFSET_RATIO = 0.15; // 15% of width per slide
 const SLIDE_DURATION = 300;
 const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
@@ -134,22 +134,15 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     }).start(() => setIsSliding(false));
   }, [offsetXAnim]);
 
-  const getRightmostX = useCallback((strokeList: Stroke[]) => {
-    const allPoints = strokeList.flatMap(stroke => stroke.points.map(p => p.x));
-    return allPoints.length > 0 ? Math.max(...allPoints) : 0;
-  }, []);
-
   const getEmptySpaceRatio = useCallback((strokeList: Stroke[]) => {
-    const rightmostX = getRightmostX(strokeList);
+    const allPoints = strokeList.flatMap(stroke => stroke.points.map(p => p.x));
+    if (allPoints.length === 0) return 1;
+    
+    const rightmostX = Math.max(...allPoints);
     const viewportRightEdge = offsetXRef.current + width;
     const emptySpace = viewportRightEdge - rightmostX;
     return emptySpace / width;
-  }, [getRightmostX, width]);
-
-  const calculateTargetOffset = useCallback((strokeList: Stroke[]) => {
-    const rightmostX = getRightmostX(strokeList);
-    return rightmostX - width * (1 - EMPTY_SPACE_TARGET);
-  }, [getRightmostX, width]);
+  }, [width]);
 
   const triggerRecognition = useCallback((strokeList: Stroke[]) => {
     if (!modelReady || strokeList.length === 0) return;
@@ -216,17 +209,21 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     
     // Auto-slide if we have less than 60% empty space
     const emptyRatio = getEmptySpaceRatio(updatedStrokes);
+    
     if (emptyRatio < EMPTY_SPACE_TARGET && emptyRatio >= 0) {
       inactivityTimerRef.current = setTimeout(() => {
-        const newOffset = calculateTargetOffset(updatedStrokes);
-        if (newOffset > offsetXRef.current + 5 && !isNaN(newOffset)) {
+        // Always slide by fixed ratio to keep incremental and predictable
+        const slideDistance = width * SLIDE_OFFSET_RATIO;
+        const newOffset = offsetXRef.current + slideDistance;
+        
+        if (!isNaN(newOffset)) {
           animateSlide(newOffset);
         }
       }, INACTIVITY_DELAY);
     }
     
     triggerRecognition(updatedStrokes);
-  }, [currentStroke, currentPath, strokes, paths, clearTimers, getEmptySpaceRatio, calculateTargetOffset, animateSlide, triggerRecognition]);
+  }, [currentStroke, currentPath, strokes, paths, clearTimers, getEmptySpaceRatio, animateSlide, triggerRecognition, width]);
 
   const clearCanvas = useCallback(() => {
     clearTimers();
@@ -289,18 +286,18 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     if (isSliding || strokes.length === 0) return;
     if (getEmptySpaceRatio(strokes) >= EMPTY_SPACE_TARGET) return;
     
-    const newOffset = calculateTargetOffset(strokes);
-    if (newOffset > offsetXRef.current + 5) {
-      animateSlide(newOffset);
-    }
-  }, [isSliding, strokes, getEmptySpaceRatio, calculateTargetOffset, animateSlide]);
+    // Always slide by fixed ratio to keep incremental and predictable
+    const slideDistance = width * SLIDE_OFFSET_RATIO;
+    const newOffset = offsetXRef.current + slideDistance;
+    
+    animateSlide(newOffset);
+  }, [isSliding, strokes, getEmptySpaceRatio, animateSlide, width]);
   
   const shouldDisableScrollRight = () => {
     if (strokes.length === 0) return true;
     try {
       const emptyRatio = getEmptySpaceRatio(strokes);
-      const potentialOffset = calculateTargetOffset(strokes);
-      return emptyRatio >= EMPTY_SPACE_TARGET || potentialOffset <= offsetXDisplay;
+      return emptyRatio >= EMPTY_SPACE_TARGET;
     } catch {
       return true;
     }
