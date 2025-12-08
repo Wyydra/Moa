@@ -22,6 +22,24 @@ build-apk:
 build-aab:
     npx expo build:android -t app-bundle --release-channel production
 
+# Rebuild Android App Bundle from scratch (clean + build)
+rebuild-aab:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🗑️  Cleaning build outputs and caches..."
+    cd android
+    # Remove output directories first
+    rm -rf app/build/outputs/bundle/
+    rm -rf app/build/outputs/apk/
+    # Remove CMake/native build cache (fixes autolinking errors)
+    rm -rf app/.cxx/
+    rm -rf app/build/generated/
+    # Clean Gradle build (skip native build clean to avoid CMake errors)
+    ./gradlew clean -x externalNativeBuildCleanDebug -x externalNativeBuildCleanRelease
+    echo "📦 Building release AAB..."
+    ./gradlew bundleRelease
+    echo "✅ AAB built: android/app/build/outputs/bundle/release/app-release.aab"
+
 # Install dependencies
 install:
     npm install
