@@ -19,13 +19,11 @@ export const TTSProvider = ({ children }: { children: ReactNode }) => {
 
   const loadSettings = useCallback(async () => {
     try {
-      console.log('[TTSContext] Loading TTS settings...');
       const [enabled, autoPlay, rate] = await Promise.all([
         getTTSEnabled(),
         getTTSAutoPlay(),
         getTTSRate(),
       ]);
-      console.log('[TTSContext] Loaded settings:', { enabled, autoPlay, rate });
       setTtsEnabled(enabled);
       setTtsAutoPlay(autoPlay);
       setTtsRate(rate);
@@ -41,7 +39,6 @@ export const TTSProvider = ({ children }: { children: ReactNode }) => {
   }, [loadSettings]);
 
   const refreshSettings = useCallback(async () => {
-    console.log('[TTSContext] Refreshing TTS settings...');
     await loadSettings();
   }, [loadSettings]);
 

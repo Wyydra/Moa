@@ -89,16 +89,7 @@ export default function PronunciationButton({
 
   // Strategy: immediate - joue une seule fois au montage
   useEffect(() => {
-    console.log('[PronunciationButton] Effect triggered (immediate):', {
-      autoPlayStrategy,
-      ttsEnabled,
-      ttsAutoPlay,
-      hasText: !!text,
-      hasAutoPlayed: hasAutoPlayed.current,
-    });
-
     if (autoPlayStrategy === 'immediate' && ttsEnabled && ttsAutoPlay && text && !hasAutoPlayed.current) {
-      console.log('[PronunciationButton] ✅ AUTO-PLAYING (immediate)');
       hasAutoPlayed.current = true;
       handlePress();
     }
@@ -106,17 +97,8 @@ export default function PronunciationButton({
 
   // Strategy: onTextChange - rejoue à chaque changement de texte
   useEffect(() => {
-    console.log('[PronunciationButton] Effect triggered (onTextChange):', {
-      autoPlayStrategy,
-      ttsEnabled,
-      ttsAutoPlay,
-      text,
-      previousText: previousText.current,
-    });
-
     if (autoPlayStrategy === 'onTextChange' && ttsEnabled && ttsAutoPlay) {
       if (text && text !== previousText.current) {
-        console.log('[PronunciationButton] ✅ AUTO-PLAYING (onTextChange)');
         previousText.current = text;
         handlePress();
       }

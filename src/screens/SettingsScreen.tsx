@@ -110,21 +110,18 @@ export default function SettingsScreen() {
   };
 
   const handleTTSEnabledChange = async (value: boolean) => {
-    console.log('[SettingsScreen] TTS Enabled changed to:', value);
     await setTTSEnabled(value);
     setTTSEnabledState(value);
     await refreshTTSSettings();
   };
 
   const handleTTSAutoPlayChange = async (value: boolean) => {
-    console.log('[SettingsScreen] TTS AutoPlay changed to:', value);
     await setTTSAutoPlay(value);
     setTTSAutoPlayState(value);
     await refreshTTSSettings();
   };
 
   const handleTTSRateChange = async (value: number) => {
-    console.log('[SettingsScreen] TTS Rate changed to:', value);
     await setTTSRate(value);
     setTTSRateState(value);
     await refreshTTSSettings();
