@@ -283,10 +283,23 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   }, [strokes, paths, isSliding, clearTimers, width, animateSlide, triggerRecognition]);
 
   const scrollLeft = useCallback(() => {
-    if (isSliding) return;
-    const newOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
-    animateSlide(newOffset);
-  }, [width, isSliding, animateSlide]);
+    if (isSliding || strokes.length === 0) return;
+    
+    // Calculate what the new empty space ratio would be after sliding left
+    const potentialNewOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
+    const allPoints = strokes.flatMap(stroke => stroke.points.map(p => p.x));
+    if (allPoints.length === 0) return;
+    
+    const rightmostX = Math.max(...allPoints);
+    const potentialViewportRightEdge = potentialNewOffset + width;
+    const potentialEmptySpace = potentialViewportRightEdge - rightmostX;
+    const potentialEmptyRatio = potentialEmptySpace / width;
+    
+    // Don't slide left if it would create more than 60% empty space
+    if (potentialEmptyRatio > EMPTY_SPACE_TARGET) return;
+    
+    animateSlide(potentialNewOffset);
+  }, [width, isSliding, animateSlide, strokes]);
 
   const scrollRight = useCallback(() => {
     if (isSliding || strokes.length === 0) return;
@@ -304,6 +317,25 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     try {
       const emptyRatio = getEmptySpaceRatio(strokes);
       return emptyRatio >= EMPTY_SPACE_TARGET;
+    } catch {
+      return true;
+    }
+  };
+
+  const shouldDisableScrollLeft = () => {
+    if (offsetXDisplay === 0 || strokes.length === 0) return true;
+    try {
+      // Check if sliding left would create more than 60% empty space
+      const potentialNewOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
+      const allPoints = strokes.flatMap(stroke => stroke.points.map(p => p.x));
+      if (allPoints.length === 0) return true;
+      
+      const rightmostX = Math.max(...allPoints);
+      const potentialViewportRightEdge = potentialNewOffset + width;
+      const potentialEmptySpace = potentialViewportRightEdge - rightmostX;
+      const potentialEmptyRatio = potentialEmptySpace / width;
+      
+      return potentialEmptyRatio > EMPTY_SPACE_TARGET;
     } catch {
       return true;
     }
@@ -351,9 +383,9 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
               {!disableNavigation && (
                 <>
                   <TouchableOpacity 
-                    style={[styles.arrowButton, (offsetXDisplay === 0 || isSliding) && styles.disabledArrow]} 
+                    style={[styles.arrowButton, (isSliding || shouldDisableScrollLeft()) && styles.disabledArrow]} 
                     onPress={scrollLeft}
-                    disabled={offsetXDisplay === 0 || isSliding}
+                    disabled={isSliding || shouldDisableScrollLeft()}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.arrowText}>←</Text>
