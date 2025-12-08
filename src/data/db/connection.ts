@@ -263,7 +263,7 @@ export function deckToRow(deck: Deck): Record<string, any> {
     id: deck.id,
     name: deck.name,
     description: deck.description || '',
-    source_language: deck.language || 'en-US', // Use single language field
+    source_language: deck.language || '', // Empty string for auto-detect
     target_language: 'en-US', // Default, future feature for language pairs
     category: 'general', // Future feature
     tags: JSON.stringify(deck.tags || []),
@@ -288,7 +288,7 @@ export function rowToDeck(row: any): Deck {
     createdAt: row.created_at,
     cardCount: row.total_cards,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
-    language: row.source_language || undefined,
+    language: row.source_language === '' ? undefined : row.source_language,
   };
 }
 
