@@ -13,7 +13,7 @@ const SLIDE_DURATION = 300;
 const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
 const CANVAS_WIDTH_PERCENT = 0.85;
-const EMPTY_SPACE_TARGET = 0.6; // 60% empty space rule
+const EMPTY_SPACE_TARGET = 0.8; // 80% empty space (20% occupied)
 
 const CANVAS_BG = {
   light: '#F5F5F5',
@@ -256,7 +256,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
           return;
         }
         
-        // Calculate exactly how much to slide to reach 60% empty space from where user drew
+        // Calculate exactly how much to slide to reach 80% empty space from where user drew
         const targetEmptySpace = width * EMPTY_SPACE_TARGET;
         const slideAmount = targetEmptySpace - emptySpaceFromLastStroke;
         const targetOffset = offsetXRef.current + slideAmount;
@@ -336,7 +336,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const potentialEmptySpace = potentialViewportRightEdge - rightmostX;
     const potentialEmptyRatio = potentialEmptySpace / width;
     
-    // Don't slide left if it would create more than 60% empty space
+    // Don't slide left if it would create more than 80% empty space
     if (potentialEmptyRatio > EMPTY_SPACE_TARGET) return;
     
     animateSlide(potentialNewOffset);
@@ -366,7 +366,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const shouldDisableScrollLeft = () => {
     if (offsetXDisplay === 0 || strokes.length === 0) return true;
     try {
-      // Check if sliding left would create more than 60% empty space
+      // Check if sliding left would create more than 80% empty space
       const potentialNewOffset = Math.max(0, offsetXRef.current - width * SLIDE_OFFSET_RATIO);
       const allPoints = strokes.flatMap(stroke => stroke.points.map(p => p.x));
       if (allPoints.length === 0) return true;
