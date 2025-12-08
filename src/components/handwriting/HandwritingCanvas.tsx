@@ -58,6 +58,11 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const [canvasWidth, setCanvasWidth] = useState(width);
   
   const offsetXRef = useRef(0);
+  const strokeStartOffsetRef = useRef(0); // Capture offset when stroke starts
+  const isDrawingRef = useRef(false); // Track if currently drawing
+  const containerRef = useRef<View>(null); // Reference to container for pageX calculations
+  const containerPageXRef = useRef(0); // Store container's pageX position
+  const lastStrokePageXRef = useRef(0); // Store last stroke's true screen position
   const offsetXAnim = useRef(new Animated.Value(0)).current;
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -177,8 +182,15 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     
     clearTimers();
     
-    const { locationX, locationY } = event.nativeEvent;
+    const { locationX, locationY, pageX } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
+    
+    // Capture the offset at stroke start for accurate viewport calculation later
+    strokeStartOffsetRef.current = offsetXRef.current;
+    isDrawingRef.current = true;
+    
+    // Capture pageX for this stroke (will be updated in touchMove to get rightmost)
+    lastStrokePageXRef.current = pageX;
     
     setCurrentStroke({ points: [{ x: globalX, y: locationY, t: Date.now() }] });
     
@@ -191,8 +203,13 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const handleTouchMove = useCallback((event: GestureResponderEvent) => {
     if (!currentStroke || !currentPath) return;
     
-    const { locationX, locationY } = event.nativeEvent;
+    const { locationX, locationY, pageX } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
+    
+    // Track the rightmost pageX of this stroke
+    if (pageX > lastStrokePageXRef.current) {
+      lastStrokePageXRef.current = pageX;
+    }
     
     setCurrentStroke({
       ...currentStroke,
@@ -214,6 +231,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     setPaths(updatedPaths);
     setCurrentStroke(null);
     setCurrentPath(null);
+    isDrawingRef.current = false; // Mark as not drawing
     
     // Clear all timers (restart fresh on each stroke)
     clearTimers();
@@ -222,20 +240,31 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const allPoints = updatedStrokes.flatMap(stroke => stroke.points.map(p => p.x));
     if (allPoints.length === 0) return;
     
-    const rightmostXGlobal = Math.max(...allPoints);
-    const rightmostXInViewport = rightmostXGlobal - offsetXRef.current;
-    const emptySpace = width - rightmostXInViewport;
-    const emptyRatio = emptySpace / width;
+    // Calculate last stroke's TRUE position in viewport using pageX (screen coordinates)
+    const lastStrokeTruePositionInViewport = lastStrokePageXRef.current - containerPageXRef.current;
     
-    console.log('[STROKE-END] Rightmost in viewport:', rightmostXInViewport.toFixed(1), 'empty:', (emptyRatio * 100).toFixed(0), '%');
+    // Calculate how much empty space we have from the last stroke's TRUE position
+    const emptySpaceFromLastStroke = width - lastStrokeTruePositionInViewport;
+    const emptyRatioFromLastStroke = emptySpaceFromLastStroke / width;
     
-    if (emptyRatio < EMPTY_SPACE_TARGET) {
+    if (emptyRatioFromLastStroke < EMPTY_SPACE_TARGET) {
       // Schedule auto-slide after inactivity
       inactivityTimerRef.current = setTimeout(() => {
-        // Slide by fixed 50px increment
-        const targetOffset = offsetXRef.current + 50;
-        console.log('[AUTO-SLIDE] Sliding 50px:', offsetXRef.current.toFixed(1), '→', targetOffset.toFixed(1));
-        animateSlide(targetOffset);
+        // Only slide if not currently drawing (use ref, not state)
+        if (isDrawingRef.current) {
+          inactivityTimerRef.current = null;
+          return;
+        }
+        
+        // Calculate exactly how much to slide to reach 60% empty space from where user drew
+        const targetEmptySpace = width * EMPTY_SPACE_TARGET;
+        const slideAmount = targetEmptySpace - emptySpaceFromLastStroke;
+        const targetOffset = offsetXRef.current + slideAmount;
+        
+        
+        if (slideAmount > 5) { // Only slide if meaningful
+          animateSlide(targetOffset);
+        }
         inactivityTimerRef.current = null;
       }, INACTIVITY_DELAY);
     }
@@ -359,12 +388,19 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   return (
     <View style={styles.container}>
       <View 
+        ref={containerRef}
         style={[styles.canvasContainer, { width, height, backgroundColor: canvasBackgroundColor }]}
         onStartShouldSetResponder={() => true}
         onMoveShouldSetResponder={() => true}
         onResponderGrant={handleTouchStart}
         onResponderMove={handleTouchMove}
         onResponderRelease={handleTouchEnd}
+        onLayout={(event) => {
+          // Capture container's position on screen
+          event.target.measure((x, y, w, h, pageX, pageY) => {
+            containerPageXRef.current = pageX;
+          });
+        }}
       >
         <Animated.View style={{ transform: [{ translateX: Animated.multiply(offsetXAnim, -1) }] }}>
           <SkiaCanvas
