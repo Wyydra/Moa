@@ -143,7 +143,9 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const rightmostX = Math.max(...allPoints);
     const viewportRightEdge = offsetXRef.current + width;
     const emptySpace = viewportRightEdge - rightmostX;
-    return emptySpace / width;
+    const ratio = emptySpace / width;
+    
+    return ratio;
   }, [width]);
 
   const triggerRecognition = useCallback((strokeList: Stroke[]) => {
@@ -174,8 +176,6 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     
     const { locationX, locationY } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
-    
-    console.log('[TOUCH-START] locationX:', locationX.toFixed(1), 'offset:', offsetXRef.current.toFixed(1), 'globalX:', globalX.toFixed(1));
     
     setCurrentStroke({ points: [{ x: globalX, y: locationY, t: Date.now() }] });
     
@@ -216,15 +216,15 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     // Auto-slide if we have less than 60% empty space
     const emptyRatio = getEmptySpaceRatio(updatedStrokes);
     
-    if (emptyRatio < EMPTY_SPACE_TARGET && emptyRatio >= 0) {
+    if (emptyRatio < EMPTY_SPACE_TARGET) {
       inactivityTimerRef.current = setTimeout(() => {
-        // Always slide by fixed ratio to keep incremental and predictable
-        const slideDistance = width * SLIDE_OFFSET_RATIO;
-        const newOffset = offsetXRef.current + slideDistance;
+        // Simple: just slide by a fixed amount (50 pixels)
+        const slideAmount = 50;
+        const targetOffset = offsetXRef.current + slideAmount;
         
-        if (!isNaN(newOffset)) {
-          animateSlide(newOffset);
-        }
+        console.log('[AUTO-SLIDE] Sliding by fixed', slideAmount, 'px from', offsetXRef.current.toFixed(1), 'to', targetOffset.toFixed(1));
+        
+        animateSlide(targetOffset);
       }, INACTIVITY_DELAY);
     }
     
