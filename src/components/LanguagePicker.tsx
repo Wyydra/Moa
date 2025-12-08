@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, StyleSheet, ActivityIndicator, Keyboard, Platform } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,24 +17,6 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
   const { languages, loading } = useAvailableLanguages();
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Écouter les événements du clavier
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => setKeyboardHeight(0)
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   // Filtrer les langues selon la recherche (strict includes)
   const filteredLanguages = languages.filter(lang => {
@@ -64,85 +46,84 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
         <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
       </TouchableOpacity>
 
-      {/* Modal */}
+      {/* Modal plein écran */}
       <Modal
         visible={showPicker}
-        transparent={true}
         animationType="slide"
         onRequestClose={() => setShowPicker(false)}
       >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity 
-            style={styles.modalOverlayTouchable}
-            activeOpacity={1}
-            onPress={() => {
-              setShowPicker(false);
-              setSearchQuery('');
-              Keyboard.dismiss();
-            }}
-          />
-          <View style={[styles.modalContent, { 
-            marginBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom,
-            paddingBottom: keyboardHeight > 0 ? 20 : 20 + insets.bottom 
-          }]}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('deck.language')}</Text>
-              <TouchableOpacity onPress={() => {
+        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity 
+              onPress={() => {
                 setShowPicker(false);
                 setSearchQuery('');
-                Keyboard.dismiss();
-              }}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+              }}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{t('deck.language')}</Text>
+            <View style={styles.spacer} />
+          </View>
+
+          {/* Recherche */}
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('deck.searchLanguage')}
+              placeholderTextColor={COLORS.textLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
               </TouchableOpacity>
-            </View>
-
-            {/* Recherche - toujours visible */}
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder={t('deck.searchLanguage')}
-                placeholderTextColor={COLORS.textLight}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            {/* Liste des langues */}
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>{t('common.loading')}</Text>
-              </View>
-            ) : (
-              <ScrollView keyboardShouldPersistTaps="handled">
-                {filteredLanguages.map((lang) => (
-                  <TouchableOpacity
-                    key={lang.code || 'auto'}
-                    style={[
-                      styles.languageOption,
-                      value === lang.code && styles.languageOptionSelected
-                    ]}
-                    onPress={() => handleSelect(lang.code)}
-                  >
-                    <Text style={styles.languageCode}>
-                      {lang.code ? lang.code : `🌐 ${t('deck.languageAuto')}`}
-                    </Text>
-                    {value === lang.code && (
-                      <Ionicons name="checkmark" size={24} color={COLORS.primary} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-                {filteredLanguages.length === 0 && (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>{t('deck.noLanguagesFound')}</Text>
-                  </View>
-                )}
-              </ScrollView>
             )}
           </View>
+
+          {/* Liste des langues */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <Text style={styles.loadingText}>{t('common.loading')}</Text>
+            </View>
+          ) : (
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={{ paddingBottom: insets.bottom }}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              {filteredLanguages.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code || 'auto'}
+                  style={[
+                    styles.languageOption,
+                    value === lang.code && styles.languageOptionSelected
+                  ]}
+                  onPress={() => handleSelect(lang.code)}
+                >
+                  <Text style={styles.languageCode}>
+                    {lang.code ? lang.code : `🌐 ${t('deck.languageAuto')}`}
+                  </Text>
+                  {value === lang.code && (
+                    <Ionicons name="checkmark" size={24} color={COLORS.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+              {filteredLanguages.length === 0 && (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>{t('deck.noLanguagesFound')}</Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
         </View>
       </Modal>
     </>
@@ -167,69 +148,78 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalOverlayTouchable: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
     backgroundColor: COLORS.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '50%',
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: SPACING.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+  },
+  backButton: {
+    padding: SPACING.xs,
+  },
+  spacer: {
+    width: 40,
   },
   modalTitle: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     color: COLORS.text,
+    flex: 1,
+    textAlign: 'center',
   },
   searchContainer: {
-    padding: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  searchInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.sm,
-    fontSize: 15,
-    color: COLORS.text,
+    margin: SPACING.md,
+    paddingHorizontal: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  searchIcon: {
+    marginRight: SPACING.sm,
+  },
+  searchInput: {
+    flex: 1,
+    padding: SPACING.sm,
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  scrollView: {
+    flex: 1,
   },
   languageOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    minHeight: 44,
+    padding: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    minHeight: 56,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border + '30',
   },
   languageOptionSelected: {
     backgroundColor: COLORS.primary + '10',
   },
   languageCode: {
-    fontSize: 16,
+    fontSize: 17,
     color: COLORS.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
     flex: 1,
   },
   loadingContainer: {
-    padding: SPACING.xl,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 200,
+    padding: SPACING.xl,
   },
   loadingText: {
     marginTop: SPACING.md,
