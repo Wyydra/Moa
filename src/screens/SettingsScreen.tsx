@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Platform,
 import { useTranslation } from 'react-i18next';
 import Slider from '@react-native-community/slider';
 import { getLocales } from 'expo-localization';
+import Constants from 'expo-constants';
 import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled, exportAllData, importAllData, getStorageSize, cleanupOldSessions, getOldSessionsCount } from '../data/storage';
 import { commonStyles } from '../styles/commonStyles';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
@@ -240,7 +241,7 @@ export default function SettingsScreen() {
   const handleReportBug = async () => {
     try {
       const subject = encodeURIComponent('Moa - Bug Report');
-      const body = encodeURIComponent(`App Version: ${require('../../package.json').version}\nPlatform: ${Platform.OS}\n\nDescribe the bug:\n\n\nSteps to reproduce:\n1. \n2. \n3. \n\nExpected behavior:\n\n\nActual behavior:\n\n`);
+      const body = encodeURIComponent(`App Version: ${Constants.expoConfig?.version || '1.3.2'}\nPlatform: ${Platform.OS}\n\nDescribe the bug:\n\n\nSteps to reproduce:\n1. \n2. \n3. \n\nExpected behavior:\n\n\nActual behavior:\n\n`);
       const url = `mailto:moafeedback@wydry.dev?subject=${subject}&body=${body}`;
       
       const canOpen = await Linking.canOpenURL(url);
@@ -264,7 +265,7 @@ export default function SettingsScreen() {
   const handleFeatureRequest = async () => {
     try {
       const subject = encodeURIComponent('Moa - Feature Request');
-      const body = encodeURIComponent(`App Version: ${require('../../package.json').version}\nPlatform: ${Platform.OS}\n\nFeature Request:\n\n\nWhy would this be useful:\n\n\nHow should it work:\n\n`);
+      const body = encodeURIComponent(`App Version: ${Constants.expoConfig?.version || '1.3.2'}\nPlatform: ${Platform.OS}\n\nFeature Request:\n\n\nWhy would this be useful:\n\n\nHow should it work:\n\n`);
       const url = `mailto:moafeedback@wydry.dev?subject=${subject}&body=${body}`;
       
       const canOpen = await Linking.canOpenURL(url);
@@ -559,7 +560,7 @@ export default function SettingsScreen() {
 
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>
-              {t('settings.version')} {require('../../package.json').version}
+              {t('settings.version')} {Constants.expoConfig?.version || '1.3.2'}
             </Text>
           </View>
         </View>
