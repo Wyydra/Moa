@@ -18,7 +18,10 @@ export interface Deck {
   createdAt: number;
   cardCount: number;
   tags?: string[];
-  language?: string; // BCP 47 language code (e.g., 'ko-KR', 'ja-JP', 'en-US')
+  frontLanguage?: string; // BCP 47 code, 'app-language', or undefined (auto-detect)
+  backLanguage?: string;  // BCP 47 code or undefined (auto-detect)
+  // Legacy field for backward compatibility
+  language?: string;
 }
 
 export interface StudySession {

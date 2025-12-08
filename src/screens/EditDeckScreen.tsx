@@ -14,7 +14,8 @@ export default function EditDeckScreen({ route, navigation}: any) {
   const { deckId } = route.params;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [language, setLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>('app-language');
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -29,7 +30,9 @@ export default function EditDeckScreen({ route, navigation}: any) {
     if (deck) {
       setName(deck.name);
       setDescription(deck.description || '');
-      setLanguage(deck.language);
+      // Handle legacy 'language' field
+      setFrontLanguage(deck.frontLanguage !== undefined ? deck.frontLanguage : (deck.language || 'app-language'));
+      setBackLanguage(deck.backLanguage !== undefined ? deck.backLanguage : undefined);
       setTags(deck.tags || []);
     }
     setLoading(false);
@@ -61,7 +64,8 @@ export default function EditDeckScreen({ route, navigation}: any) {
       deck.name = name.trim();
       deck.description = description.trim() || undefined;
       deck.tags = tags;
-      deck.language = language;
+      deck.frontLanguage = frontLanguage;
+      deck.backLanguage = backLanguage;
       await saveDeck(deck);
       navigation.goBack();
     }
@@ -106,7 +110,20 @@ export default function EditDeckScreen({ route, navigation}: any) {
         numberOfLines={3}
       />
 
-      <LanguagePicker value={language} onChange={setLanguage} />
+      <Text style={commonStyles.label}>{t('deck.frontLanguage')}</Text>
+      <Text style={styles.languageDescription}>{t('deck.frontLanguageDescription')}</Text>
+      <LanguagePicker 
+        value={frontLanguage} 
+        onChange={setFrontLanguage}
+        includeAppLanguage={true}
+      />
+
+      <Text style={commonStyles.label}>{t('deck.backLanguage')}</Text>
+      <Text style={styles.languageDescription}>{t('deck.backLanguageDescription')}</Text>
+      <LanguagePicker 
+        value={backLanguage} 
+        onChange={setBackLanguage}
+      />
 
       <Text style={commonStyles.label}>{t('deck.tags')}</Text>
       <View style={styles.tagsContainer}>
@@ -241,5 +258,11 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: SPACING.xl,
     marginBottom: SPACING.lg,
+  },
+  languageDescription: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginBottom: SPACING.sm,
+    marginTop: -SPACING.xs,
   },
 });

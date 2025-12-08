@@ -14,7 +14,8 @@ export default function CreateDeckScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [language, setLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>('app-language');
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -52,7 +53,8 @@ export default function CreateDeckScreen({ navigation }: any) {
       createdAt: Date.now(),
       cardCount: 0,
       tags: tags,
-      language: language,
+      frontLanguage: frontLanguage,
+      backLanguage: backLanguage,
     };
 
     await saveDeck(newDeck);
@@ -91,7 +93,20 @@ export default function CreateDeckScreen({ navigation }: any) {
         numberOfLines={3}
       />
 
-      <LanguagePicker value={language} onChange={setLanguage} />
+      <Text style={commonStyles.label}>{t('deck.frontLanguage')}</Text>
+      <Text style={styles.languageDescription}>{t('deck.frontLanguageDescription')}</Text>
+      <LanguagePicker 
+        value={frontLanguage} 
+        onChange={setFrontLanguage}
+        includeAppLanguage={true}
+      />
+
+      <Text style={commonStyles.label}>{t('deck.backLanguage')}</Text>
+      <Text style={styles.languageDescription}>{t('deck.backLanguageDescription')}</Text>
+      <LanguagePicker 
+        value={backLanguage} 
+        onChange={setBackLanguage}
+      />
 
       <Text style={commonStyles.label}>{t('deck.tags')}</Text>
       <View style={styles.tagsContainer}>
@@ -226,5 +241,11 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: SPACING.xl,
     marginBottom: SPACING.lg,
+  },
+  languageDescription: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginBottom: SPACING.sm,
+    marginTop: -SPACING.xs,
   },
 });

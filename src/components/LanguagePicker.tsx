@@ -9,23 +9,35 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/co
 interface LanguagePickerProps {
   value: string | undefined;
   onChange: (code: string | undefined) => void;
+  includeAppLanguage?: boolean; // Show "App Language" option
+  label?: string; // Custom label for the picker
 }
 
-export default function LanguagePicker({ value, onChange }: LanguagePickerProps) {
-  const { t } = useTranslation();
+export default function LanguagePicker({ value, onChange, includeAppLanguage = false, label }: LanguagePickerProps) {
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { languages, loading } = useAvailableLanguages();
+  const { languages, loading } = useAvailableLanguages(includeAppLanguage);
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filtrer les langues selon la recherche (strict includes)
   const filteredLanguages = languages.filter(lang => {
     if (!lang.code) return true; // Auto-detect toujours visible
+    if (lang.code === 'app-language') return true; // App language toujours visible
     return lang.code.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   // Afficher la valeur sélectionnée
-  const displayValue = value ? value : t('deck.languageAuto');
+  const getDisplayValue = () => {
+    if (!value) return t('deck.languageAuto');
+    if (value === 'app-language') {
+      const currentLang = i18n.language === 'fr' ? 'Français' : 'English';
+      return `${t('deck.appLanguage')} (${currentLang})`;
+    }
+    return value;
+  };
+  
+  const displayValue = getDisplayValue();
 
   const handleSelect = (code: string | undefined) => {
     onChange(code);
@@ -100,23 +112,35 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
             >
-              {filteredLanguages.map((lang) => (
-                <TouchableOpacity
-                  key={lang.code || 'auto'}
-                  style={[
-                    styles.languageOption,
-                    value === lang.code && styles.languageOptionSelected
-                  ]}
-                  onPress={() => handleSelect(lang.code)}
-                >
-                  <Text style={styles.languageCode}>
-                    {lang.code ? lang.code : `🌐 ${t('deck.languageAuto')}`}
-                  </Text>
-                  {value === lang.code && (
-                    <Ionicons name="checkmark" size={24} color={COLORS.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
+              {filteredLanguages.map((lang) => {
+                let displayText = '';
+                if (!lang.code) {
+                  displayText = `🌐 ${t('deck.languageAuto')}`;
+                } else if (lang.code === 'app-language') {
+                  const currentLang = i18n.language === 'fr' ? 'Français' : 'English';
+                  displayText = `📱 ${t('deck.appLanguage')} (${currentLang})`;
+                } else {
+                  displayText = lang.code;
+                }
+                
+                return (
+                  <TouchableOpacity
+                    key={lang.code || 'auto'}
+                    style={[
+                      styles.languageOption,
+                      value === lang.code && styles.languageOptionSelected
+                    ]}
+                    onPress={() => handleSelect(lang.code)}
+                  >
+                    <Text style={styles.languageCode}>
+                      {displayText}
+                    </Text>
+                    {value === lang.code && (
+                      <Ionicons name="checkmark" size={24} color={COLORS.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
               {filteredLanguages.length === 0 && (
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>{t('deck.noLanguagesFound')}</Text>

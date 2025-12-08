@@ -9,6 +9,7 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/co
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function BrowseScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -19,7 +20,8 @@ export default function BrowseScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadCards();
@@ -40,11 +42,12 @@ export default function BrowseScreen({route, navigation}: any) {
     
     setCards(allCards);
     
-    // Load deck to get language setting
+    // Load deck to get language settings
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
     
@@ -145,7 +148,10 @@ export default function BrowseScreen({route, navigation}: any) {
                 }
                 rate={ttsRate}
                 autoPlay={false}
-                language={deckLanguage}
+                language={showBack 
+                  ? (reversed ? frontLanguage : backLanguage)
+                  : (reversed ? backLanguage : frontLanguage)
+                }
               />
             </View>
           )}

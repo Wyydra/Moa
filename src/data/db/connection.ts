@@ -7,7 +7,7 @@ import { Card, Deck } from '../model';
  */
 
 const DATABASE_NAME = 'moa.db';
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 2;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -159,6 +159,18 @@ async function createSchemaV1(database: SQLite.SQLiteDatabase): Promise<void> {
 }
 
 /**
+ * Migrate from v1 to v2: Add back_language column to decks table
+ */
+async function migrateV1ToV2(database: SQLite.SQLiteDatabase): Promise<void> {
+  await database.execAsync(`
+    ALTER TABLE decks ADD COLUMN back_language TEXT NOT NULL DEFAULT '';
+  `);
+  
+  // Migrate existing data: source_language becomes frontLanguage, backLanguage defaults to auto-detect
+  // No data migration needed - the new column defaults to '' (auto-detect)
+}
+
+/**
  * Migrate schema from one version to another
  */
 async function migrateSchema(
@@ -168,16 +180,16 @@ async function migrateSchema(
 ): Promise<void> {
   console.log(`Migrating schema from v${fromVersion} to v${toVersion}`);
 
-  if (fromVersion === 0 && toVersion === 1) {
+  if (fromVersion === 0 && toVersion >= 1) {
     // Fresh install - create schema v1
     await createSchemaV1(database);
     console.log('Schema v1 created successfully');
   }
   
-  // Future migrations will go here:
-  // if (fromVersion === 1 && toVersion === 2) {
-  //   await migrateV1ToV2(database);
-  // }
+  if (fromVersion === 1 && toVersion >= 2) {
+    await migrateV1ToV2(database);
+    console.log('Schema migrated to v2 successfully');
+  }
 }
 
 /**
@@ -259,11 +271,16 @@ export function rowToCard(row: any): Card {
  * Maps current Deck model to extended database schema
  */
 export function deckToRow(deck: Deck): Record<string, any> {
+  // Handle legacy 'language' field for backward compatibility
+  const frontLang = deck.frontLanguage !== undefined ? deck.frontLanguage : (deck.language || '');
+  const backLang = deck.backLanguage !== undefined ? deck.backLanguage : '';
+  
   return {
     id: deck.id,
     name: deck.name,
     description: deck.description || '',
-    source_language: deck.language || '', // Empty string for auto-detect
+    source_language: frontLang, // Now stores frontLanguage
+    back_language: backLang,    // New field for backLanguage
     target_language: 'en-US', // Default, future feature for language pairs
     category: 'general', // Future feature
     tags: JSON.stringify(deck.tags || []),
@@ -288,7 +305,8 @@ export function rowToDeck(row: any): Deck {
     createdAt: row.created_at,
     cardCount: row.total_cards,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
-    language: row.source_language === '' ? undefined : row.source_language,
+    frontLanguage: row.source_language === '' ? undefined : row.source_language,
+    backLanguage: row.back_language === '' ? undefined : row.back_language,
   };
 }
 
