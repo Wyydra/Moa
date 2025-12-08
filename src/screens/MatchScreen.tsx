@@ -80,10 +80,13 @@ export default function MatchScreen({ route, navigation }: any) {
     const cardsToUse = shuffledCards.slice(0, numCards);
 
     const generatedTiles: Tile[] = [];
-    cardsToUse.forEach(card => {
+    for (const card of cardsToUse) {
       // Detect language for each side of the card
       const frontText = reversed ? card.back : card.front;
       const backText = reversed ? card.front : card.back;
+      
+      const frontLanguage = await detectLanguage(frontText);
+      const backLanguage = await detectLanguage(backText);
       
       generatedTiles.push({
         id: `${card.id}-front`,
@@ -92,7 +95,7 @@ export default function MatchScreen({ route, navigation }: any) {
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
-        language: detectLanguage(frontText),
+        language: frontLanguage,
       });
       generatedTiles.push({
         id: `${card.id}-back`,
@@ -101,9 +104,9 @@ export default function MatchScreen({ route, navigation }: any) {
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
-        language: detectLanguage(backText),
+        language: backLanguage,
       });
-    });
+    }
 
     const shuffledTiles = generatedTiles.sort(() => Math.random() - 0.5);
     setTiles(shuffledTiles);

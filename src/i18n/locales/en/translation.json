@@ -55,6 +55,8 @@
     "language": "Language",
     "languageDescription": "Select the language for text-to-speech pronunciation",
     "languageAuto": "Auto-detect",
+    "searchLanguage": "Search by code...",
+    "noLanguagesFound": "No languages found",
     "tags": "Tags",
     "addTag": "Add tag",
     "filterByTag": "Filter by tag",

@@ -55,7 +55,7 @@ export default function PronunciationButton({
 
     try {
       // Use provided language prop, otherwise auto-detect
-      const langCode = language || detectLanguage(text);
+      const langCode = language || await detectLanguage(text);
 
       console.log('[PronunciationButton] Starting speech with language:', langCode, 'rate:', rate);
       await Speech.speak(text, {

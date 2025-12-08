@@ -55,6 +55,8 @@
     "language": "Langue",
     "languageDescription": "Sélectionnez la langue pour la prononciation synthèse vocale",
     "languageAuto": "Détection automatique",
+    "searchLanguage": "Rechercher par code...",
+    "noLanguagesFound": "Aucune langue trouvée",
     "tags": "Étiquettes",
     "addTag": "Ajouter une étiquette",
     "filterByTag": "Filtrer par étiquette",
