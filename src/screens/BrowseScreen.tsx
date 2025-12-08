@@ -3,15 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
 import { getCardsByDeck, getCardsByTags, getDeckById } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
+import { createCommonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function BrowseScreen({route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
@@ -92,11 +97,11 @@ export default function BrowseScreen({route, navigation}: any) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={32} color={COLORS.text} />
+            <Ionicons name="close" size={32} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
-          <Ionicons name="albums-outline" size={80} color={COLORS.textLight} />
+          <Ionicons name="albums-outline" size={80} color={theme.textLight} />
           <Text style={commonStyles.emptyText}>{t('deck.noCards')}</Text>
           <TouchableOpacity style={commonStyles.button} onPress={handleBack}>
             <Text style={commonStyles.buttonText}>{t('common.done')}</Text>
@@ -117,7 +122,7 @@ export default function BrowseScreen({route, navigation}: any) {
           {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={32} color={COLORS.text} />
+          <Ionicons name="close" size={32} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -147,7 +152,7 @@ export default function BrowseScreen({route, navigation}: any) {
         </View>
 
         <TouchableOpacity style={[commonStyles.button, styles.flipButton]} onPress={handleFlip}>
-          <Ionicons name="repeat-outline" size={20} color={COLORS.textInverse} />
+          <Ionicons name="repeat-outline" size={20} color={theme.textInverse} />
           <Text style={commonStyles.buttonText}>
             {showBack ? t('flashcard.showQuestion') : t('flashcard.showAnswer')}
           </Text>
@@ -162,7 +167,7 @@ export default function BrowseScreen({route, navigation}: any) {
             <Ionicons 
               name="chevron-back" 
               size={24} 
-              color={canGoPrevious ? COLORS.text : COLORS.textLight} 
+              color={canGoPrevious ? theme.text : theme.textLight} 
             />
             <Text style={[styles.navButtonText, !canGoPrevious && styles.navButtonTextDisabled]}>
               {t('common.previous')}
@@ -180,7 +185,7 @@ export default function BrowseScreen({route, navigation}: any) {
             <Ionicons 
               name="chevron-forward" 
               size={24} 
-              color={canGoNext ? COLORS.text : COLORS.textLight} 
+              color={canGoNext ? theme.text : theme.textLight} 
             />
           </TouchableOpacity>
         </View>
@@ -189,7 +194,7 @@ export default function BrowseScreen({route, navigation}: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: -0.2,
   },
   cardContainer: {
@@ -219,12 +224,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xxl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.xl,
   },
   cardLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.lg,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
@@ -232,7 +237,7 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
     lineHeight: TYPOGRAPHY.fontSize.xxl * TYPOGRAPHY.lineHeight.normal,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
@@ -259,10 +264,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     gap: SPACING.xs,
     ...SHADOWS.sm,
   },
@@ -272,10 +277,10 @@ const styles = StyleSheet.create({
   navButtonText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   navButtonTextDisabled: {
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
   pronunciationContainer: {
     marginTop: SPACING.xl,

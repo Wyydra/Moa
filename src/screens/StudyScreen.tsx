@@ -4,9 +4,11 @@ import { Card, StudySession } from "../data/model";
 import { getDueCards, getDueCardsByTags, batchSaveCards, getDeckById, saveStudySession, generateId } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
+import { createCommonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
@@ -15,6 +17,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function StudyScreen({route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
@@ -140,11 +145,11 @@ if (completed) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={32} color={COLORS.text} />
+            <Ionicons name="close" size={32} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={96} color={COLORS.success} />
+          <Ionicons name="checkmark-circle" size={96} color={theme.success} />
           <Text style={styles.completedTitle}>{t('study.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {cards.length === 0 ? t('study.noDueCards') : t('study.reviewedCards', { count: cards.length })}
@@ -167,7 +172,7 @@ if (completed) {
           {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={32} color={COLORS.text} />
+          <Ionicons name="close" size={32} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -257,7 +262,7 @@ if (completed) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -271,7 +276,7 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: -0.2,
   },
   cardContainer: {
@@ -287,12 +292,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xxl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.xl,
   },
   cardLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.lg,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
     lineHeight: TYPOGRAPHY.fontSize.xxl * TYPOGRAPHY.lineHeight.normal,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
@@ -326,19 +331,19 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   againButton: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: theme.danger,
   },
   hardButton: {
-    backgroundColor: COLORS.warning,
+    backgroundColor: theme.warning,
   },
   goodButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
   },
   easyButton: {
-    backgroundColor: COLORS.success,
+    backgroundColor: theme.success,
   },
   responseButtonText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     fontSize: TYPOGRAPHY.fontSize.sm,
     marginBottom: SPACING.xs,
@@ -346,7 +351,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   responseTime: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.xs,
     opacity: 0.9,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
@@ -360,14 +365,14 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.xl,
     marginBottom: SPACING.md,
     letterSpacing: -0.5,
   },
   completedText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xxl,
     textAlign: 'center',
     lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,

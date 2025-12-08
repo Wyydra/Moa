@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { HandwritingCanvas } from './HandwritingCanvas';
-import { commonStyles } from '../../styles/commonStyles';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../utils/constants';
+import { createCommonStyles } from '../../styles/commonStyles';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../utils/constants';
+import { useTheme } from '../../hooks/useTheme';
+import type { Theme } from '../../utils/themes';
 
 interface HandwritingModuleProps {
   // Text management
@@ -55,6 +57,9 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
   const finalCanvasWidth = canvasWidth || Math.floor(screenWidth * 0.85);
   const finalCanvasHeight = canvasHeight || Math.floor(screenHeight * 0.4);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentText, setCurrentText] = useState(initialText);
   const [recognitionHistory, setRecognitionHistory] = useState<string[]>([]);
@@ -111,7 +116,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
           <Ionicons 
             name={buttonIcon as any} 
             size={20} 
-            color={disabled ? COLORS.textLight : COLORS.primary} 
+            color={disabled ? theme.textLight : theme.primary} 
           />
           <Text style={[styles.triggerButtonText, buttonTextStyle, disabled && styles.disabledText]}>
             {buttonText || t('modes.write.writeByHand')}
@@ -171,7 +176,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
                   style={styles.deleteButton}
                   onPress={resetToSnapshot}
                 >
-                  <Ionicons name="backspace-outline" size={20} color={COLORS.danger} />
+                  <Ionicons name="backspace-outline" size={20} color={theme.danger} />
                   <Text style={styles.deleteButtonText}>
                     {t('common.delete')} All
                   </Text>
@@ -186,7 +191,7 @@ export const HandwritingModule: React.FC<HandwritingModuleProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   // Trigger button
   triggerButton: {
     flexDirection: 'row',
@@ -195,22 +200,22 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
   },
   triggerButtonText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: 4,
   },
   disabled: {
     opacity: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
   disabledText: {
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
   
   // Safe area
@@ -245,24 +250,24 @@ const styles = StyleSheet.create({
   // Text display area
   textDisplay: {
     width: '100%',
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     minHeight: 60,
   },
   textDisplayLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xs,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   textDisplayValue: {
     fontSize: TYPOGRAPHY.fontSize.xl,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     minHeight: 30,
   },
@@ -282,14 +287,14 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.danger,
+    borderColor: theme.danger,
   },
   deleteButtonText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.danger,
+    color: theme.danger,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: 4,
   },

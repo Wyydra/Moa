@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
 import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Animated } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
+import { createCommonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { HandwritingModule } from '../components/handwriting';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
@@ -13,6 +15,9 @@ import * as Speech from 'expo-speech';
 import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function WriteScreen({route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
@@ -131,11 +136,11 @@ export default function WriteScreen({route, navigation}: any) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={28} color={COLORS.text} />
+            <Ionicons name="close" size={28} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+          <Ionicons name="checkmark-circle" size={80} color={theme.success} />
           <Text style={styles.completedTitle}>{t('modes.write.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {t('modes.write.score', { correct: correctCount, total: cards.length, percentage })}
@@ -157,7 +162,7 @@ export default function WriteScreen({route, navigation}: any) {
           {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -272,7 +277,7 @@ export default function WriteScreen({route, navigation}: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -286,7 +291,7 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   cardContainer: {
     flex: 1,
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -309,14 +314,14 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   cardText: {
     fontSize: 24,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
     lineHeight: 32,
   },
@@ -335,26 +340,26 @@ const styles = StyleSheet.create({
   },
   answerLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text,
+    color: theme.text,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
   inputCorrect: {
-    borderColor: COLORS.success,
-    backgroundColor: COLORS.success + '20',
+    borderColor: theme.success,
+    backgroundColor: theme.success + '20',
   },
   inputIncorrect: {
-    borderColor: COLORS.danger,
-    backgroundColor: COLORS.danger + '20',
+    borderColor: theme.danger,
+    backgroundColor: theme.danger + '20',
   },
   resultSection: {
     marginBottom: SPACING.lg,
@@ -367,40 +372,40 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.lg,
   },
   correctBadge: {
-    backgroundColor: COLORS.success,
+    backgroundColor: theme.success,
   },
   incorrectBadge: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: theme.danger,
   },
   resultText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
   },
   correctAnswerBox: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.info,
+    borderLeftColor: theme.info,
     ...SHADOWS.sm,
   },
   correctAnswerLabel: {
     fontSize: 12,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xs,
     textTransform: 'uppercase',
   },
   correctAnswerText: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   submitButton: {
@@ -420,13 +425,13 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   completedText: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xl,
   },
 });

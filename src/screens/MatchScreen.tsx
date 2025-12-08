@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
 import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getTTSEnabled, getTTSRate, getDeckById } from "../data/storage";
 import { StudySession } from "../data/model";
-import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
+import { createCommonStyles } from "../styles/commonStyles";
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { Ionicons } from "@expo/vector-icons";
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
@@ -23,6 +25,9 @@ interface Tile {
 }
 
 export default function MatchScreen({ route, navigation }: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [tiles, setTiles] = useState<Tile[]>([]);
@@ -230,11 +235,11 @@ export default function MatchScreen({ route, navigation }: any) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={28} color={COLORS.text} />
+            <Ionicons name="close" size={28} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+          <Ionicons name="checkmark-circle" size={80} color={theme.success} />
           <Text style={styles.completedTitle}>{t('modes.match.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {t('modes.match.stats', { matches: matchedCount, tries })}
@@ -258,7 +263,7 @@ export default function MatchScreen({ route, navigation }: any) {
       <View style={styles.header}>
         <Text style={styles.headerText}>{t('modes.match.title')}</Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -329,7 +334,7 @@ export default function MatchScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -340,7 +345,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
   },
   spacer: {
     width: 28,
@@ -349,11 +354,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: SPACING.lg,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   stat: {
@@ -361,18 +366,18 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   statValue: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
   },
   instruction: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textAlign: 'center',
     marginBottom: SPACING.md,
   },
@@ -386,12 +391,12 @@ const styles = StyleSheet.create({
   tile: {
     width: '31.5%',
     height: screenHeight * 0.12,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   tileTouchable: {
@@ -402,18 +407,18 @@ const styles = StyleSheet.create({
     padding: SPACING.xs,
   },
   tileSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
-    ...SHADOWS.colored(COLORS.primary),
+    borderColor: theme.primary,
+    backgroundColor: theme.primary,
+    ...SHADOWS.colored(theme.primary),
   },
   tileWrong: {
-    borderColor: COLORS.danger,
-    backgroundColor: COLORS.danger,
-    ...SHADOWS.colored(COLORS.danger),
+    borderColor: theme.danger,
+    backgroundColor: theme.danger,
+    ...SHADOWS.colored(theme.danger),
   },
   tileText: {
     fontSize: 13,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
   },
 
@@ -425,22 +430,22 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   completedText: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.sm,
   },
   timeText: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xl,
   },
   doneButton: {
     marginTop: SPACING.sm,
-    backgroundColor: COLORS.textMedium,
+    backgroundColor: theme.textMedium,
   },
 });

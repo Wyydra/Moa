@@ -2,13 +2,18 @@ import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { getDeckById, saveDeck, getAllTags } from "../data/storage";
 import { View, Alert, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
+import { createCommonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LanguagePicker from '../components/LanguagePicker';
 
 export default function EditDeckScreen({ route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { deckId } = route.params;
@@ -88,7 +93,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
         <View style={styles.spacer} />
         <Text style={commonStyles.screenTitle}>{t('deck.editDeck')}</Text>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -149,7 +154,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
           style={styles.addTagButton}
           onPress={handleAddTag}
         >
-          <Ionicons name="add-circle" size={28} color={COLORS.primary} />
+          <Ionicons name="add-circle" size={28} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
@@ -186,7 +191,7 @@ export default function EditDeckScreen({ route, navigation}: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -211,14 +216,14 @@ const styles = StyleSheet.create({
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     marginRight: SPACING.sm,
     marginBottom: SPACING.sm,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   tagText: {
@@ -243,16 +248,16 @@ const styles = StyleSheet.create({
     maxHeight: 40,
   },
   suggestedTagChip: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.full,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     marginRight: SPACING.sm,
   },
   suggestedTagText: {
-    color: COLORS.textLight,
+    color: theme.textLight,
     fontSize: 14,
   },
   saveButton: {
@@ -261,7 +266,7 @@ const styles = StyleSheet.create({
   },
   languageDescription: {
     fontSize: 12,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.sm,
     marginTop: -SPACING.xs,
   },

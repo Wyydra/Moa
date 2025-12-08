@@ -5,8 +5,8 @@ import Slider from '@react-native-community/slider';
 import { getLocales } from 'expo-localization';
 import Constants from 'expo-constants';
 import { getLanguagePreference, saveLanguagePreference, getHandwritingLanguage, saveHandwritingLanguage, getTTSEnabled, getTTSAutoPlay, setTTSAutoPlay, getTTSRate, setTTSRate, setTTSEnabled, getNotificationsEnabled, setNotificationsEnabled, getNotificationTime, setNotificationTime, getStreakRemindersEnabled, setStreakRemindersEnabled, exportAllData, importAllData, getStorageSize, cleanupOldSessions, getOldSessionsCount } from '../data/storage';
-import { commonStyles } from '../styles/commonStyles';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
+import { createCommonStyles } from '../styles/commonStyles';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../utils/constants';
 import OptionPicker from '../components/OptionPicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleDailyReminder, cancelDailyReminder, scheduleStreakReminder, cancelStreakReminder } from '../utils/notifications';
@@ -15,6 +15,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
+import type { ThemeMode } from '../contexts/ThemeContext';
 
 const getAppLanguages = (t: any) => [
   { code: 'system', name: t('settings.systemDefault'), icon: '🌐' },
@@ -29,8 +32,12 @@ const HANDWRITING_LANGUAGES = [
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const insets = useSafeAreaInsets();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const [appLanguage, setAppLanguage] = useState(i18n.language);
+  const [currentThemeMode, setCurrentThemeMode] = useState<ThemeMode>(themeMode);
   const [handwritingLanguage, setHandwritingLanguage] = useState('ko');
   const [ttsEnabled, setTTSEnabledState] = useState(true);
   const [ttsAutoPlay, setTTSAutoPlayState] = useState(false);
@@ -46,6 +53,10 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadPreferences();
   }, []);
+
+  useEffect(() => {
+    setCurrentThemeMode(themeMode);
+  }, [themeMode]);
 
   const loadPreferences = async () => {
     const savedAppLang = await getLanguagePreference();
@@ -89,6 +100,11 @@ export default function SettingsScreen() {
   const handleHandwritingLanguageChange = async (lang: string) => {
     await saveHandwritingLanguage(lang);
     setHandwritingLanguage(lang);
+  };
+
+  const handleThemeChange = async (mode: string) => {
+    await setThemeMode(mode as ThemeMode);
+    setCurrentThemeMode(mode as ThemeMode);
   };
 
   const handleTTSEnabledChange = async (value: boolean) => {
@@ -358,6 +374,19 @@ export default function SettingsScreen() {
             onValueChange={handleAppLanguageChange}
           />
 
+          <Text style={styles.sectionTitle}>{t('settings.appearance')}</Text>
+          <OptionPicker
+            label={t('settings.theme')}
+            description={t('settings.themeDescription')}
+            value={currentThemeMode}
+            options={[
+              { code: 'auto', name: t('settings.themeAuto'), icon: '🌓' },
+              { code: 'light', name: t('settings.themeLight'), icon: '☀️' },
+              { code: 'dark', name: t('settings.themeDark'), icon: '🌙' },
+            ]}
+            onValueChange={handleThemeChange}
+          />
+
           <OptionPicker
             label={t('settings.handwritingLanguage')}
             description={t('settings.handwritingLanguageDescription')}
@@ -376,8 +405,8 @@ export default function SettingsScreen() {
             <Switch
               value={ttsEnabled}
               onValueChange={handleTTSEnabledChange}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor={COLORS.surface}
+              trackColor={{ false: theme.border, true: theme.primary }}
+              thumbColor={theme.surface}
             />
           </View>
 
@@ -391,8 +420,8 @@ export default function SettingsScreen() {
                 <Switch
                   value={ttsAutoPlay}
                   onValueChange={handleTTSAutoPlayChange}
-                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
-                  thumbColor={COLORS.surface}
+                  trackColor={{ false: theme.border, true: theme.primary }}
+                  thumbColor={theme.surface}
                 />
               </View>
 
@@ -410,9 +439,9 @@ export default function SettingsScreen() {
                     step={0.1}
                     value={ttsRate}
                     onValueChange={handleTTSRateChange}
-                    minimumTrackTintColor={COLORS.primary}
-                    maximumTrackTintColor={COLORS.border}
-                    thumbTintColor={COLORS.primary}
+                    minimumTrackTintColor={theme.primary}
+                    maximumTrackTintColor={theme.border}
+                    thumbTintColor={theme.primary}
                   />
                   <Text style={styles.sliderValue}>2.0x</Text>
                 </View>
@@ -431,8 +460,8 @@ export default function SettingsScreen() {
             <Switch
               value={notificationsEnabled}
               onValueChange={handleNotificationsEnabledChange}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor={COLORS.surface}
+              trackColor={{ false: theme.border, true: theme.primary }}
+              thumbColor={theme.surface}
             />
           </View>
 
@@ -467,8 +496,8 @@ export default function SettingsScreen() {
                 <Switch
                   value={streakRemindersEnabled}
                   onValueChange={handleStreakRemindersChange}
-                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
-                  thumbColor={COLORS.surface}
+                  trackColor={{ false: theme.border, true: theme.primary }}
+                  thumbColor={theme.surface}
                 />
               </View>
             </>
@@ -569,14 +598,14 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   content: {
     paddingHorizontal: 0,
   },
   sectionTitle: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.lg,
     marginTop: SPACING.lg,
     letterSpacing: -0.3,
@@ -585,7 +614,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
     marginBottom: SPACING.md,
@@ -596,7 +625,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   settingColumn: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
     marginBottom: SPACING.md,
@@ -613,13 +642,13 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
     letterSpacing: -0.2,
   },
   settingDescription: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     lineHeight: TYPOGRAPHY.fontSize.sm * 1.4,
   },
   sliderContainer: {
@@ -634,23 +663,23 @@ const styles = StyleSheet.create({
   },
   sliderValue: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   currentRateValue: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     textAlign: 'center',
     marginTop: SPACING.md,
   },
   timeValue: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
   },
   testButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     alignItems: 'center',
@@ -664,24 +693,24 @@ const styles = StyleSheet.create({
   testButtonText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.surface,
+    color: theme.surface,
     letterSpacing: 0.5,
   },
   storageValue: {
     fontSize: TYPOGRAPHY.fontSize.xl,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     textAlign: 'center',
     marginTop: SPACING.md,
   },
   actionButton: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     alignItems: 'center',
     marginBottom: SPACING.md,
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -691,50 +720,50 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.primary,
+    color: theme.primary,
     letterSpacing: 0.5,
   },
   compactButton: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
     marginBottom: SPACING.sm,
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
   },
   compactButtonText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.primary,
+    color: theme.primary,
   },
   cleanupButton: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
     marginBottom: SPACING.md,
     borderWidth: 1.5,
-    borderColor: COLORS.danger,
+    borderColor: theme.danger,
   },
   cleanupButtonText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.danger,
+    color: theme.danger,
   },
   debugButton: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.textLight,
+    borderColor: theme.textLight,
   },
   debugButtonText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
   },
   versionContainer: {
     alignItems: 'center',
@@ -742,11 +771,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     paddingTop: SPACING.lg,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: theme.border,
   },
   versionText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
 });
