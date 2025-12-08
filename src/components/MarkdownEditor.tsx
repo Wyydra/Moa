@@ -8,8 +8,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING } from '../utils/constants';
+import { SPACING } from '../utils/constants';
 import { wrapWithMarkdown, insertLinePrefix } from '../utils/markdown';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 interface MarkdownEditorProps {
   value: string;
@@ -26,6 +28,8 @@ export default function MarkdownEditor({
   label,
   autoFocus = false,
 }: MarkdownEditorProps) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const textInputRef = useRef<TextInput>(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [contentHeight, setContentHeight] = useState(44);
@@ -118,14 +122,14 @@ export default function MarkdownEditor({
             style={styles.toolbarButton}
             onPress={() => applyLinePrefix('- ')}
           >
-            <Ionicons name="list" size={18} color={COLORS.text} />
+            <Ionicons name="list" size={18} color={theme.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.toolbarButton}
             onPress={() => applyLinePrefix('1. ')}
           >
-            <Ionicons name="list-outline" size={18} color={COLORS.text} />
+            <Ionicons name="list-outline" size={18} color={theme.text} />
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -141,7 +145,7 @@ export default function MarkdownEditor({
           setContentHeight(event.nativeEvent.contentSize.height);
         }}
         placeholder={placeholder}
-        placeholderTextColor={COLORS.textLight}
+        placeholderTextColor={theme.textLight}
         multiline
         autoFocus={autoFocus}
         textAlignVertical="top"
@@ -150,25 +154,25 @@ export default function MarkdownEditor({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     marginBottom: SPACING.md,
   },
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: SPACING.sm,
   },
   toolbarContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     borderWidth: 2,
     borderBottomWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     overflow: 'hidden',
   },
   toolbar: {
@@ -185,45 +189,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 6,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
   },
   toolbarButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
+    color: theme.text,
   },
   toolbarButtonTextBold: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: theme.text,
   },
   toolbarButtonTextItalic: {
     fontSize: 16,
     fontStyle: 'italic',
-    color: COLORS.text,
+    color: theme.text,
   },
   toolbarButtonTextUnderline: {
     fontSize: 16,
     textDecorationLine: 'underline',
-    color: COLORS.text,
+    color: theme.text,
   },
   separator: {
     width: 1,
     height: 24,
-    backgroundColor: COLORS.border,
+    backgroundColor: theme.border,
     marginHorizontal: SPACING.xs,
   },
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderWidth: 2,
     borderTopWidth: 0,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     fontSize: 16,
-    color: COLORS.text,
+    color: theme.text,
     minHeight: 44,
   },
 });

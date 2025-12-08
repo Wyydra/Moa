@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { COLORS, SPACING, TYPOGRAPHY } from '../utils/constants';
+import { SPACING, TYPOGRAPHY } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'large';
@@ -13,23 +15,26 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'large',
-  color = COLORS.primary,
+  color,
   text,
   fullScreen = false,
   style,
   textStyle,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const effectiveColor = color ?? theme.primary;
   const containerStyle = fullScreen ? styles.fullScreenContainer : styles.container;
 
   return (
     <View style={[containerStyle, style]}>
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator size={size} color={effectiveColor} />
       {text && <Text style={[styles.text, textStyle]}>{text}</Text>}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -39,12 +44,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
   },
   text: {
     marginTop: SPACING.md,
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textAlign: 'center',
   },
 });

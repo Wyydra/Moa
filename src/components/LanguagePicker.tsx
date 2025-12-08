@@ -4,7 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAvailableLanguages } from '../hooks/useAvailableLanguages';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 interface LanguagePickerProps {
   value: string | undefined;
@@ -15,6 +17,8 @@ interface LanguagePickerProps {
 
 export default function LanguagePicker({ value, onChange, includeAppLanguage = false, label }: LanguagePickerProps) {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
   const { languages, loading } = useAvailableLanguages(includeAppLanguage);
   const [showPicker, setShowPicker] = useState(false);
@@ -55,7 +59,7 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
         <Text style={styles.selectorText}>
           {displayValue}
         </Text>
-        <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
+        <Ionicons name="chevron-down" size={20} color={theme.textLight} />
       </TouchableOpacity>
 
       {/* Modal plein écran */}
@@ -74,7 +78,7 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
               }}
               style={styles.backButton}
             >
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={theme.text} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>{t('deck.language')}</Text>
             <View style={styles.spacer} />
@@ -82,11 +86,11 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
 
           {/* Recherche */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
+            <Ionicons name="search" size={20} color={theme.textLight} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               placeholder={t('deck.searchLanguage')}
-              placeholderTextColor={COLORS.textLight}
+              placeholderTextColor={theme.textLight}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
@@ -94,7 +98,7 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
+                <Ionicons name="close-circle" size={20} color={theme.textLight} />
               </TouchableOpacity>
             )}
           </View>
@@ -102,7 +106,7 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
           {/* Liste des langues */}
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
+              <ActivityIndicator size="large" color={theme.primary} />
               <Text style={styles.loadingText}>{t('common.loading')}</Text>
             </View>
           ) : (
@@ -136,7 +140,7 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
                       {displayText}
                     </Text>
                     {value === lang.code && (
-                      <Ionicons name="checkmark" size={24} color={COLORS.primary} />
+                      <Ionicons name="checkmark" size={24} color={theme.primary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -154,27 +158,27 @@ export default function LanguagePicker({ value, onChange, includeAppLanguage = f
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   selectorText: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -183,7 +187,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: theme.border,
   },
   backButton: {
     padding: SPACING.xs,
@@ -194,19 +198,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     flex: 1,
     textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     margin: SPACING.md,
     paddingHorizontal: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
   searchIcon: {
     marginRight: SPACING.sm,
@@ -215,7 +219,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: SPACING.sm,
     fontSize: 16,
-    color: COLORS.text,
+    color: theme.text,
   },
   scrollView: {
     flex: 1,
@@ -228,14 +232,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     minHeight: 56,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border + '30',
+    borderBottomColor: theme.border + '30',
   },
   languageOptionSelected: {
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: theme.primary + '10',
   },
   languageCode: {
     fontSize: 17,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
     flex: 1,
   },
@@ -248,7 +252,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: SPACING.md,
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
   },
   emptyContainer: {
     padding: SPACING.xl,
@@ -256,6 +260,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
 });
