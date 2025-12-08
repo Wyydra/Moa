@@ -18,6 +18,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../utils/themes';
 import type { ThemeMode } from '../contexts/ThemeContext';
+import { useTTS } from '../contexts/TTSContext';
 
 const getAppLanguages = (t: any) => [
   { code: 'system', name: t('settings.systemDefault'), icon: '🌐' },
@@ -33,6 +34,7 @@ const HANDWRITING_LANGUAGES = [
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { theme, themeMode, setThemeMode } = useTheme();
+  const { refreshSettings: refreshTTSSettings } = useTTS();
   const insets = useSafeAreaInsets();
   const commonStyles = createCommonStyles(theme);
   const styles = createStyles(theme);
@@ -108,18 +110,24 @@ export default function SettingsScreen() {
   };
 
   const handleTTSEnabledChange = async (value: boolean) => {
+    console.log('[SettingsScreen] TTS Enabled changed to:', value);
     await setTTSEnabled(value);
     setTTSEnabledState(value);
+    await refreshTTSSettings();
   };
 
   const handleTTSAutoPlayChange = async (value: boolean) => {
+    console.log('[SettingsScreen] TTS AutoPlay changed to:', value);
     await setTTSAutoPlay(value);
     setTTSAutoPlayState(value);
+    await refreshTTSSettings();
   };
 
   const handleTTSRateChange = async (value: number) => {
+    console.log('[SettingsScreen] TTS Rate changed to:', value);
     await setTTSRate(value);
     setTTSRateState(value);
+    await refreshTTSSettings();
   };
 
   const handleNotificationsEnabledChange = async (value: boolean) => {
