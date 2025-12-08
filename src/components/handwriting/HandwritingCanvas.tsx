@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing, Dimensions, useColorScheme } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, GestureResponderEvent, NativeModules, Alert, Animated, Easing, Dimensions } from 'react-native';
 import { Skia, SkPath } from '@shopify/react-native-skia';
 import { SkiaCanvas } from './SkiaCanvas';
 import { getHandwritingLanguage } from '../../data/storage';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../utils/constants';
+import { useTheme } from '../../hooks/useTheme';
 import type { Stroke } from './types';
+import type { Theme } from '../../utils/themes';
 
 const { HandwritingModule } = NativeModules;
 
@@ -14,11 +16,6 @@ const INACTIVITY_DELAY = 1500;
 const RECOGNITION_DELAY = 1500;
 const CANVAS_WIDTH_PERCENT = 0.85;
 const EMPTY_SPACE_TARGET = 0.8; // 80% empty space (20% occupied)
-
-const CANVAS_BG = {
-  light: '#F5F5F5',
-  dark: '#0F0F0F',
-};
 
 const LANGUAGE_NAMES: Record<string, string> = {
   ko: 'Korean',
@@ -44,7 +41,8 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   strokeWidth = 3,
   disableNavigation = false,
 }) => {
-  const colorScheme = useColorScheme();
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const width = propWidth || Math.floor(Dimensions.get('window').width * CANVAS_WIDTH_PERCENT);
   
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -382,8 +380,8 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     }
   };
 
-  const canvasBackgroundColor = colorScheme === 'dark' ? CANVAS_BG.dark : CANVAS_BG.light;
-  const strokeColor = colorScheme === 'dark' ? COLORS.primaryLight : COLORS.primary;
+  const canvasBackgroundColor = isDark ? '#0F0F0F' : '#F5F5F5';
+  const strokeColor = isDark ? theme.primaryLight : theme.primary;
 
   return (
     <View style={styles.container}>
@@ -496,8 +494,9 @@ const arePropsEqual = (prev: HandwritingCanvasProps, next: HandwritingCanvasProp
 
 export const HandwritingCanvas = React.memo(HandwritingCanvasComponent, arePropsEqual);
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
+    width: '100%',
     alignItems: 'center',
     gap: SPACING.md,
   },
@@ -522,18 +521,18 @@ const styles = StyleSheet.create({
   arrowButton: {
     width: 44,
     height: 44,
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
     ...SHADOWS.sm,
   },
   disabledArrow: {
-    backgroundColor: COLORS.border,
+    backgroundColor: theme.border,
     opacity: 0.5,
   },
   arrowText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
@@ -546,13 +545,13 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: COLORS.warning + '20',
+    backgroundColor: theme.warning + '20',
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.warning + '40',
+    borderColor: theme.warning + '40',
   },
   statusText: {
-    color: COLORS.warning,
+    color: theme.warning,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
     textAlign: 'center',
@@ -560,14 +559,14 @@ const styles = StyleSheet.create({
   strokeCounterContainer: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: theme.surfaceAlt,
     borderRadius: BORDER_RADIUS.sm,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
   strokeCounter: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   rightButtonsGroup: {
@@ -578,12 +577,12 @@ const styles = StyleSheet.create({
   clearButton: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm + 2,
-    backgroundColor: COLORS.danger,
+    backgroundColor: theme.danger,
     borderRadius: BORDER_RADIUS.md,
     ...SHADOWS.sm,
   },
   clearButtonText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     letterSpacing: 0.3,
@@ -591,12 +590,12 @@ const styles = StyleSheet.create({
   doneButton: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm + 2,
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.md,
     ...SHADOWS.sm,
   },
   doneButtonText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     letterSpacing: 0.3,
