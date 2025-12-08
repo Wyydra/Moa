@@ -28,6 +28,9 @@ import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import * as Font from 'expo-font';
 import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount, resetAllNotifications } from './src/utils/notifications';
+import { ThemeProvider } from './src/contexts/ThemeContext';
+import { useTheme } from './src/hooks/useTheme';
+import { TTSProvider } from './src/contexts/TTSContext';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -97,17 +100,18 @@ function SettingsStackNavigator() {
 
 function MainNavigator() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366F1',
-        tabBarInactiveTintColor: '#A1A1AA',
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textLight,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E4E4E7',
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
@@ -342,11 +346,25 @@ export default function App() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <MainNavigator />
-          <StatusBar style='auto'/>
-        </NavigationContainer>
+        <ThemeProvider>
+          <TTSProvider>
+            <AppContent />
+          </TTSProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
+  );
+}
+
+function AppContent() {
+  const { isDark } = useTheme();
+  
+  return (
+    <>
+      <NavigationContainer>
+        <MainNavigator />
+      </NavigationContainer>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
   );
 }

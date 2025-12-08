@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
@@ -28,8 +28,6 @@ export default function TestScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsRate, setTTSRate] = useState(1.0);
   const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
   const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const optionAnims = useRef<Animated.Value[]>([]).current;
@@ -37,7 +35,6 @@ export default function TestScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadCardsAndGenerateQuestions();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -53,12 +50,7 @@ export default function TestScreen({route, navigation}: any) {
     };
   }, []);
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSRate(rate);
-  };
+
 
   const animateQuestion = () => {
     questionAnim.setValue(0);
@@ -239,16 +231,13 @@ export default function TestScreen({route, navigation}: any) {
             content={reversed ? currentQuestion.card.back : currentQuestion.card.front}
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.ttsContainer}>
-              <PronunciationButton
-                text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
-                rate={ttsRate}
-                autoPlay={false}
-                language={reversed ? backLanguage : frontLanguage}
-              />
-            </View>
-          )}
+          <View style={styles.ttsContainer}>
+            <PronunciationButton
+              text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
+              autoPlayStrategy="onTextChange"
+              language={reversed ? backLanguage : frontLanguage}
+            />
+          </View>
         </Animated.View>
 
         <View style={styles.optionsContainer}>
@@ -282,11 +271,10 @@ export default function TestScreen({route, navigation}: any) {
                 >
                   <Text style={styles.optionText}>{option}</Text>
                   <View style={styles.optionRightContent}>
-                    {showResult && isCorrect && ttsEnabled && (
+                    {showResult && isCorrect && (
                       <PronunciationButton
                         text={option}
-                        rate={ttsRate}
-                        autoPlay={false}
+                        autoPlayStrategy="immediate"
                         language={reversed ? frontLanguage : backLanguage}
                       />
                     )}

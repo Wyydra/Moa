@@ -202,6 +202,12 @@
    },
       "settings": {
       "title": "Paramètres",
+      "appearance": "Apparence",
+      "theme": "Thème",
+      "themeDescription": "Choisissez votre schéma de couleurs préféré",
+      "themeAuto": "Système par défaut",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
       "appLanguage": "Langue de l'application",
       "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
       "systemDefault": "Par défaut système",

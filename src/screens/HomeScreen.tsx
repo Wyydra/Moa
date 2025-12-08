@@ -1,7 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
-import { commonStyles } from '../styles/commonStyles';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { createCommonStyles } from '../styles/commonStyles';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState, useRef, useEffect } from 'react';
@@ -13,6 +15,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
   const [totalDue, setTotalDue] = useState(0);
   const [totalDecks, setTotalDecks] = useState(0);
@@ -126,17 +131,17 @@ export default function HomeScreen({ navigation }: any) {
       >
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Ionicons name="albums" size={28} color={COLORS.info} />
+            <Ionicons name="albums" size={28} color={theme.info} />
             <Text style={styles.statNumber}>{totalDecks}</Text>
             <Text style={styles.statLabel}>{t('library.totalDecks')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="layers" size={28} color={COLORS.success} />
+            <Ionicons name="layers" size={28} color={theme.success} />
             <Text style={styles.statNumber}>{totalCards}</Text>
             <Text style={styles.statLabel}>{t('library.totalCards')}</Text>
           </View>
           <View style={[styles.statCard, styles.statCardHighlight]}>
-            <Ionicons name="time" size={28} color={COLORS.textInverse} />
+            <Ionicons name="time" size={28} color={theme.textInverse} />
             <Text style={[styles.statNumber, styles.statNumberHighlight]}>{totalDue}</Text>
             <Text style={[styles.statLabel, styles.statLabelHighlight]}>{t('library.cardsDue')}</Text>
           </View>
@@ -161,12 +166,12 @@ export default function HomeScreen({ navigation }: any) {
         >
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Ionicons name="flame" size={28} color={COLORS.warning} />
+              <Ionicons name="flame" size={28} color={theme.warning} />
               <Text style={styles.statNumber}>{streak}</Text>
               <Text style={styles.statLabel}>{t('progress.dayStreak')}</Text>
             </View>
             <View style={styles.statCard}>
-              <Ionicons name="checkmark-circle" size={28} color={COLORS.success} />
+              <Ionicons name="checkmark-circle" size={28} color={theme.success} />
               <Text style={styles.statNumber}>{todayReviews}</Text>
               <Text style={styles.statLabel}>{t('progress.reviewsToday')}</Text>
             </View>
@@ -216,7 +221,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Empty State */}
       {topDecks.length === 0 && !loading && (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-circle-outline" size={72} color={COLORS.success} />
+          <Ionicons name="checkmark-circle-outline" size={72} color={theme.success} />
           <Text style={styles.emptyTitle}>{t('home.allCaughtUp')}</Text>
           <Text style={styles.emptyText}>{t('home.noCardsDue')}</Text>
           <TouchableOpacity
@@ -225,7 +230,7 @@ export default function HomeScreen({ navigation }: any) {
             accessibilityLabel={t('home.browseLibrary')}
             accessibilityHint="Browse your deck library"
           >
-            <Ionicons name="library-outline" size={22} color={COLORS.textInverse} />
+            <Ionicons name="library-outline" size={22} color={theme.textInverse} />
             <Text style={commonStyles.buttonText}>{t('home.browseLibrary')}</Text>
           </TouchableOpacity>
         </View>
@@ -236,7 +241,7 @@ export default function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     marginTop: SPACING.md,
     marginBottom: SPACING.xxl,
@@ -244,13 +249,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: TYPOGRAPHY.fontSize.display,
     fontWeight: TYPOGRAPHY.fontWeight.extrabold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   statsSection: {
@@ -262,39 +267,39 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     alignItems: 'center',
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   statCardHighlight: {
-    backgroundColor: COLORS.primary,
-    ...SHADOWS.colored(COLORS.primary),
+    backgroundColor: theme.primary,
+    ...SHADOWS.colored(theme.primary),
   },
   statNumber: {
     fontSize: TYPOGRAPHY.fontSize.xxxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.sm,
     marginBottom: SPACING.xs,
     letterSpacing: -0.5,
   },
   statNumberHighlight: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
   },
   statLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textAlign: 'center',
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   statLabelHighlight: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     opacity: 0.85,
   },
   section: {
@@ -309,17 +314,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: -0.5,
   },
   viewAllText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.primary,
+    color: theme.primary,
     letterSpacing: 0.3,
   },
   deckCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     flexDirection: 'row',
@@ -327,7 +332,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   deckInfo: {
@@ -336,29 +341,29 @@ const styles = StyleSheet.create({
   deckName: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
     letterSpacing: -0.2,
   },
   deckDescription: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
   },
   dueBadge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     minWidth: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.colored(COLORS.primary),
+    ...SHADOWS.colored(theme.primary),
   },
   dueBadgeText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.textInverse,
+    color: theme.textInverse,
   },
   emptyState: {
     alignItems: 'center',
@@ -368,14 +373,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.xl,
     marginBottom: SPACING.md,
     letterSpacing: -0.3,
   },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xxl,
     textAlign: 'center',
     lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,

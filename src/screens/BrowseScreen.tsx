@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "../data/model";
-import { getCardsByDeck, getCardsByTags, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, getDeckById } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,14 +18,11 @@ export default function BrowseScreen({route, navigation}: any) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsRate, setTTSRate] = useState(1.0);
   const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
   const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadCards();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -54,12 +51,7 @@ export default function BrowseScreen({route, navigation}: any) {
     setLoading(false);
   };
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSRate(rate);
-  };
+
 
   const handleFlip = () => {
     setShowBack(!showBack);
@@ -139,22 +131,19 @@ export default function BrowseScreen({route, navigation}: any) {
             }
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.pronunciationContainer}>
-              <PronunciationButton 
-                text={showBack 
-                  ? (reversed ? currentCard.front : currentCard.back)
-                  : (reversed ? currentCard.back : currentCard.front)
-                }
-                rate={ttsRate}
-                autoPlay={false}
-                language={showBack 
-                  ? (reversed ? frontLanguage : backLanguage)
-                  : (reversed ? backLanguage : frontLanguage)
-                }
-              />
-            </View>
-          )}
+          <View style={styles.pronunciationContainer}>
+            <PronunciationButton 
+              text={showBack 
+                ? (reversed ? currentCard.front : currentCard.back)
+                : (reversed ? currentCard.back : currentCard.front)
+              }
+              autoPlayStrategy="onTextChange"
+              language={showBack 
+                ? (reversed ? frontLanguage : backLanguage)
+                : (reversed ? backLanguage : frontLanguage)
+              }
+            />
+          </View>
         </View>
 
         <TouchableOpacity style={[commonStyles.button, styles.flipButton]} onPress={handleFlip}>

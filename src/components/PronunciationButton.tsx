@@ -4,47 +4,63 @@ import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { COLORS } from "../utils/constants";
 import * as Speech from 'expo-speech';
 import { detectLanguage } from '../utils/languageDetection';
+import { useTTS } from '../contexts/TTSContext';
 
 interface PronunciationButtonProps {
   text: string;
   size?: number;
   color?: string;
   rate?: number;
-  autoPlay?: boolean;
   language?: string;
+  autoPlayStrategy?: 'immediate' | 'onTextChange' | 'manual';
+  disabled?: boolean;
 }
 
 export default function PronunciationButton({
   text,
   size = 24,
-    color = COLORS.primary,
-    rate = 1.0,
-    autoPlay = false,
-    language,
+  color = COLORS.primary,
+  rate,
+  autoPlayStrategy = 'manual',
+  language,
+  disabled = false,
 }: PronunciationButtonProps) {
+  const { ttsEnabled, ttsAutoPlay, ttsRate: globalRate } = useTTS();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const hasAutoPlayed = useRef(false);
+  const previousText = useRef(text);
 
+  const effectiveRate = rate ?? globalRate;
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       Speech.stop();
-    }
+    };
   }, []);
 
+  // Strategy: immediate - joue une seule fois au montage
   useEffect(() => {
-    if (autoPlay && text && !hasAutoPlayed.current) {
+    if (autoPlayStrategy === 'immediate' && ttsEnabled && ttsAutoPlay && text && !hasAutoPlayed.current) {
       hasAutoPlayed.current = true;
       handlePress();
     }
-  }, [autoPlay, text]);
+  }, [autoPlayStrategy, ttsEnabled, ttsAutoPlay, text]);
 
+  // Strategy: onTextChange - rejoue à chaque changement de texte
   useEffect(() => {
-    // Reset the autoPlay flag when text changes
-    hasAutoPlayed.current = false;
-  }, [text]);
+    if (autoPlayStrategy === 'onTextChange' && ttsEnabled && ttsAutoPlay) {
+      if (text && text !== previousText.current) {
+        previousText.current = text;
+        handlePress();
+      }
+    }
+  }, [text, autoPlayStrategy, ttsEnabled, ttsAutoPlay]);
 
   const handlePress = async () => {
+    if (disabled || !ttsEnabled) return;
+    
     if (isSpeaking) {
       await Speech.stop();
       setIsSpeaking(false);
@@ -57,10 +73,10 @@ export default function PronunciationButton({
       // Use provided language prop, otherwise auto-detect
       const langCode = language || await detectLanguage(text);
 
-      console.log('[PronunciationButton] Starting speech with language:', langCode, 'rate:', rate);
+      console.log('[PronunciationButton] Starting speech with language:', langCode, 'rate:', effectiveRate);
       await Speech.speak(text, {
         language: langCode,
-        rate: rate,
+        rate: effectiveRate,
         pitch: 1.0,
         onStart: () => {
           console.log('[PronunciationButton] Speech started');
@@ -71,7 +87,7 @@ export default function PronunciationButton({
           console.log('[PronunciationButton] Speech completed');
           setIsSpeaking(false);
         },
-        onStopped:() => {
+        onStopped: () => {
           console.log('[PronunciationButton] Speech stopped');
           setIsSpeaking(false);
         },
@@ -88,20 +104,25 @@ export default function PronunciationButton({
     }
   };
 
+  // Ne pas afficher le bouton si TTS désactivé
+  if (!ttsEnabled) return null;
+
   if (isLoading) {
     return (
       <ActivityIndicator size="small" color={color} />
     );
   }
+
   return (
     <TouchableOpacity
       onPress={handlePress}
-      style={[styles.button, isSpeaking && styles.speaking]}
+      style={[styles.button, isSpeaking && styles.speaking, disabled && styles.disabled]}
+      disabled={disabled}
     >
       <Ionicons
         name={isSpeaking ? "stop-circle" : "volume-high"}
         size={size}
-        color={color}
+        color={disabled ? COLORS.textLight : color}
       />
     </TouchableOpacity>
   );
@@ -116,5 +137,8 @@ const styles = StyleSheet.create({
   },
   speaking: {
     backgroundColor: COLORS.primary + '20',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

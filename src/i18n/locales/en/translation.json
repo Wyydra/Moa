@@ -202,6 +202,12 @@
    },
       "settings": {
       "title": "Settings",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "themeDescription": "Choose your preferred color scheme",
+      "themeAuto": "System Default",
+      "themeLight": "Light",
+      "themeDark": "Dark",
       "appLanguage": "App Language",
       "appLanguageDescription": "Select the language for the app interface",
       "systemDefault": "System Default",

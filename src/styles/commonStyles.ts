@@ -1,23 +1,24 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import type { Theme } from '../utils/themes';
 
-export const commonStyles = StyleSheet.create({
+export const createCommonStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
     padding: SPACING.xl,
   },
 
   screenTitle: {
     fontSize: TYPOGRAPHY.fontSize.huge,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xl,
     letterSpacing: -0.5,
   },
 
   card: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
     ...SHADOWS.md,
@@ -25,68 +26,68 @@ export const commonStyles = StyleSheet.create({
   },
 
   cardSubtle: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
 
   button: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.colored(COLORS.primary),
+    ...SHADOWS.colored(theme.primary),
   },
 
   buttonSecondary: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.xl,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
   },
 
   buttonText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     letterSpacing: 0.3,
   },
 
   buttonTextSecondary: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.primary,
+    color: theme.primary,
     letterSpacing: 0.3,
   },
 
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.text,
+    color: theme.text,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
 
   inputFocused: {
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
     ...SHADOWS.sm,
   },
 
   label: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
     letterSpacing: 0.5,
@@ -95,7 +96,7 @@ export const commonStyles = StyleSheet.create({
 
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textAlign: 'center',
     marginTop: SPACING.xxxl,
     lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
@@ -103,12 +104,12 @@ export const commonStyles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: theme.overlay,
     justifyContent: 'flex-end',
   },
 
   modalContent: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderTopLeftRadius: BORDER_RADIUS.xxl,
     borderTopRightRadius: BORDER_RADIUS.xxl,
     padding: SPACING.xl,
@@ -125,13 +126,13 @@ export const commonStyles = StyleSheet.create({
   modalTitle: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: -0.3,
   },
 
   modalCloseButton: {
     fontSize: TYPOGRAPHY.fontSize.xxxl,
-    color: COLORS.textLight,
+    color: theme.textLight,
     fontWeight: TYPOGRAPHY.fontWeight.regular,
   },
 });

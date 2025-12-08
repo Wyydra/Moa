@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getDueCards, getDueCardsByTags, batchSaveCards, getTTSEnabled, getTTSAutoPlay, getTTSRate, getDeckById, saveStudySession, generateId } from "../data/storage";
+import { getDueCards, getDueCardsByTags, batchSaveCards, getDeckById, saveStudySession, generateId } from "../data/storage";
 import { calculateNextReview, StudyResponse } from "../utils/srsAlgorithm";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
@@ -23,16 +23,11 @@ export default function StudyScreen({route, navigation}: any) {
   const [showBack, setShowBack] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsAutoPlay, setTTSAutoPlay] = useState(false);
-  const [ttsRate, setTTSRate] = useState(1.0);
   const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
   const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
 
-
   useEffect(() => {
     loadDueCards();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -72,14 +67,7 @@ export default function StudyScreen({route, navigation}: any) {
     }
   };
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const autoPlay = await getTTSAutoPlay();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSAutoPlay(autoPlay);
-    setTTSRate(rate);
-  };
+
 
   const handleFlip = () => {
     setShowBack(!showBack);
@@ -193,22 +181,19 @@ if (completed) {
             }
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.pronunciationContainer}>
-              <PronunciationButton 
-                text={showBack 
-                  ? (reversed ? currentCard.front : currentCard.back)
-                  : (reversed ? currentCard.back : currentCard.front)
-                }
-                rate={ttsRate}
-                autoPlay={showBack && ttsAutoPlay}
-                language={showBack 
-                  ? (reversed ? frontLanguage : backLanguage)
-                  : (reversed ? backLanguage : frontLanguage)
-                }
-              />
-            </View>
-          )}
+          <View style={styles.pronunciationContainer}>
+            <PronunciationButton 
+              text={showBack 
+                ? (reversed ? currentCard.front : currentCard.back)
+                : (reversed ? currentCard.back : currentCard.front)
+              }
+              autoPlayStrategy={showBack ? 'immediate' : 'manual'}
+              language={showBack 
+                ? (reversed ? frontLanguage : backLanguage)
+                : (reversed ? backLanguage : frontLanguage)
+              }
+            />
+          </View>
         </View>
 
         {!showBack ? (

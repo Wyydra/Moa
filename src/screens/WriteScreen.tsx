@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById } from "../data/storage";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Animated } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,8 +23,6 @@ export default function WriteScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsRate, setTTSRate] = useState(1.0);
   const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
   const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -32,7 +30,6 @@ export default function WriteScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadCards();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -41,12 +38,7 @@ export default function WriteScreen({route, navigation}: any) {
     };
   }, []);
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSRate(rate);
-  };
+
 
   const loadCards = async () => {
     const allCards = tags 
@@ -176,16 +168,13 @@ export default function WriteScreen({route, navigation}: any) {
             content={reversed ? currentCard.back : currentCard.front}
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.ttsContainer}>
-              <PronunciationButton
-                text={reversed ? currentCard.back : currentCard.front}
-                rate={ttsRate}
-                autoPlay={false}
-                language={reversed ? backLanguage : frontLanguage}
-              />
-            </View>
-          )}
+          <View style={styles.ttsContainer}>
+            <PronunciationButton
+              text={reversed ? currentCard.back : currentCard.front}
+              autoPlayStrategy="onTextChange"
+              language={reversed ? backLanguage : frontLanguage}
+            />
+          </View>
         </View>
 
         <View style={styles.answerSection}>
@@ -248,16 +237,13 @@ export default function WriteScreen({route, navigation}: any) {
               <View style={styles.correctAnswerBox}>
                 <Text style={styles.correctAnswerLabel}>{t('modes.write.correctAnswer')}:</Text>
                 <Text style={styles.correctAnswerText}>{reversed ? currentCard.front : currentCard.back}</Text>
-                {ttsEnabled && (
-                  <View style={styles.ttsContainer}>
-                    <PronunciationButton
-                      text={reversed ? currentCard.front : currentCard.back}
-                      rate={ttsRate}
-                      autoPlay={false}
-                      language={reversed ? frontLanguage : backLanguage}
-                    />
-                  </View>
-                )}
+                <View style={styles.ttsContainer}>
+                  <PronunciationButton
+                    text={reversed ? currentCard.front : currentCard.back}
+                    autoPlayStrategy="immediate"
+                    language={reversed ? frontLanguage : backLanguage}
+                  />
+                </View>
               </View>
             )}
           </Animated.View>

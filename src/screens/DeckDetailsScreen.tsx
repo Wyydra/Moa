@@ -1,7 +1,7 @@
 import { TouchableOpacity, Text, View, StyleSheet, FlatList, Alert, Modal, BackHandler, TextInput, ScrollView, Dimensions, Switch } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { createCommonStyles } from "../styles/commonStyles";
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState, useEffect } from "react";
@@ -12,6 +12,8 @@ import QRCode from 'react-native-qrcode-svg';
 import * as Sharing from 'expo-sharing';
 import { Paths, File } from 'expo-file-system';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 type CardStatus = 'new' | 'learning' | 'mastered';
 type ViewMode = 'list' | 'grid';
@@ -19,6 +21,9 @@ type ViewMode = 'list' | 'grid';
 export default function DeckDetailsScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { deckId } = route.params;
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<Card[]>([]);
@@ -61,9 +66,9 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
   // Helper function to get color for card status
   const getStatusColor = (status: CardStatus): string => {
     switch (status) {
-      case 'new': return COLORS.success;
-      case 'learning': return COLORS.warning;
-      case 'mastered': return COLORS.info;
+      case 'new': return theme.success;
+      case 'learning': return theme.warning;
+      case 'mastered': return theme.info;
     }
   };
 
@@ -559,7 +564,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             <Ionicons 
               name={isSelected ? "checkbox" : "square-outline"} 
               size={24} 
-              color={isSelected ? COLORS.primary : COLORS.textLight} 
+              color={isSelected ? theme.primary : theme.textLight} 
             />
           ) : (
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -567,7 +572,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           <View style={styles.cardTextContainer}>
             <View style={styles.cardMainRow}>
               <Text style={styles.cardFront} numberOfLines={1}>{stripHtmlTags(item.front)}</Text>
-              <Ionicons name="arrow-forward" size={14} color={COLORS.textLight} style={styles.arrowIcon} />
+              <Ionicons name="arrow-forward" size={14} color={theme.textLight} style={styles.arrowIcon} />
               <Text style={styles.cardBack} numberOfLines={1}>{stripHtmlTags(item.back)}</Text>
             </View>
             {item.tags && item.tags.length > 0 && (
@@ -582,7 +587,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             <Text style={styles.cardMeta}>{statusLabel} • {nextReviewText}</Text>
           </View>
           {!selectionMode && (
-            <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+            <Ionicons name="chevron-forward" size={20} color={theme.textLight} />
           )}
         </View>
       </TouchableOpacity>
@@ -609,7 +614,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           <Ionicons 
             name={isSelected ? "checkbox" : "square-outline"} 
             size={20} 
-            color={isSelected ? COLORS.primary : COLORS.textLight} 
+            color={isSelected ? theme.primary : theme.textLight} 
             style={styles.statusDotGrid}
           />
         ) : (
@@ -647,7 +652,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
       {/* Header */}
       <View style={[styles.header, { marginTop: insets.top }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title} numberOfLines={1}>
@@ -656,7 +661,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         </View>
         {!selectionMode && (
           <TouchableOpacity onPress={() => setShowOverflowMenu(true)} style={styles.overflowButton}>
-            <Ionicons name="ellipsis-horizontal" size={24} color={COLORS.text} />
+            <Ionicons name="ellipsis-horizontal" size={24} color={theme.text} />
           </TouchableOpacity>
         )}
       </View>
@@ -666,13 +671,13 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         <>
           <View style={styles.statsRow}>
             <View style={styles.statBadge}>
-              <Ionicons name="albums-outline" size={16} color={COLORS.textMedium} />
+              <Ionicons name="albums-outline" size={16} color={theme.textMedium} />
               <Text style={styles.statBadgeText}>
                 {t('deck.cardCount', { count: cards.length })}
               </Text>
             </View>
             <View style={[styles.statBadge, dueCount > 0 && styles.statBadgeDue]}>
-              <Ionicons name="time-outline" size={16} color={dueCount > 0 ? COLORS.primary : COLORS.textMedium} />
+              <Ionicons name="time-outline" size={16} color={dueCount > 0 ? theme.primary : theme.textMedium} />
               <Text style={[styles.statBadgeText, dueCount > 0 && styles.statBadgeTextDue]}>
                 {t('deck.dueCount', { count: dueCount })}
               </Text>
@@ -699,7 +704,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
           {allCardTags.length > 0 && (
             <View style={styles.cardFilterSection}>
               <View style={styles.cardFilterHeader}>
-                <Ionicons name="funnel-outline" size={16} color={COLORS.textLight} />
+                <Ionicons name="funnel-outline" size={16} color={theme.textLight} />
                 <Text style={styles.cardFilterLabel}>{t('card.filterByTag')}</Text>
               </View>
               <ScrollView 
@@ -728,7 +733,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                   style={styles.clearCardFilterButton}
                   onPress={handleClearCardFilter}
                 >
-                  <Ionicons name="close-circle" size={16} color={COLORS.primary} />
+                  <Ionicons name="close-circle" size={16} color={theme.primary} />
                   <Text style={styles.clearCardFilterText}>{t('library.clearFilter')}</Text>
                 </TouchableOpacity>
               )}
@@ -740,7 +745,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             style={[commonStyles.button, styles.studyButton]}
             onPress={() => setShowModePicker(true)}
           >
-            <Ionicons name="school-outline" size={22} color={COLORS.textInverse} />
+            <Ionicons name="school-outline" size={22} color={theme.textInverse} />
             <Text style={commonStyles.buttonText}>{t('deck.startStudying')}</Text>
           </TouchableOpacity>
         </>
@@ -768,13 +773,13 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               {selectedCardIds.length > 0 && (
                 <>
                   <TouchableOpacity onPress={handleBulkDelete} style={styles.actionIconButton}>
-                    <Ionicons name="trash-outline" size={22} color={COLORS.danger} />
+                    <Ionicons name="trash-outline" size={22} color={theme.danger} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleBulkResetProgress} style={styles.actionIconButton}>
-                    <Ionicons name="refresh-outline" size={22} color={COLORS.textMedium} />
+                    <Ionicons name="refresh-outline" size={22} color={theme.textMedium} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setShowBulkActionsMenu(true)} style={styles.actionIconButton}>
-                    <Ionicons name="ellipsis-horizontal" size={22} color={COLORS.textMedium} />
+                    <Ionicons name="ellipsis-horizontal" size={22} color={theme.textMedium} />
                   </TouchableOpacity>
                 </>
               )}
@@ -786,7 +791,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                   <Ionicons 
                     name="list" 
                     size={20} 
-                    color={viewMode === 'list' ? COLORS.primary : COLORS.textLight} 
+                    color={viewMode === 'list' ? theme.primary : theme.textLight} 
                   />
                 </TouchableOpacity>
                 <TouchableOpacity 
@@ -796,7 +801,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                   <Ionicons 
                     name="grid" 
                     size={20} 
-                    color={viewMode === 'grid' ? COLORS.primary : COLORS.textLight} 
+                    color={viewMode === 'grid' ? theme.primary : theme.textLight} 
                   />
                 </TouchableOpacity>
               </View>
@@ -817,7 +822,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                   <Ionicons 
                     name="list" 
                     size={20} 
-                    color={viewMode === 'list' ? COLORS.primary : COLORS.textLight} 
+                    color={viewMode === 'list' ? theme.primary : theme.textLight} 
                   />
                 </TouchableOpacity>
                 <TouchableOpacity 
@@ -827,7 +832,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                   <Ionicons 
                     name="grid" 
                     size={20} 
-                    color={viewMode === 'grid' ? COLORS.primary : COLORS.textLight} 
+                    color={viewMode === 'grid' ? theme.primary : theme.textLight} 
                   />
                 </TouchableOpacity>
               </View>
@@ -895,20 +900,20 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         >
           <View style={styles.overflowMenu}>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleBulkAddTags}>
-              <Ionicons name="pricetag-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="pricetag-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('card.bulkAddTags')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleBulkRemoveTags}>
-              <Ionicons name="pricetags-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="pricetags-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('card.bulkRemoveTags')}</Text>
             </TouchableOpacity>
             <View style={styles.overflowDivider} />
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleBulkMove}>
-              <Ionicons name="folder-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="folder-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('card.bulkMove')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleBulkExport}>
-              <Ionicons name="download-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="download-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('card.bulkExport')}</Text>
             </TouchableOpacity>
           </View>
@@ -929,7 +934,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
         >
           <View style={styles.overflowMenu}>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleShareDeck}>
-              <Ionicons name="share-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="share-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('deck.shareDeck')}</Text>
             </TouchableOpacity>
 
@@ -940,19 +945,19 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 await handleExportFile();
               }}
             >
-              <Ionicons name="download-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="download-outline" size={22} color={theme.primary} />
               <Text style={styles.overflowMenuText}>{t('deck.exportAsFile')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleEditDeck}>
-              <Ionicons name="create-outline" size={22} color={COLORS.textMedium} />
+              <Ionicons name="create-outline" size={22} color={theme.textMedium} />
               <Text style={styles.overflowMenuText}>{t('deck.editDeckInfo')}</Text>
             </TouchableOpacity>
 
             <View style={styles.overflowDivider} />
 
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleDeleteDeck}>
-              <Ionicons name="trash-outline" size={22} color={COLORS.danger} />
+              <Ionicons name="trash-outline" size={22} color={theme.danger} />
               <Text style={[styles.overflowMenuText, styles.overflowMenuTextDanger]}>
                 {t('deck.deleteDeck')}
               </Text>
@@ -980,14 +985,14 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
             {/* Reverse Cards Toggle */}
             <View style={styles.reverseToggleContainer}>
               <View style={styles.reverseToggleInfo}>
-                <Ionicons name="swap-horizontal" size={22} color={COLORS.primary} />
+                <Ionicons name="swap-horizontal" size={22} color={theme.primary} />
                 <Text style={styles.reverseToggleText}>{t('study.reverseCards')}</Text>
               </View>
               <Switch
                 value={reverseCards}
                 onValueChange={setReverseCards}
-                trackColor={{ false: COLORS.border, true: COLORS.primary }}
-                thumbColor={COLORS.surface}
+                trackColor={{ false: theme.border, true: theme.primary }}
+                thumbColor={theme.surface}
               />
             </View>
 
@@ -998,7 +1003,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('StudyScreen', { deckId, reversed: reverseCards });
               }}
             >
-              <Ionicons name="book-outline" size={28} color={COLORS.learn} />
+              <Ionicons name="book-outline" size={28} color={theme.learn} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.learn.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.learn.description')}</Text>
@@ -1012,7 +1017,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('WriteScreen', { deckId, reversed: reverseCards });
               }}
             >
-              <Ionicons name="create-outline" size={28} color={COLORS.write} />
+              <Ionicons name="create-outline" size={28} color={theme.write} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.write.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.write.description')}</Text>
@@ -1026,7 +1031,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('TestScreen', { deckId, reversed: reverseCards });
               }}
             >
-              <Ionicons name="clipboard-outline" size={28} color={COLORS.test} />
+              <Ionicons name="clipboard-outline" size={28} color={theme.test} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.test.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.test.description')}</Text>
@@ -1040,7 +1045,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('MatchScreen', { deckId, reversed: reverseCards });
               }}
             >
-              <Ionicons name="git-compare-outline" size={28} color={COLORS.match} />
+              <Ionicons name="git-compare-outline" size={28} color={theme.match} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.match.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.match.description')}</Text>
@@ -1054,7 +1059,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                 navigation.navigate('BrowseScreen', { deckId, reversed: reverseCards });
               }}
             >
-              <Ionicons name="eye-outline" size={28} color={COLORS.info} />
+              <Ionicons name="eye-outline" size={28} color={theme.info} />
               <View style={styles.modeTextContainer}>
                 <Text style={styles.modeTitle}>{t('modes.browse.title')}</Text>
                 <Text style={styles.modeDescription}>{t('modes.browse.description')}</Text>
@@ -1065,7 +1070,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
               style={[styles.modeOption, styles.modeOptionDisabled]}
               disabled={true}
             >
-              <Ionicons name="mic-outline" size={24} color={COLORS.textLight} />
+              <Ionicons name="mic-outline" size={24} color={theme.textLight} />
               <View style={styles.modeTextContainer}>
                 <Text style={[styles.modeTitle, styles.modeDisabled]}>{t('modes.spell.title')}</Text>
                 <Text style={[styles.modeDescription, styles.modeDisabled]}>{t('modes.spell.description')}</Text>
@@ -1105,7 +1110,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                       {t('deck.cardCount', { count: item.cardCount })}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+                  <Ionicons name="chevron-forward" size={20} color={theme.textLight} />
                 </TouchableOpacity>
               )}
             />
@@ -1142,7 +1147,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                     returnKeyType="done"
                   />
                   <TouchableOpacity onPress={handleAddTagToList} style={styles.addTagButton}>
-                    <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+                    <Ionicons name="add-circle" size={24} color={theme.primary} />
                   </TouchableOpacity>
                 </View>
 
@@ -1152,7 +1157,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                       <View key={index} style={styles.tagChip}>
                         <Text style={styles.tagText}>{tag}</Text>
                         <TouchableOpacity onPress={() => handleRemoveTagFromList(tag)}>
-                          <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
+                          <Ionicons name="close-circle" size={16} color={theme.textInverse} />
                         </TouchableOpacity>
                       </View>
                     ))}
@@ -1189,7 +1194,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
                             {tag}
                           </Text>
                           {tagsToRemove.includes(tag) && (
-                            <Ionicons name="checkmark-circle" size={16} color={COLORS.textInverse} />
+                            <Ionicons name="checkmark-circle" size={16} color={theme.textInverse} />
                           )}
                         </TouchableOpacity>
                       ))}
@@ -1254,7 +1259,7 @@ export default function DeckDetailsScreen({ route, navigation }: any) {
 const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = (screenWidth - (SPACING.xl * 2) - (SPACING.xs * 4)) / 2;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   // Header
   header: {
     flexDirection: 'row',
@@ -1272,7 +1277,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     letterSpacing: -0.5,
   },
   overflowButton: {
@@ -1289,22 +1294,22 @@ const styles = StyleSheet.create({
   statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: theme.surfaceAlt,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
     gap: SPACING.xs,
   },
   statBadgeDue: {
-    backgroundColor: COLORS.primaryLight + '20',
+    backgroundColor: theme.primaryLight + '20',
   },
   statBadgeText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   statBadgeTextDue: {
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
 
@@ -1316,13 +1321,13 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   tagChip: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
   },
   tagText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.xs,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
@@ -1330,7 +1335,7 @@ const styles = StyleSheet.create({
   // Description
   description: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     marginBottom: SPACING.lg,
     lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
@@ -1354,7 +1359,7 @@ const styles = StyleSheet.create({
   cardsSectionTitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   headerRightActions: {
     flexDirection: 'row',
@@ -1367,7 +1372,7 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   selectAllButton: {
@@ -1376,7 +1381,7 @@ const styles = StyleSheet.create({
   },
   selectAllText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   actionIconButton: {
@@ -1385,7 +1390,7 @@ const styles = StyleSheet.create({
   },
   viewToggle: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: theme.surfaceAlt,
     borderRadius: BORDER_RADIUS.sm,
     padding: SPACING.xxs,
   },
@@ -1394,20 +1399,20 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xs,
   },
   viewToggleButtonActive: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
   },
 
   // List View Card Items
   cardItem: {
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   cardItemSelected: {
-    borderColor: COLORS.primary,
+    borderColor: theme.primary,
     borderWidth: 2,
-    backgroundColor: COLORS.primaryLight + '10',
+    backgroundColor: theme.primaryLight + '10',
   },
   cardContent: {
     flexDirection: 'row',
@@ -1430,7 +1435,7 @@ const styles = StyleSheet.create({
   cardFront: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     flex: 1,
   },
   arrowIcon: {
@@ -1438,12 +1443,12 @@ const styles = StyleSheet.create({
   },
   cardBack: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     flex: 1,
   },
   cardMeta: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
   cardTagsRow: {
     flexDirection: 'row',
@@ -1453,14 +1458,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   cardTagChip: {
-    backgroundColor: COLORS.primaryLight + '30',
+    backgroundColor: theme.primaryLight + '30',
     borderRadius: 8,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 2,
   },
   cardTagText: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.primary,
+    color: theme.primary,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
 
@@ -1473,7 +1478,7 @@ const styles = StyleSheet.create({
     margin: SPACING.xs,
     minHeight: 120,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   statusDotGrid: {
@@ -1484,17 +1489,17 @@ const styles = StyleSheet.create({
   gridCardFront: {
     fontSize: TYPOGRAPHY.fontSize.base,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
   },
   gridCardBack: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     marginBottom: SPACING.xs,
   },
   gridCardMeta: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginTop: 'auto',
   },
 
@@ -1511,26 +1516,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     width: 64,
     height: 64,
     borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.colored(COLORS.primary),
+    ...SHADOWS.colored(theme.primary),
   },
 
   // Overflow Menu
   overflowOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: theme.overlay,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
     paddingTop: 60,
     paddingRight: SPACING.lg,
   },
   overflowMenu: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.lg,
     minWidth: 200,
     ...SHADOWS.lg,
@@ -1543,15 +1548,15 @@ const styles = StyleSheet.create({
   },
   overflowMenuText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   overflowMenuTextDanger: {
-    color: COLORS.danger,
+    color: theme.danger,
   },
   overflowDivider: {
     height: 1,
-    backgroundColor: COLORS.divider,
+    backgroundColor: theme.divider,
     marginVertical: SPACING.xs,
   },
 
@@ -1562,7 +1567,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: theme.divider,
   },
   deckPickerInfo: {
     flex: 1,
@@ -1570,12 +1575,12 @@ const styles = StyleSheet.create({
   deckPickerName: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
   },
   deckPickerMeta: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
 
   // Study Mode Picker
@@ -1584,7 +1589,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.divider,
+    borderBottomColor: theme.divider,
   },
   modeOptionDisabled: {
     opacity: 0.5,
@@ -1596,17 +1601,17 @@ const styles = StyleSheet.create({
   modeTitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
     letterSpacing: -0.2,
   },
   modeDescription: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
   },
   modeDisabled: {
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
 
   // QR Modal
@@ -1615,24 +1620,24 @@ const styles = StyleSheet.create({
     minHeight: 400,
   },
   qrContainer: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     padding: SPACING.xl,
     borderRadius: BORDER_RADIUS.lg,
     marginVertical: SPACING.xl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   qrInstructions: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     textAlign: 'center',
     marginBottom: SPACING.xl,
     paddingHorizontal: SPACING.lg,
     lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.relaxed,
   },
   closeButton: {
-    backgroundColor: COLORS.textMedium,
+    backgroundColor: theme.textMedium,
   },
   
   // Tag Input
@@ -1644,14 +1649,14 @@ const styles = StyleSheet.create({
   },
   tagInput: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     fontSize: 16,
-    color: COLORS.text,
+    color: theme.text,
   },
   addTagButton: {
     padding: SPACING.xs,
@@ -1666,7 +1671,7 @@ const styles = StyleSheet.create({
   selectableTagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: theme.surfaceAlt,
     borderRadius: 16,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
@@ -1675,16 +1680,16 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectableTagChipSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   selectableTagText: {
-    color: COLORS.text,
+    color: theme.text,
     fontSize: 14,
     fontWeight: '600',
   },
   selectableTagTextSelected: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
   },
   confirmButton: {
     marginTop: SPACING.md,
@@ -1702,7 +1707,7 @@ const styles = StyleSheet.create({
   },
   cardFilterLabel: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -1712,25 +1717,25 @@ const styles = StyleSheet.create({
     maxHeight: 44,
   },
   cardFilterTagChip: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.full,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     marginRight: SPACING.md,
   },
   cardFilterTagChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   cardFilterTagText: {
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   cardFilterTagTextActive: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
   },
   clearCardFilterButton: {
     flexDirection: 'row',
@@ -1738,7 +1743,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   clearCardFilterText: {
-    color: COLORS.primary,
+    color: theme.primary,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
@@ -1751,7 +1756,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: theme.surfaceAlt,
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.lg,
   },
@@ -1762,7 +1767,7 @@ const styles = StyleSheet.create({
   },
   reverseToggleText: {
     fontSize: TYPOGRAPHY.fontSize.base,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
 });
