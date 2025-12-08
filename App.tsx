@@ -187,15 +187,18 @@ export default function App() {
   useEffect(() => {
     async function initialize() {
       try {
-        // Load fonts
+        // Phase 1: Load fonts
         await Font.loadAsync({
           ...Ionicons.font,
         });
         
-        // Initialize database and storage
+        // Phase 2: Initialize database and storage (MUST complete before Phase 3)
         const { runMigrations } = await import('./src/data/migrations');
         await runMigrations();
         await initializeStorage();
+        
+        // Phase 3: Initialize features that depend on database
+        await initializeNotifications();
         
         setIsReady(true);
       } catch (error) {
@@ -220,11 +223,7 @@ export default function App() {
         Alert.alert(title, message, [{ text: 'OK' }]);
       }
     }
-    initialize();
-  }, []);
-
-  // Initialize notifications
-  useEffect(() => {
+    
     const initializeNotifications = async () => {
       // Guard - prevent duplicate initialization
       if (notificationsInitialized.current) {
@@ -278,9 +277,9 @@ export default function App() {
         notificationsInitialized.current = false;
       }
     };
-
-    initializeNotifications();
-
+    
+    initialize();
+    
     // Cleanup notification listeners
     return () => {
       if (notificationListener.current) {

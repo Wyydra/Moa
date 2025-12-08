@@ -12,6 +12,7 @@ import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
 import { updateBadgeCount } from '../utils/notifications';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function StudyScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -25,7 +26,8 @@ export default function StudyScreen({route, navigation}: any) {
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsAutoPlay, setTTSAutoPlay] = useState(false);
   const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
 
 
   useEffect(() => {
@@ -55,11 +57,12 @@ export default function StudyScreen({route, navigation}: any) {
     const shuffledCards = [...dueCards].sort(() => Math.random() - 0.5);
     setCards(shuffledCards);
     
-    // Load deck to get language setting
+    // Load deck to get language settings
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
     
@@ -199,7 +202,10 @@ if (completed) {
                 }
                 rate={ttsRate}
                 autoPlay={showBack && ttsAutoPlay}
-                language={deckLanguage}
+                language={showBack 
+                  ? (reversed ? frontLanguage : backLanguage)
+                  : (reversed ? backLanguage : frontLanguage)
+                }
               />
             </View>
           )}

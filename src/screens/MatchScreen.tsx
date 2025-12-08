@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from "react-native";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getTTSEnabled, getTTSRate } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getTTSEnabled, getTTSRate, getDeckById } from "../data/storage";
 import { StudySession } from "../data/model";
 import { commonStyles } from "../styles/commonStyles";
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from "../utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
-import { detectLanguage } from '../utils/languageDetection';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -34,6 +34,8 @@ export default function MatchScreen({ route, navigation }: any) {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsRate, setTTSRate] = useState(1.0);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadCardsAndGenerateTiles();
@@ -74,6 +76,15 @@ export default function MatchScreen({ route, navigation }: any) {
       return;
     }
 
+    // Load deck languages for TTS
+    if (deckId) {
+      const deck = await getDeckById(deckId);
+      if (deck) {
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
+      }
+    }
+
     const numCards = Math.min(6, allCards.length);
     
     const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
@@ -81,12 +92,9 @@ export default function MatchScreen({ route, navigation }: any) {
 
     const generatedTiles: Tile[] = [];
     for (const card of cardsToUse) {
-      // Detect language for each side of the card
+      // Use deck languages for each side
       const frontText = reversed ? card.back : card.front;
       const backText = reversed ? card.front : card.back;
-      
-      const frontLanguage = await detectLanguage(frontText);
-      const backLanguage = await detectLanguage(backText);
       
       generatedTiles.push({
         id: `${card.id}-front`,
@@ -95,7 +103,7 @@ export default function MatchScreen({ route, navigation }: any) {
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
-        language: frontLanguage,
+        language: reversed ? backLanguage : frontLanguage,
       });
       generatedTiles.push({
         id: `${card.id}-back`,
@@ -104,7 +112,7 @@ export default function MatchScreen({ route, navigation }: any) {
         cardId: card.id,
         matched: false,
         animation: new Animated.Value(0),
-        language: backLanguage,
+        language: reversed ? frontLanguage : backLanguage,
       });
     }
 

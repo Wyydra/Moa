@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 interface Question {
   card: Card;
@@ -29,7 +30,8 @@ export default function TestScreen({route, navigation}: any) {
   const [correctCount, setCorrectCount] = useState(0);
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const optionAnims = useRef<Animated.Value[]>([]).current;
   const questionAnim = useRef(new Animated.Value(0)).current;
 
@@ -122,11 +124,12 @@ export default function TestScreen({route, navigation}: any) {
     setQuestions(generatedQuestions);
     setLoading(false);
     
-    // Load deck language for TTS
+    // Load deck languages for TTS
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
   }
@@ -242,7 +245,7 @@ export default function TestScreen({route, navigation}: any) {
                 text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
                 rate={ttsRate}
                 autoPlay={false}
-                language={deckLanguage}
+                language={reversed ? backLanguage : frontLanguage}
               />
             </View>
           )}
@@ -284,7 +287,7 @@ export default function TestScreen({route, navigation}: any) {
                         text={option}
                         rate={ttsRate}
                         autoPlay={false}
-                        language={deckLanguage}
+                        language={reversed ? frontLanguage : backLanguage}
                       />
                     )}
                     {showResult && isCorrect && (

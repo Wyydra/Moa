@@ -10,6 +10,7 @@ import { HandwritingModule } from '../components/handwriting';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function WriteScreen({route, navigation}: any) {
   const { t } = useTranslation();
@@ -24,7 +25,8 @@ export default function WriteScreen({route, navigation}: any) {
   const [correctCount, setCorrectCount] = useState(0);
   const [ttsEnabled, setTTSEnabled] = useState(true);
   const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const resultAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,11 +59,12 @@ export default function WriteScreen({route, navigation}: any) {
       setCompleted(true);
     }
     
-    // Load deck language for TTS
+    // Load deck languages for TTS
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
   };
@@ -179,7 +182,7 @@ export default function WriteScreen({route, navigation}: any) {
                 text={reversed ? currentCard.back : currentCard.front}
                 rate={ttsRate}
                 autoPlay={false}
-                language={deckLanguage}
+                language={reversed ? backLanguage : frontLanguage}
               />
             </View>
           )}
@@ -251,7 +254,7 @@ export default function WriteScreen({route, navigation}: any) {
                       text={reversed ? currentCard.front : currentCard.back}
                       rate={ttsRate}
                       autoPlay={false}
-                      language={deckLanguage}
+                      language={reversed ? frontLanguage : backLanguage}
                     />
                   </View>
                 )}
