@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, StyleSheet, ActivityIndicator, Keyboard, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAvailableLanguages } from '../hooks/useAvailableLanguages';
@@ -15,6 +15,24 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
   const { languages, loading } = useAvailableLanguages();
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Écouter les événements du clavier
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   // Filtrer les langues selon la recherche (strict includes)
   const filteredLanguages = languages.filter(lang => {
@@ -52,13 +70,23 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
         onRequestClose={() => setShowPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <TouchableOpacity 
+            style={styles.modalOverlayTouchable}
+            activeOpacity={1}
+            onPress={() => {
+              setShowPicker(false);
+              setSearchQuery('');
+              Keyboard.dismiss();
+            }}
+          />
+          <View style={[styles.modalContent, { marginBottom: keyboardHeight }]}>
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('deck.language')}</Text>
               <TouchableOpacity onPress={() => {
                 setShowPicker(false);
                 setSearchQuery('');
+                Keyboard.dismiss();
               }}>
                 <Ionicons name="close" size={24} color={COLORS.text} />
               </TouchableOpacity>
@@ -84,7 +112,7 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
                 <Text style={styles.loadingText}>{t('common.loading')}</Text>
               </View>
             ) : (
-              <ScrollView>
+              <ScrollView keyboardShouldPersistTaps="handled">
                 {filteredLanguages.map((lang) => (
                   <TouchableOpacity
                     key={lang.code || 'auto'}
@@ -136,14 +164,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  modalOverlayTouchable: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '55%',
+    maxHeight: '50%',
     paddingBottom: 20,
   },
   modalHeader: {
