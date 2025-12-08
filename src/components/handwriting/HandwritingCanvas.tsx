@@ -55,6 +55,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   const [downloadStatus, setDownloadStatus] = useState('Checking model...');
   const [isSliding, setIsSliding] = useState(false);
   const [offsetXDisplay, setOffsetXDisplay] = useState(0);
+  const [canvasWidth, setCanvasWidth] = useState(width);
   
   const offsetXRef = useRef(0);
   const offsetXAnim = useRef(new Animated.Value(0)).current;
@@ -122,17 +123,18 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
   };
 
   const animateSlide = useCallback((newOffset: number) => {
+    setIsSliding(true);
     offsetXRef.current = newOffset;
     setOffsetXDisplay(newOffset);
-    setIsSliding(true);
-    
+    // Extend canvas width to accommodate the new offset + viewport
+    setCanvasWidth(newOffset + width);
     Animated.timing(offsetXAnim, {
       toValue: newOffset,
       duration: SLIDE_DURATION,
       useNativeDriver: true,
       easing: Easing.out(Easing.ease),
     }).start(() => setIsSliding(false));
-  }, [offsetXAnim]);
+  }, [offsetXAnim, width]);
 
   const getEmptySpaceRatio = useCallback((strokeList: Stroke[]) => {
     const allPoints = strokeList.flatMap(stroke => stroke.points.map(p => p.x));
@@ -173,8 +175,11 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const { locationX, locationY } = event.nativeEvent;
     const globalX = locationX + offsetXRef.current;
     
+    console.log('[TOUCH-START] locationX:', locationX.toFixed(1), 'offset:', offsetXRef.current.toFixed(1), 'globalX:', globalX.toFixed(1));
+    
     setCurrentStroke({ points: [{ x: globalX, y: locationY, t: Date.now() }] });
     
+    // Path uses local coordinates because the canvas itself is translated
     const path = Skia.Path.Make();
     path.moveTo(locationX, locationY);
     setCurrentPath(path);
@@ -191,6 +196,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
       points: [...currentStroke.points, { x: globalX, y: locationY, t: Date.now() }],
     });
     
+    // Path uses local coordinates because the canvas itself is translated
     currentPath.lineTo(locationX, locationY);
     setCurrentPath(currentPath.copy());
   }, [currentStroke, currentPath]);
@@ -320,7 +326,7 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
           <SkiaCanvas
             paths={paths}
             currentPath={currentPath}
-            width={width}
+            width={canvasWidth}
             height={height}
             strokeWidth={strokeWidth}
             strokeColor={strokeColor}
