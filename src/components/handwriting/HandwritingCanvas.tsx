@@ -214,30 +214,34 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     setPaths(updatedPaths);
     setCurrentStroke(null);
     setCurrentPath(null);
+    
+    // Clear all timers (restart fresh on each stroke)
     clearTimers();
     
-    // Auto-slide if we have less than 60% empty space
-    const emptyRatio = getEmptySpaceRatio(updatedStrokes);
+    // Check if we need to auto-slide
+    const allPoints = updatedStrokes.flatMap(stroke => stroke.points.map(p => p.x));
+    if (allPoints.length === 0) return;
+    
+    const rightmostXGlobal = Math.max(...allPoints);
+    const rightmostXInViewport = rightmostXGlobal - offsetXRef.current;
+    const emptySpace = width - rightmostXInViewport;
+    const emptyRatio = emptySpace / width;
+    
+    console.log('[STROKE-END] Rightmost in viewport:', rightmostXInViewport.toFixed(1), 'empty:', (emptyRatio * 100).toFixed(0), '%');
     
     if (emptyRatio < EMPTY_SPACE_TARGET) {
+      // Schedule auto-slide after inactivity
       inactivityTimerRef.current = setTimeout(() => {
-        // Calculate how much to slide to reach exactly 60% empty space
-        // Current empty space = emptyRatio * width
-        // Target empty space = 0.6 * width
-        // Need to slide by: (0.6 - emptyRatio) * width
-        const slideAmount = (EMPTY_SPACE_TARGET - emptyRatio) * width;
-        const targetOffset = offsetXRef.current + slideAmount;
-        
-        console.log('[AUTO-SLIDE] Empty ratio:', emptyRatio.toFixed(2), '→ sliding', slideAmount.toFixed(1), 'px to reach 60%');
-        
-        if (slideAmount > 5) { // Only slide if meaningful
-          animateSlide(targetOffset);
-        }
+        // Slide by fixed 50px increment
+        const targetOffset = offsetXRef.current + 50;
+        console.log('[AUTO-SLIDE] Sliding 50px:', offsetXRef.current.toFixed(1), '→', targetOffset.toFixed(1));
+        animateSlide(targetOffset);
+        inactivityTimerRef.current = null;
       }, INACTIVITY_DELAY);
     }
     
     triggerRecognition(updatedStrokes);
-  }, [currentStroke, currentPath, strokes, paths, clearTimers, getEmptySpaceRatio, animateSlide, triggerRecognition, width]);
+  }, [currentStroke, currentPath, strokes, paths, clearTimers, animateSlide, triggerRecognition, width]);
 
   const clearCanvas = useCallback(() => {
     clearTimers();
