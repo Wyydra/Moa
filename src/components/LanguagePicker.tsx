@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput, StyleSheet, ActivityIndicator, Keyboard, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAvailableLanguages } from '../hooks/useAvailableLanguages';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 
@@ -12,6 +13,7 @@ interface LanguagePickerProps {
 
 export default function LanguagePicker({ value, onChange }: LanguagePickerProps) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { languages, loading } = useAvailableLanguages();
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,7 +81,10 @@ export default function LanguagePicker({ value, onChange }: LanguagePickerProps)
               Keyboard.dismiss();
             }}
           />
-          <View style={[styles.modalContent, { marginBottom: keyboardHeight }]}>
+          <View style={[styles.modalContent, { 
+            marginBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom,
+            paddingBottom: keyboardHeight > 0 ? 20 : 20 + insets.bottom 
+          }]}>
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('deck.language')}</Text>
@@ -175,7 +180,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '50%',
-    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',
