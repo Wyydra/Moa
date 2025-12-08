@@ -140,9 +140,12 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     const allPoints = strokeList.flatMap(stroke => stroke.points.map(p => p.x));
     if (allPoints.length === 0) return 1;
     
-    const rightmostX = Math.max(...allPoints);
-    const viewportRightEdge = offsetXRef.current + width;
-    const emptySpace = viewportRightEdge - rightmostX;
+    // Convert global coordinates to viewport coordinates (0 to width)
+    const rightmostXGlobal = Math.max(...allPoints);
+    const rightmostXInViewport = rightmostXGlobal - offsetXRef.current;
+    
+    // Calculate empty space from rightmost stroke to right edge of viewport
+    const emptySpace = width - rightmostXInViewport;
     const ratio = emptySpace / width;
     
     return ratio;
@@ -218,13 +221,18 @@ const HandwritingCanvasComponent: React.FC<HandwritingCanvasProps> = ({
     
     if (emptyRatio < EMPTY_SPACE_TARGET) {
       inactivityTimerRef.current = setTimeout(() => {
-        // Simple: just slide by a fixed amount (50 pixels)
-        const slideAmount = 50;
+        // Calculate how much to slide to reach exactly 60% empty space
+        // Current empty space = emptyRatio * width
+        // Target empty space = 0.6 * width
+        // Need to slide by: (0.6 - emptyRatio) * width
+        const slideAmount = (EMPTY_SPACE_TARGET - emptyRatio) * width;
         const targetOffset = offsetXRef.current + slideAmount;
         
-        console.log('[AUTO-SLIDE] Sliding by fixed', slideAmount, 'px from', offsetXRef.current.toFixed(1), 'to', targetOffset.toFixed(1));
+        console.log('[AUTO-SLIDE] Empty ratio:', emptyRatio.toFixed(2), '→ sliding', slideAmount.toFixed(1), 'px to reach 60%');
         
-        animateSlide(targetOffset);
+        if (slideAmount > 5) { // Only slide if meaningful
+          animateSlide(targetOffset);
+        }
       }, INACTIVITY_DELAY);
     }
     
