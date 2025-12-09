@@ -2,17 +2,21 @@ import * as SQLite from 'expo-sqlite';
 import { Card, Deck } from '../model';
 
 /**
- * Database connection and schema management for SQLite storage
- * Handles initialization, migrations, and transaction management
+ * Database connection and helper functions for SQLite storage
+ * 
+ * Note: Schema creation and migrations are managed by migrations.ts
+ * This file only handles the database connection and data conversion helpers
  */
 
 const DATABASE_NAME = 'moa.db';
-const CURRENT_SCHEMA_VERSION = 1;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
  * Get or create database connection
+ * 
+ * Note: This only opens the connection and configures SQLite settings.
+ * Schema creation/migration is handled by migrations.ts during app startup.
  */
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) {
@@ -20,164 +24,14 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   }
 
   db = await SQLite.openDatabaseAsync(DATABASE_NAME);
-  await initializeSchema(db);
-  return db;
-}
-
-/**
- * Initialize database schema and perform migrations if needed
- */
-async function initializeSchema(database: SQLite.SQLiteDatabase): Promise<void> {
-  await database.execAsync(`
+  
+  // Configure SQLite settings for optimal performance and data integrity
+  await db.execAsync(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
   `);
-
-  // Create metadata table first to track schema version
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS metadata (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at INTEGER NOT NULL
-    );
-  `);
-
-  // Check current schema version
-  const result = await database.getFirstAsync<{ value: string }>(
-    'SELECT value FROM metadata WHERE key = ?',
-    ['schema_version']
-  );
-
-  const currentVersion = result ? parseInt(result.value, 10) : 0;
-
-  if (currentVersion < CURRENT_SCHEMA_VERSION) {
-    await migrateSchema(database, currentVersion, CURRENT_SCHEMA_VERSION);
-  }
-}
-
-/**
- * Create all tables, indexes, and views for schema v1
- */
-async function createSchemaV1(database: SQLite.SQLiteDatabase): Promise<void> {
-  await database.execAsync(`
-    -- Decks table
-    CREATE TABLE IF NOT EXISTS decks (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      source_language TEXT NOT NULL,
-      target_language TEXT NOT NULL,
-      category TEXT NOT NULL,
-      tags TEXT NOT NULL, -- JSON array
-      is_public INTEGER NOT NULL DEFAULT 0,
-      shared_by TEXT,
-      total_cards INTEGER NOT NULL DEFAULT 0,
-      mastered_cards INTEGER NOT NULL DEFAULT 0,
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
-    );
-
-    -- Cards table
-    CREATE TABLE IF NOT EXISTS cards (
-      id TEXT PRIMARY KEY,
-      deck_id TEXT NOT NULL,
-      front TEXT NOT NULL,
-      back TEXT NOT NULL,
-      pronunciation TEXT,
-      difficulty INTEGER NOT NULL DEFAULT 0,
-      last_reviewed INTEGER,
-      next_review INTEGER,
-      review_count INTEGER NOT NULL DEFAULT 0,
-      correct_count INTEGER NOT NULL DEFAULT 0,
-      incorrect_count INTEGER NOT NULL DEFAULT 0,
-      ease_factor REAL NOT NULL DEFAULT 2.5,
-      interval INTEGER NOT NULL DEFAULT 0,
-      stroke_order_data TEXT, -- JSON
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL,
-      FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
-    );
-
-    -- Study sessions table
-    CREATE TABLE IF NOT EXISTS study_sessions (
-      id TEXT PRIMARY KEY,
-      deck_id TEXT NOT NULL,
-      card_id TEXT NOT NULL,
-      mode TEXT NOT NULL, -- 'learn', 'test', 'write', 'match'
-      correct INTEGER NOT NULL,
-      time_spent INTEGER NOT NULL,
-      difficulty INTEGER NOT NULL,
-      created_at INTEGER NOT NULL,
-      FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE,
-      FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
-    );
-
-    -- Indexes for performance
-    CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON cards(deck_id);
-    CREATE INDEX IF NOT EXISTS idx_cards_next_review ON cards(next_review);
-    CREATE INDEX IF NOT EXISTS idx_cards_difficulty ON cards(difficulty);
-    CREATE INDEX IF NOT EXISTS idx_study_sessions_deck_id ON study_sessions(deck_id);
-    CREATE INDEX IF NOT EXISTS idx_study_sessions_card_id ON study_sessions(card_id);
-    CREATE INDEX IF NOT EXISTS idx_study_sessions_created_at ON study_sessions(created_at);
-    CREATE INDEX IF NOT EXISTS idx_study_sessions_mode ON study_sessions(mode);
-
-    -- Views for common queries
-    CREATE VIEW IF NOT EXISTS deck_summary AS
-    SELECT 
-      d.id,
-      d.name,
-      d.description,
-      d.source_language,
-      d.target_language,
-      d.category,
-      d.tags,
-      d.is_public,
-      d.shared_by,
-      d.created_at,
-      d.updated_at,
-      COUNT(c.id) as total_cards,
-      SUM(CASE WHEN c.difficulty = 5 THEN 1 ELSE 0 END) as mastered_cards
-    FROM decks d
-    LEFT JOIN cards c ON d.id = c.deck_id
-    GROUP BY d.id;
-
-    CREATE VIEW IF NOT EXISTS card_with_deck AS
-    SELECT 
-      c.*,
-      d.name as deck_name,
-      d.source_language,
-      d.target_language
-    FROM cards c
-    JOIN decks d ON c.deck_id = d.id;
-  `);
-
-  // Set schema version
-  await database.runAsync(
-    'INSERT OR REPLACE INTO metadata (key, value, updated_at) VALUES (?, ?, ?)',
-    ['schema_version', CURRENT_SCHEMA_VERSION.toString(), Date.now()]
-  );
-}
-
-/**
- * Migrate schema from one version to another
- */
-async function migrateSchema(
-  database: SQLite.SQLiteDatabase,
-  fromVersion: number,
-  toVersion: number
-): Promise<void> {
-  console.log(`Migrating schema from v${fromVersion} to v${toVersion}`);
-
-  if (fromVersion === 0 && toVersion === 1) {
-    // Fresh install - create schema v1
-    await createSchemaV1(database);
-    console.log('Schema v1 created successfully');
-  }
   
-  // Future migrations will go here:
-  // if (fromVersion === 1 && toVersion === 2) {
-  //   await migrateV1ToV2(database);
-  // }
+  return db;
 }
 
 /**
@@ -259,11 +113,16 @@ export function rowToCard(row: any): Card {
  * Maps current Deck model to extended database schema
  */
 export function deckToRow(deck: Deck): Record<string, any> {
+  // Handle legacy 'language' field for backward compatibility
+  const frontLang = deck.frontLanguage !== undefined ? deck.frontLanguage : (deck.language || '');
+  const backLang = deck.backLanguage !== undefined ? deck.backLanguage : '';
+  
   return {
     id: deck.id,
     name: deck.name,
     description: deck.description || '',
-    source_language: deck.language || 'en-US', // Use single language field
+    source_language: frontLang, // Now stores frontLanguage
+    back_language: backLang,    // New field for backLanguage
     target_language: 'en-US', // Default, future feature for language pairs
     category: 'general', // Future feature
     tags: JSON.stringify(deck.tags || []),
@@ -288,7 +147,8 @@ export function rowToDeck(row: any): Deck {
     createdAt: row.created_at,
     cardCount: row.total_cards,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
-    language: row.source_language || undefined,
+    frontLanguage: row.source_language === '' ? undefined : row.source_language,
+    backLanguage: row.back_language === '' ? undefined : row.back_language,
   };
 }
 

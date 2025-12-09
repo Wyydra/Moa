@@ -1,17 +1,23 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, Animated } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById } from "../data/storage";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Animated } from "react-native";
+import { createCommonStyles } from "../styles/commonStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
-import { HandwritingCanvas } from '../components/HandwritingCanvas';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
+import { HandwritingModule } from '../components/handwriting';
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 export default function WriteScreen({route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
@@ -22,16 +28,13 @@ export default function WriteScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [showHandwriting, setShowHandwriting] = useState(false);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const resultAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCards();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -40,12 +43,7 @@ export default function WriteScreen({route, navigation}: any) {
     };
   }, []);
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSRate(rate);
-  };
+
 
   const loadCards = async () => {
     const allCards = tags 
@@ -58,11 +56,12 @@ export default function WriteScreen({route, navigation}: any) {
       setCompleted(true);
     }
     
-    // Load deck language for TTS
+    // Load deck languages for TTS
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
   };
@@ -120,12 +119,7 @@ export default function WriteScreen({route, navigation}: any) {
     navigation.goBack();
   };
 
-  const handleHandwritingRecognition = (results: string[]) => {
-    if (results.length > 0) {
-      setUserAnswer(results[0]);
-      setShowHandwriting(false);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -142,11 +136,11 @@ export default function WriteScreen({route, navigation}: any) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={28} color={COLORS.text} />
+            <Ionicons name="close" size={28} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+          <Ionicons name="checkmark-circle" size={80} color={theme.success} />
           <Text style={styles.completedTitle}>{t('modes.write.sessionComplete')}</Text>
           <Text style={styles.completedText}>
             {t('modes.write.score', { correct: correctCount, total: cards.length, percentage })}
@@ -168,7 +162,7 @@ export default function WriteScreen({route, navigation}: any) {
           {t('study.progress', { current: currentIndex + 1, total: cards.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -179,31 +173,24 @@ export default function WriteScreen({route, navigation}: any) {
             content={reversed ? currentCard.back : currentCard.front}
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.ttsContainer}>
-              <PronunciationButton
-                text={reversed ? currentCard.back : currentCard.front}
-                rate={ttsRate}
-                autoPlay={false}
-                language={deckLanguage}
-              />
-            </View>
-          )}
+          <View style={styles.ttsContainer}>
+            <PronunciationButton
+              text={reversed ? currentCard.back : currentCard.front}
+              autoPlayStrategy="onTextChange"
+              language={reversed ? backLanguage : frontLanguage}
+            />
+          </View>
         </View>
 
         <View style={styles.answerSection}>
           <View style={styles.answerHeader}>
             <Text style={styles.answerLabel}>{t('modes.write.yourAnswer')}</Text>
-            <TouchableOpacity
-              onPress={() => setShowHandwriting(true)}
-              style={styles.handwritingButton}
+            <HandwritingModule
+              initialText={userAnswer}
+              onTextChange={setUserAnswer}
+              mode="append"
               disabled={showResult}
-            >
-              <Ionicons name="brush-outline" size={20} color={showResult ? COLORS.textLight : COLORS.primary} />
-              <Text style={[styles.handwritingButtonText, showResult && styles.handwritingButtonDisabled]}>
-                {t('modes.write.writeByHand')}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
           <Animated.View
             style={{
@@ -255,16 +242,13 @@ export default function WriteScreen({route, navigation}: any) {
               <View style={styles.correctAnswerBox}>
                 <Text style={styles.correctAnswerLabel}>{t('modes.write.correctAnswer')}:</Text>
                 <Text style={styles.correctAnswerText}>{reversed ? currentCard.front : currentCard.back}</Text>
-                {ttsEnabled && (
-                  <View style={styles.ttsContainer}>
-                    <PronunciationButton
-                      text={reversed ? currentCard.front : currentCard.back}
-                      rate={ttsRate}
-                      autoPlay={false}
-                      language={deckLanguage}
-                    />
-                  </View>
-                )}
+                <View style={styles.ttsContainer}>
+                  <PronunciationButton
+                    text={reversed ? currentCard.front : currentCard.back}
+                    autoPlayStrategy="immediate"
+                    language={reversed ? frontLanguage : backLanguage}
+                  />
+                </View>
               </View>
             )}
           </Animated.View>
@@ -289,34 +273,11 @@ export default function WriteScreen({route, navigation}: any) {
           </TouchableOpacity>
         )}
       </View>
-
-      <Modal
-        visible={showHandwriting}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowHandwriting(false)}
-      >
-        <View style={commonStyles.modalOverlay}>
-          <View style={commonStyles.modalContent}>
-            <View style={commonStyles.modalHeader}>
-              <Text style={commonStyles.modalTitle}>{t('modes.write.writeByHand')}</Text>
-              <TouchableOpacity onPress={() => setShowHandwriting(false)}>
-                <Text style={commonStyles.modalCloseButton}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <HandwritingCanvas
-              onRecognitionResult={handleHandwritingRecognition}
-              width={300}
-              height={300}
-            />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -330,7 +291,7 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   cardContainer: {
     flex: 1,
@@ -344,7 +305,7 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -353,14 +314,14 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   cardText: {
     fontSize: 24,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
     lineHeight: 32,
   },
@@ -379,39 +340,26 @@ const styles = StyleSheet.create({
   },
   answerLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  handwritingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  handwritingButtonText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  handwritingButtonDisabled: {
-    color: COLORS.textLight,
-  },
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text,
+    color: theme.text,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
   },
   inputCorrect: {
-    borderColor: COLORS.success,
-    backgroundColor: COLORS.success + '20',
+    borderColor: theme.success,
+    backgroundColor: theme.success + '20',
   },
   inputIncorrect: {
-    borderColor: COLORS.danger,
-    backgroundColor: COLORS.danger + '20',
+    borderColor: theme.danger,
+    backgroundColor: theme.danger + '20',
   },
   resultSection: {
     marginBottom: SPACING.lg,
@@ -424,40 +372,40 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.lg,
   },
   correctBadge: {
-    backgroundColor: COLORS.success,
+    backgroundColor: theme.success,
   },
   incorrectBadge: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: theme.danger,
   },
   resultText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
   },
   correctAnswerBox: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.info,
+    borderLeftColor: theme.info,
     ...SHADOWS.sm,
   },
   correctAnswerLabel: {
     fontSize: 12,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xs,
     textTransform: 'uppercase',
   },
   correctAnswerText: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   submitButton: {
@@ -477,13 +425,13 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   completedText: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xl,
   },
 });

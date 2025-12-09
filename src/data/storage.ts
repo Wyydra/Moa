@@ -12,6 +12,7 @@ const TTS_RATE_KEY = '@moa_tts_rate';
 const NOTIFICATIONS_ENABLED_KEY = '@moa_notifications_enabled';
 const NOTIFICATIONS_TIME_KEY = '@moa_notifications_time';
 const NOTIFICATIONS_STREAK_KEY = '@moa_notifications_streak';
+const THEME_MODE_KEY = '@moa_theme_mode';
 
 export const generateId = (): string => {
   return Date.now().toString() + Math.random().toString(36).substring(2,9);
@@ -325,6 +326,25 @@ export const saveHandwritingLanguage = async (language: string): Promise<void> =
     await AsyncStorage.setItem(HANDWRITING_LANG_KEY, language);
   } catch (error) {
     console.error('Error saving handwriting language:', error);
+    throw error;
+  }
+};
+
+export const getThemeMode = async (): Promise<'auto' | 'light' | 'dark'> => {
+  try {
+    const value = await AsyncStorage.getItem(THEME_MODE_KEY);
+    return (value as 'auto' | 'light' | 'dark') || 'auto';
+  } catch (error) {
+    console.error('Error loading theme mode:', error);
+    return 'auto';
+  }
+};
+
+export const setThemeMode = async (mode: 'auto' | 'light' | 'dark'): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(THEME_MODE_KEY, mode);
+  } catch (error) {
+    console.error('Error saving theme mode:', error);
     throw error;
   }
 };

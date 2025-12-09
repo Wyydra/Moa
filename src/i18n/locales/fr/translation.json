@@ -55,6 +55,13 @@
     "language": "Langue",
     "languageDescription": "Sélectionnez la langue pour la prononciation synthèse vocale",
     "languageAuto": "Détection automatique",
+    "appLanguage": "Langue de l'app",
+    "frontLanguage": "Langue du recto",
+    "backLanguage": "Langue du verso",
+    "frontLanguageDescription": "Langue pour le recto des cartes (question)",
+    "backLanguageDescription": "Langue pour le verso des cartes (réponse)",
+    "searchLanguage": "Rechercher par code...",
+    "noLanguagesFound": "Aucune langue trouvée",
     "tags": "Étiquettes",
     "addTag": "Ajouter une étiquette",
     "filterByTag": "Filtrer par étiquette",
@@ -149,6 +156,7 @@
       "description": "Tapez les réponses",
       "yourAnswer": "Votre réponse",
       "writeByHand": "Écrire à la main",
+      "startWriting": "Commencez à écrire...",
       "submit": "Soumettre la réponse",
       "correct": "Correct !",
       "incorrect": "Incorrect",
@@ -194,6 +202,12 @@
    },
       "settings": {
       "title": "Paramètres",
+      "appearance": "Apparence",
+      "theme": "Thème",
+      "themeDescription": "Choisissez votre schéma de couleurs préféré",
+      "themeAuto": "Système par défaut",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
       "appLanguage": "Langue de l'application",
       "appLanguageDescription": "Sélectionnez la langue de l'interface de l'application",
       "systemDefault": "Par défaut système",
@@ -226,7 +240,8 @@
         "reportBug": "Signaler un bug",
         "featureRequest": "Demander une fonctionnalité",
         "emailError": "Impossible d'ouvrir le client email. Veuillez vous assurer d'avoir une application email configurée."
-      }
+      },
+      "version": "Version"
     },
     "progress": {
       "title": "Progrès",

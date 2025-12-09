@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 export interface Option {
   code: string;
@@ -25,6 +27,8 @@ export default function OptionPicker({
   options, 
   onValueChange 
 }: OptionPickerProps) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [showPicker, setShowPicker] = useState(false);
 
   const selectedOption = options.find(o => o.code === value);
@@ -46,7 +50,7 @@ export default function OptionPicker({
             {selectedOption?.nativeName || selectedOption?.name || value}
           </Text>
         </View>
-        <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
+        <Ionicons name="chevron-down" size={20} color={theme.textLight} />
       </TouchableOpacity>
 
       <Modal
@@ -60,7 +64,7 @@ export default function OptionPicker({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={theme.text} />
               </TouchableOpacity>
             </View>
             
@@ -84,7 +88,7 @@ export default function OptionPicker({
                     {option.nativeName || option.name}
                   </Text>
                   {value === option.code && (
-                    <Ionicons name="checkmark" size={24} color={COLORS.primary} />
+                    <Ionicons name="checkmark" size={24} color={theme.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -96,31 +100,31 @@ export default function OptionPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     marginBottom: SPACING.xl,
   },
   label: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
   },
   description: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.md,
   },
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     minHeight: 50,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   selectorContent: {
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   modalOverlay: {
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.background,
     borderTopLeftRadius: BORDER_RADIUS.xl,
     borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: '70%',
@@ -154,12 +158,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: theme.border,
   },
   modalTitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   option: {
     flexDirection: 'row',
@@ -169,14 +173,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionSelected: {
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: theme.primary + '10',
   },
   optionIcon: {
     fontSize: 28,
   },
   optionName: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text,
+    color: theme.text,
     flex: 1,
   },
 });

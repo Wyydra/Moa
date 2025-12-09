@@ -55,6 +55,13 @@
     "language": "Language",
     "languageDescription": "Select the language for text-to-speech pronunciation",
     "languageAuto": "Auto-detect",
+    "appLanguage": "App Language",
+    "frontLanguage": "Front Language",
+    "backLanguage": "Back Language",
+    "frontLanguageDescription": "Language for the front side of cards (question)",
+    "backLanguageDescription": "Language for the back side of cards (answer)",
+    "searchLanguage": "Search by code...",
+    "noLanguagesFound": "No languages found",
     "tags": "Tags",
     "addTag": "Add tag",
     "filterByTag": "Filter by tag",
@@ -149,6 +156,7 @@
       "description": "Type out the answers",
       "yourAnswer": "Your Answer",
       "writeByHand": "Write by hand",
+      "startWriting": "Start writing...",
       "submit": "Submit Answer",
       "correct": "Correct!",
       "incorrect": "Incorrect",
@@ -194,6 +202,12 @@
    },
       "settings": {
       "title": "Settings",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "themeDescription": "Choose your preferred color scheme",
+      "themeAuto": "System Default",
+      "themeLight": "Light",
+      "themeDark": "Dark",
       "appLanguage": "App Language",
       "appLanguageDescription": "Select the language for the app interface",
       "systemDefault": "System Default",
@@ -226,7 +240,8 @@
         "reportBug": "Report a Bug",
         "featureRequest": "Request a Feature",
         "emailError": "Unable to open email client. Please ensure you have an email app configured."
-      }
+      },
+      "version": "Version"
     },
     "progress": {
       "title": "Progress",

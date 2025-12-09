@@ -1,19 +1,24 @@
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, Pressable, ScrollView } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from 'react-i18next';
-import { commonStyles } from '../styles/commonStyles';
+import { createCommonStyles } from '../styles/commonStyles';
 import { useCallback, useState } from "react";
 import { Deck } from "../data/model";
 import { deleteDeck, getAllDecks, getAllTags, getDecksByTags, getDeckById, importDeckFromJSON } from "../data/storage";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 export default function LibraryScreen({navigation}: any) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -197,7 +202,7 @@ export default function LibraryScreen({navigation}: any) {
             style={styles.menuButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="ellipsis-vertical" size={20} color={COLORS.textLight} />
+            <Ionicons name="ellipsis-vertical" size={20} color={theme.textLight} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -213,7 +218,7 @@ export default function LibraryScreen({navigation}: any) {
       {allTags.length > 0 && (
         <View style={styles.filterSection}>
           <View style={styles.filterHeader}>
-            <Ionicons name="funnel-outline" size={16} color={COLORS.textLight} />
+            <Ionicons name="funnel-outline" size={16} color={theme.textLight} />
             <Text style={styles.filterLabel}>{t('library.filterByTags')}</Text>
           </View>
           <ScrollView 
@@ -243,7 +248,7 @@ export default function LibraryScreen({navigation}: any) {
                 style={styles.clearFilterButton}
                 onPress={handleClearFilter}
               >
-                <Ionicons name="close-circle" size={16} color={COLORS.skyBlue} />
+                <Ionicons name="close-circle" size={16} color={theme.primary} />
                 <Text style={styles.clearFilterText}>{t('library.clearFilter')}</Text>
               </TouchableOpacity>
               <View style={styles.modeButtons}>
@@ -338,12 +343,12 @@ export default function LibraryScreen({navigation}: any) {
         <Pressable style={styles.modalOverlay} onPress={closeModal}>
           <View style={styles.actionSheet}>
             <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-              <Ionicons name="create-outline" size={24} color={COLORS.text} />
+              <Ionicons name="create-outline" size={24} color={theme.text} />
               <Text style={styles.actionText}>{t('common.edit')}</Text>
             </TouchableOpacity>
             <View style={styles.actionDivider} />
             <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+              <Ionicons name="trash-outline" size={24} color={theme.danger} />
               <Text style={[styles.actionText, styles.deleteText]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
@@ -353,7 +358,7 @@ export default function LibraryScreen({navigation}: any) {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   createButton: {
     marginTop: SPACING.xxl,
   },
@@ -368,7 +373,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -378,25 +383,25 @@ const styles = StyleSheet.create({
     maxHeight: 44,
   },
   filterTagChip: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.full,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     marginRight: SPACING.md,
   },
   filterTagChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   filterTagText: {
-    color: COLORS.textMedium,
+    color: theme.textMedium,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
   filterTagTextActive: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
   },
   clearFilterButton: {
     flexDirection: 'row',
@@ -404,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   clearFilterText: {
-    color: COLORS.primary,
+    color: theme.primary,
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
     marginLeft: SPACING.sm,
@@ -424,23 +429,23 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     gap: SPACING.xs,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   modeButtonLearn: {
-    backgroundColor: COLORS.learn,
+    backgroundColor: theme.learn,
   },
   modeButtonTest: {
-    backgroundColor: COLORS.test,
+    backgroundColor: theme.test,
   },
   modeButtonWrite: {
-    backgroundColor: COLORS.write,
+    backgroundColor: theme.write,
   },
   modeButtonMatch: {
-    backgroundColor: COLORS.match,
+    backgroundColor: theme.match,
   },
   modeButtonText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.xs,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
     letterSpacing: 0.3,
@@ -451,7 +456,7 @@ const styles = StyleSheet.create({
   deckCard: {
     marginBottom: SPACING.lg,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   deckContent: {
@@ -465,13 +470,13 @@ const styles = StyleSheet.create({
   deckName: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.xs,
     letterSpacing: -0.3,
   },
   deckCount: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   menuButton: {
@@ -481,33 +486,33 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 104,
-    backgroundColor: COLORS.accent,
+    backgroundColor: theme.accent,
     width: 60,
     height: 60,
     borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.colored(COLORS.accent),
+    ...SHADOWS.colored(theme.accent),
   },
   fab: {
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     width: 64,
     height: 64,
     borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.colored(COLORS.primary),
+    ...SHADOWS.colored(theme.primary),
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: theme.overlay,
     justifyContent: 'flex-end',
   },
   actionSheet: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderTopLeftRadius: BORDER_RADIUS.xxl,
     borderTopRightRadius: BORDER_RADIUS.xxl,
     paddingBottom: 34,
@@ -520,15 +525,15 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text,
+    color: theme.text,
     fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   deleteText: {
-    color: COLORS.danger,
+    color: theme.danger,
   },
   actionDivider: {
     height: 1,
-    backgroundColor: COLORS.divider,
+    backgroundColor: theme.divider,
     marginHorizontal: SPACING.lg,
   },
 });

@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { commonStyles } from '../styles/commonStyles';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { createCommonStyles } from '../styles/commonStyles';
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { 
   getAllDecks, 
@@ -28,6 +30,9 @@ interface DeckProgress {
 }
 
 export default function ProgressScreen() {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
@@ -118,25 +123,25 @@ export default function ProgressScreen() {
         {/* Main Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, styles.statCardPrimary]}>
-            <Ionicons name="flame" size={32} color={COLORS.danger} />
+            <Ionicons name="flame" size={32} color={theme.danger} />
             <Text style={styles.statValue}>{streak}</Text>
             <Text style={styles.statLabel}>{t('progress.dayStreak')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="checkmark-circle" size={32} color={COLORS.primary} />
+            <Ionicons name="checkmark-circle" size={32} color={theme.primary} />
             <Text style={styles.statValue}>{todayReviews}</Text>
             <Text style={styles.statLabel}>{t('progress.reviewsToday')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="calendar" size={32} color={COLORS.success} />
+            <Ionicons name="calendar" size={32} color={theme.success} />
             <Text style={styles.statValue}>{weekReviews}</Text>
             <Text style={styles.statLabel}>{t('progress.reviewsThisWeek')}</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Ionicons name="trophy" size={32} color={COLORS.warning} />
+            <Ionicons name="trophy" size={32} color={theme.warning} />
             <Text style={styles.statValue}>{accuracy}%</Text>
             <Text style={styles.statLabel}>{t('progress.accuracy')}</Text>
           </View>
@@ -227,7 +232,7 @@ export default function ProgressScreen() {
         {/* Motivational Message */}
         {streak >= 7 && (
           <View style={styles.motivationCard}>
-            <Ionicons name="star" size={24} color={COLORS.warning} />
+            <Ionicons name="star" size={24} color={theme.warning} />
             <Text style={styles.motivationText}>
               {t('progress.keepItUp')}
             </Text>
@@ -236,7 +241,7 @@ export default function ProgressScreen() {
 
         {totalDue === 0 && totalCards > 0 && (
           <View style={styles.motivationCard}>
-            <Ionicons name="checkmark-done-circle" size={24} color={COLORS.success} />
+            <Ionicons name="checkmark-done-circle" size={24} color={theme.success} />
             <Text style={styles.motivationText}>
               {t('progress.allCaughtUp')}
             </Text>
@@ -247,7 +252,7 @@ export default function ProgressScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   title: {
     marginBottom: SPACING.lg,
   },
@@ -259,13 +264,13 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     alignItems: 'center',
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   statCardPrimary: {
@@ -274,13 +279,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: TYPOGRAPHY.fontSize.huge,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.xs,
     marginBottom: SPACING.xxs,
   },
   statLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    color: COLORS.textLight,
+    color: theme.textLight,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -291,15 +296,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginBottom: SPACING.md,
   },
   overallCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   overallRow: {
@@ -310,23 +315,23 @@ const styles = StyleSheet.create({
   },
   overallLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text,
+    color: theme.text,
   },
   overallValue: {
     fontSize: TYPOGRAPHY.fontSize.xl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
   },
   overallValueDue: {
-    color: COLORS.primary,
+    color: theme.primary,
   },
   deckCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.sm,
   },
   deckHeader: {
@@ -338,17 +343,17 @@ const styles = StyleSheet.create({
   deckName: {
     fontSize: TYPOGRAPHY.fontSize.md,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     flex: 1,
   },
   dueBadge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 4,
   },
   dueBadgeText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: TYPOGRAPHY.fontSize.xs,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
@@ -357,7 +362,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: COLORS.border,
+    backgroundColor: theme.border,
     borderRadius: BORDER_RADIUS.xs,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -366,10 +371,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   progressMastered: {
-    backgroundColor: COLORS.success,
+    backgroundColor: theme.success,
   },
   progressLearning: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
   },
   deckStats: {
     flexDirection: 'row',
@@ -388,33 +393,33 @@ const styles = StyleSheet.create({
     marginRight: SPACING.xs,
   },
   statDotMastered: {
-    backgroundColor: COLORS.success,
+    backgroundColor: theme.success,
   },
   statDotLearning: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
   },
   statDotNew: {
-    backgroundColor: COLORS.border,
+    backgroundColor: theme.border,
   },
   deckStatText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.textLight,
+    color: theme.textLight,
   },
   motivationCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.md,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   motivationText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
     marginLeft: SPACING.sm,
     flex: 1,
   },

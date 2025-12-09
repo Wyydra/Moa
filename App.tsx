@@ -27,7 +27,10 @@ import './src/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { handleImportURL } from './src/utils/deepLinking';
 import * as Font from 'expo-font';
-import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount } from './src/utils/notifications';
+import { scheduleDailyReminder, scheduleStreakReminder, updateBadgeCount, resetAllNotifications } from './src/utils/notifications';
+import { ThemeProvider } from './src/contexts/ThemeContext';
+import { useTheme } from './src/hooks/useTheme';
+import { TTSProvider } from './src/contexts/TTSContext';
 
 const Tab = createBottomTabNavigator();
 const LibraryStack = createNativeStackNavigator();
@@ -97,17 +100,18 @@ function SettingsStackNavigator() {
 
 function MainNavigator() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366F1',
-        tabBarInactiveTintColor: '#A1A1AA',
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textLight,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E4E4E7',
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
@@ -182,19 +186,23 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const notificationsInitialized = useRef(false);
   
   useEffect(() => {
     async function initialize() {
       try {
-        // Load fonts
+        // Phase 1: Load fonts
         await Font.loadAsync({
           ...Ionicons.font,
         });
         
-        // Initialize database and storage
+        // Phase 2: Initialize database and storage (MUST complete before Phase 3)
         const { runMigrations } = await import('./src/data/migrations');
         await runMigrations();
         await initializeStorage();
+        
+        // Phase 3: Initialize features that depend on database
+        await initializeNotifications();
         
         setIsReady(true);
       } catch (error) {
@@ -219,13 +227,18 @@ export default function App() {
         Alert.alert(title, message, [{ text: 'OK' }]);
       }
     }
-    initialize();
-  }, []);
-
-  // Initialize notifications
-  useEffect(() => {
+    
     const initializeNotifications = async () => {
+      // Guard - prevent duplicate initialization
+      if (notificationsInitialized.current) {
+        console.log('[App] Notifications already initialized, skipping');
+        return;
+      }
+
       try {
+        console.log('[App] Initializing notifications');
+        notificationsInitialized.current = true;
+
         // Update badge count on app start
         await updateBadgeCount();
 
@@ -236,6 +249,9 @@ export default function App() {
 
         // Schedule notifications if enabled
         if (notificationsEnabled) {
+          // Always reset notifications to ensure clean state
+          await resetAllNotifications();
+          
           await scheduleDailyReminder(notificationTime.hour, notificationTime.minute);
           
           if (streakRemindersEnabled) {
@@ -245,27 +261,29 @@ export default function App() {
 
         // Setup notification listeners
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-          console.log('Notification received:', notification);
+          console.log('[App] Notification received:', notification.request.content.title);
         });
 
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-          console.log('Notification tapped:', response);
+          console.log('[App] Notification tapped:', response.notification.request.content.title);
           // Handle notification tap - could navigate to specific screen
           const notificationType = response.notification.request.content.data?.type;
           
           if (notificationType === 'daily-reminder' || notificationType === 'streak-reminder') {
             // Navigate to Home screen to start studying
             // This would require access to navigation ref
-            console.log('User wants to study from notification');
+            console.log('[App] User wants to study from notification');
           }
         });
       } catch (error) {
-        console.error('Error initializing notifications:', error);
+        console.error('[App] Error initializing notifications:', error);
+        // Reset flag on error to allow retry
+        notificationsInitialized.current = false;
       }
     };
-
-    initializeNotifications();
-
+    
+    initialize();
+    
     // Cleanup notification listeners
     return () => {
       if (notificationListener.current) {
@@ -328,11 +346,25 @@ export default function App() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <MainNavigator />
-          <StatusBar style='auto'/>
-        </NavigationContainer>
+        <ThemeProvider>
+          <TTSProvider>
+            <AppContent />
+          </TTSProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
+  );
+}
+
+function AppContent() {
+  const { isDark } = useTheme();
+  
+  return (
+    <>
+      <NavigationContainer>
+        <MainNavigator />
+      </NavigationContainer>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
   );
 }

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, ScrollView, View, StyleSheet, Dimensions } from 'react-native';
-import { COLORS } from '../utils/constants';
 import { markdownToHtml, isMarkdown, stripMarkdown } from '../utils/markdown';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -22,6 +23,8 @@ export default function CardContentRenderer({
   maxHeight,
   maxHeightPercent = 0.35, // Default: 35% of screen height
 }: CardContentRendererProps) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   // Calculate max height: use explicit maxHeight if provided, otherwise use percentage
   const calculatedMaxHeight = maxHeight ?? (SCREEN_HEIGHT * maxHeightPercent);
 
@@ -91,7 +94,7 @@ export default function CardContentRenderer({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     width: '100%',
     position: 'relative',
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentText: {
-    color: COLORS.text,
+    color: theme.text,
     fontSize: 18,
     textAlign: 'center',
   },

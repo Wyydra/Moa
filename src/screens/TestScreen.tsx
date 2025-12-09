@@ -1,14 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, StudySession } from "../data/model";
-import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById, getTTSEnabled, getTTSRate } from "../data/storage";
+import { getCardsByDeck, getCardsByTags, saveStudySession, generateId, getDeckById } from "../data/storage";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
-import { commonStyles } from "../styles/commonStyles";
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { createCommonStyles } from "../styles/commonStyles";
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { Ionicons } from "@expo/vector-icons";
 import PronunciationButton from '../components/PronunciationButton';
 import CardContentRenderer from '../components/CardContentRenderer';
 import * as Speech from 'expo-speech';
+import { getDeckLanguageForSide } from '../utils/availableLanguages';
 
 interface Question {
   card: Card;
@@ -17,6 +20,9 @@ interface Question {
 }
 
 export default function TestScreen({route, navigation}: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const { deckId, tags, reversed = false } = route.params;
   const [cards, setCards] = useState<Card[]>([]);
@@ -27,15 +33,13 @@ export default function TestScreen({route, navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
-  const [ttsEnabled, setTTSEnabled] = useState(true);
-  const [ttsRate, setTTSRate] = useState(1.0);
-  const [deckLanguage, setDeckLanguage] = useState<string | undefined>(undefined);
+  const [frontLanguage, setFrontLanguage] = useState<string | undefined>(undefined);
+  const [backLanguage, setBackLanguage] = useState<string | undefined>(undefined);
   const optionAnims = useRef<Animated.Value[]>([]).current;
   const questionAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadCardsAndGenerateQuestions();
-    loadTTSSettings();
   }, [deckId, tags]);
 
   useEffect(() => {
@@ -51,12 +55,7 @@ export default function TestScreen({route, navigation}: any) {
     };
   }, []);
 
-  const loadTTSSettings = async () => {
-    const enabled = await getTTSEnabled();
-    const rate = await getTTSRate();
-    setTTSEnabled(enabled);
-    setTTSRate(rate);
-  };
+
 
   const animateQuestion = () => {
     questionAnim.setValue(0);
@@ -122,11 +121,12 @@ export default function TestScreen({route, navigation}: any) {
     setQuestions(generatedQuestions);
     setLoading(false);
     
-    // Load deck language for TTS
+    // Load deck languages for TTS
     if (deckId) {
       const deck = await getDeckById(deckId);
       if (deck) {
-        setDeckLanguage(deck.language);
+        setFrontLanguage(getDeckLanguageForSide(deck, 'front'));
+        setBackLanguage(getDeckLanguageForSide(deck, 'back'));
       }
     }
   }
@@ -185,11 +185,11 @@ export default function TestScreen({route, navigation}: any) {
         <View style={styles.header}>
           <View style={styles.spacer} />
           <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="close" size={28} color={COLORS.text}/>
+            <Ionicons name="close" size={28} color={theme.text}/>
           </TouchableOpacity>
         </View>
           <View style={styles.completedContainer}>
-            <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+            <Ionicons name="checkmark-circle" size={80} color={theme.success} />
             <Text style={styles.completedTitle}>{t('modes.test.sessionComplete')}</Text>
             <Text style={styles.completedText}>
               {t('modes.test.score', { correct: correctCount, total: questions.length, percentage })}
@@ -211,7 +211,7 @@ export default function TestScreen({route, navigation}: any) {
           {t('study.progress', { current: currentIndex + 1, total: questions.length })}
         </Text>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="close" size={28} color={COLORS.text} />
+          <Ionicons name="close" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -236,16 +236,13 @@ export default function TestScreen({route, navigation}: any) {
             content={reversed ? currentQuestion.card.back : currentQuestion.card.front}
             textStyle={styles.cardText}
           />
-          {ttsEnabled && (
-            <View style={styles.ttsContainer}>
-              <PronunciationButton
-                text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
-                rate={ttsRate}
-                autoPlay={false}
-                language={deckLanguage}
-              />
-            </View>
-          )}
+          <View style={styles.ttsContainer}>
+            <PronunciationButton
+              text={reversed ? currentQuestion.card.back : currentQuestion.card.front}
+              autoPlayStrategy="onTextChange"
+              language={reversed ? backLanguage : frontLanguage}
+            />
+          </View>
         </Animated.View>
 
         <View style={styles.optionsContainer}>
@@ -279,19 +276,18 @@ export default function TestScreen({route, navigation}: any) {
                 >
                   <Text style={styles.optionText}>{option}</Text>
                   <View style={styles.optionRightContent}>
-                    {showResult && isCorrect && ttsEnabled && (
+                    {showResult && isCorrect && (
                       <PronunciationButton
                         text={option}
-                        rate={ttsRate}
-                        autoPlay={false}
-                        language={deckLanguage}
+                        autoPlayStrategy="immediate"
+                        language={reversed ? frontLanguage : backLanguage}
                       />
                     )}
                     {showResult && isCorrect && (
-                      <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
+                      <Ionicons name="checkmark-circle" size={24} color={theme.success} />
                     )}
                     {showResult && isSelected && !isCorrect && (
-                      <Ionicons name="close-circle" size={24} color={COLORS.danger} />
+                      <Ionicons name="close-circle" size={24} color={theme.danger} />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -315,7 +311,7 @@ export default function TestScreen({route, navigation}: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -329,7 +325,7 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: TYPOGRAPHY.fontSize.lg,
     fontWeight: TYPOGRAPHY.fontWeight.semibold,
-    color: COLORS.text,
+    color: theme.text,
   },
   testContainer: {
     flex: 1,
@@ -343,19 +339,19 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     marginBottom: SPACING.xl,
     borderWidth: 0.5,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     ...SHADOWS.md,
   },
   cardLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   cardText: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
-    color: COLORS.text,
+    color: theme.text,
     textAlign: 'center',
     lineHeight: 32,
   },
@@ -367,33 +363,33 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   option: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     ...SHADOWS.sm,
   },
   optionCorrect: {
-    backgroundColor: COLORS.success + '20',
+    backgroundColor: theme.success + '20',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
-    borderColor: COLORS.success,
+    borderColor: theme.success,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     ...SHADOWS.sm,
   },
   optionIncorrect: {
-    backgroundColor: COLORS.danger + '20',
+    backgroundColor: theme.danger + '20',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     borderWidth: 2,
-    borderColor: COLORS.danger,
+    borderColor: theme.danger,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -401,7 +397,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text,
+    color: theme.text,
     flex: 1,
   },
   optionRightContent: {
@@ -420,13 +416,13 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
-    color: COLORS.text,
+    color: theme.text,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   completedText: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: theme.textLight,
     marginBottom: SPACING.xl,
   },
 });

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { commonStyles } from '../styles/commonStyles';
+import { createCommonStyles } from '../styles/commonStyles';
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SPACING } from '../utils/constants';
+import { SPACING } from '../utils/constants';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../utils/themes';
 import { generateId, saveCard } from "../data/storage";
 import { Card } from "../data/model";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +14,9 @@ import { stripMarkdown } from '../utils/markdown';
 
 
 export default function AddCardScreen({ route, navigation }: any) {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { deckId } = route.params;
@@ -73,7 +78,7 @@ export default function AddCardScreen({ route, navigation }: any) {
           <View style={styles.spacer} />
           <Text style={commonStyles.screenTitle}>{t('card.addCard')}</Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color={COLORS.text} />
+            <Ionicons name="close" size={28} color={theme.text} />
           </TouchableOpacity>
         </View>
 
@@ -111,7 +116,7 @@ export default function AddCardScreen({ route, navigation }: any) {
                 returnKeyType="done"
               />
               <TouchableOpacity onPress={handleAddTag} style={styles.addTagButton}>
-                <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+                <Ionicons name="add-circle" size={24} color={theme.primary} />
               </TouchableOpacity>
             </View>
 
@@ -121,7 +126,7 @@ export default function AddCardScreen({ route, navigation }: any) {
                   <View key={index} style={styles.tagChip}>
                     <Text style={styles.tagText}>{tag}</Text>
                     <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                      <Ionicons name="close-circle" size={16} color={COLORS.textInverse} />
+                      <Ionicons name="close-circle" size={16} color={theme.textInverse} />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -141,7 +146,7 @@ export default function AddCardScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -174,14 +179,14 @@ const styles = StyleSheet.create({
   },
   tagInput: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: theme.border,
     borderRadius: 12,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     fontSize: 16,
-    color: COLORS.text,
+    color: theme.text,
   },
   addTagButton: {
     padding: SPACING.xs,
@@ -195,14 +200,14 @@ const styles = StyleSheet.create({
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: theme.primary,
     borderRadius: 16,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     gap: SPACING.xs,
   },
   tagText: {
-    color: COLORS.textInverse,
+    color: theme.textInverse,
     fontSize: 14,
     fontWeight: '600',
   },
