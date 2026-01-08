@@ -3,17 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/home';
+import SettingsScreen from '../screens/settings';
+
+import { useTheme } from '../theme';
+import LibraryScreen from '../screens/library';
 
 const Tab = createBottomTabNavigator();
-
-const TabNavigatorConfig = {
-  initialRouteName: 'Home',
-  screenOptions: {
-    headerShown: false,
-    tabBarActiveTintColor: '#000',
-    tabBarInactiveTintColor: '#666',
-  },
-};
 
 const Routes = [
   { 
@@ -23,9 +18,34 @@ const Routes = [
     icon: 'home' as const,
     iconOutline: 'home-outline' as const,
   },
+  { 
+    name: 'Library', 
+    component: LibraryScreen,
+    label: 'Library',
+    icon: 'library' as const,
+    iconOutline: 'library-outline' as const,
+  },
+  { 
+    name: 'Settings', 
+    component: SettingsScreen,
+    label: 'Settings',
+    icon: 'settings' as const,
+    iconOutline: 'settings-outline' as const,
+  },
 ];
 
 export default function Navigation() {
+  const { theme } = useTheme();
+
+  const TabNavigatorConfig = {
+    initialRouteName: 'Home' as const,
+    screenOptions: {
+      headerShown: false,
+      tabBarActiveTintColor: theme.colors.primary,
+      tabBarInactiveTintColor: theme.colors.secondary,
+    },
+  };
+
   return (
     <NavigationContainer>
       <Tab.Navigator {...TabNavigatorConfig}>
