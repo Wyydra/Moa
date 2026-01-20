@@ -1,6 +1,6 @@
 export type LibraryStackParamList = {
     LibraryList: undefined;
-    DeckDetail: { deckId: string };
+    DeckDetail: { deckId: number };
 };
 
 export type MainTabParamList = {
