@@ -12,11 +12,11 @@ export default function LibraryScreen() {
   };
 
   return (
-     <Screen>
+    <Screen>
       <ScreenTitle>Library</ScreenTitle>
       <FlatList
         data={decks}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <DeckCard deck={item} onPress={handleDeckPress} />
         )}

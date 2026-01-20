@@ -1,4 +1,4 @@
-import { getDatabase } from './index';
+import { resetDatabase } from './index';
 import { deckService, cardService, tagService } from '../services';
 
 export async function seedDatabase(): Promise<void> {
@@ -14,39 +14,36 @@ export async function seedDatabase(): Promise<void> {
 
   // 2. Create Deck
   const deckId = await deckService.create({
-    name: 'Welcome Deck',
+    name: 'First Deck',
     description: 'This is a sample deck to get you started.',
     tagIds: [tag1Id, tag2Id]
   });
 
   // 3. Create Cards
-  await cardService.create({
-    front: 'What is this app?',
-    back: 'It is a flashcard app built with React Native and clean architecture.',
-    deckId: deckId,
-    tagIds: [tag1Id]
-  });
+  const cards = [
+    {
+      front: 'What is this app?',
+      back: 'It is a flashcard app built with React Native and clean architecture.',
+      deckId: deckId,
+      tagIds: [tag1Id]
+    },
+    {
+      front: 'How do I add a card?',
+      back: 'Go to the deck details and tap the + button.',
+      deckId: deckId
+    }
+  ];
 
-  await cardService.create({
-    front: 'How do I add a card?',
-    back: 'Go to the deck details and tap the + button.',
-    deckId: deckId
-  });
+  for (const card of cards) {
+    await cardService.create(card);
+  }
 
   console.log('Database seeded successfully');
 }
 
 export async function resetAndSeed(): Promise<void> {
-  const db = getDatabase();
-
-  // Order matters for Foreign Key constraints
-  await db.runAsync('DELETE FROM card_tag');
-  await db.runAsync('DELETE FROM deck_tag');
-  await db.runAsync('DELETE FROM card');
-  await db.runAsync('DELETE FROM tag');
-  await db.runAsync('DELETE FROM deck');
-
-  console.log('Database cleared');
+  await resetDatabase();
+  console.log('Database cleared and schema reset');
 
   await seedDatabase();
 }
