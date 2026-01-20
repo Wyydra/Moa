@@ -1,13 +1,16 @@
-import { Deck } from "../services/deckService";
-import { Text } from 'react-native'
+import { Deck } from "../model/deck";
+import { Text, TouchableOpacity } from 'react-native'
 
 interface DeckCardProps {
   deck: Deck,
-  onPress: (deckId: string) => void;
+  onPress: (deckId: number) => void;
 }
 
 export default function DeckCard({ deck, onPress }: DeckCardProps) {
   return (
-    <Text>{deck.name}</Text>
+    <TouchableOpacity onPress={() => onPress(deck.id)}>
+      <Text>{deck.name}</Text>
+      <Text>{deck.cardCount} cards</Text>
+    </TouchableOpacity>
   )
 }

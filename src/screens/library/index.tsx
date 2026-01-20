@@ -1,14 +1,20 @@
 import { Screen, ScreenTitle } from '../../components'
 import DeckCard from '../../components/DeckCard';
 import { useDecks } from '../../hooks/useDecks';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import { LibraryStackParamList } from '../../types/navigation';
 import { View, FlatList, Text } from 'react-native'
+
+type NavigationProp = NativeStackNavigationProp<LibraryStackParamList>;
 
 export default function LibraryScreen() {
   const { decks, loading, error, refresh } = useDecks();
+  const navigation = useNavigation<NavigationProp>();
 
-  const handleDeckPress = (deckId: string) => {
-    // TODO: Navigate to deck detail screen
-    console.log('Deck pressed:', deckId);
+  const handleDeckPress = (deckId: number) => {
+    navigation.navigate('DeckDetail', { deckId: deckId.toString() });
   };
 
   return (

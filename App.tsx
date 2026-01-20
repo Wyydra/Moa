@@ -1,4 +1,5 @@
 import { ThemeProvider } from './src/theme';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Navigation from './src/navigation';
 import { useEffect, useState } from 'react';
 import { initDatabase } from './src/database';
@@ -39,7 +40,9 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <Navigation />
+      <SafeAreaProvider>
+        <Navigation />
+      </SafeAreaProvider>
     </ThemeProvider>
   );
 }
